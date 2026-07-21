@@ -163,14 +163,28 @@ function controlFields(
   control: DeliveryContractV2["outcomes"][number]["product"]["controls"][number],
 ): Array<[string, string]> {
   return [
+    ["surface", control.surface],
+    ["region", control.region],
     ["location", control.location],
+    ["control_type", control.control_type],
+    ["label_content", control.label_content],
+    ["user_task", control.user_task],
+    ["visibility", control.visibility],
+    ["availability", control.availability],
     ["trigger", control.trigger],
     ["input", control.input],
+    ["validation", control.validation],
+    ["default_value", control.default_value],
+    ["interaction", control.interaction],
+    ["navigation_result", control.navigation_result],
     ["loading", control.loading_state],
     ["empty", control.empty_state],
     ["success", control.success_state],
     ["failure", control.failure_state],
+    ["recovery", control.recovery],
+    ["permission", control.permission],
     ["feedback", control.feedback],
+    ["accessibility", control.accessibility],
   ];
 }
 

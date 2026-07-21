@@ -112,14 +112,28 @@ const OWNER_AUTHORITY_POLICY = {
 
 const CONTROL_AUTHORITY_POLICY = {
   key: "identity",
+  surface: "semantic_user_review",
+  region: "semantic_user_review",
   location: "semantic_user_review",
+  control_type: "semantic_user_review",
+  label_content: "semantic_user_review",
+  user_task: "semantic_user_review",
+  visibility: "semantic_user_review",
+  availability: "semantic_user_review",
   trigger: "semantic_user_review",
   input: "semantic_user_review",
+  validation: "semantic_user_review",
+  default_value: "semantic_user_review",
+  interaction: "semantic_user_review",
+  navigation_result: "semantic_user_review",
   loading_state: "semantic_user_review",
   empty_state: "semantic_user_review",
   success_state: "semantic_user_review",
   failure_state: "semantic_user_review",
+  recovery: "semantic_user_review",
+  permission: "semantic_user_review",
   feedback: "semantic_user_review",
+  accessibility: "semantic_user_review",
 } satisfies Record<keyof DeliveryControlV2, AuthorityFieldPolicy>;
 
 const OUTCOME_TECHNICAL_AUTHORITY_POLICY = {

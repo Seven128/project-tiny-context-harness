@@ -44,6 +44,10 @@ test("templates keep rationale durable, optional and evidence-free", () => {
     [
       ".codex/ty-context-managed/context_templates/product-surface-contract.md",
       "packages/ty-context/assets/context_templates/product-surface-contract.md"
+    ],
+    [
+      ".codex/ty-context-managed/context_templates/screen-contract.md",
+      "packages/ty-context/assets/context_templates/screen-contract.md"
     ]
   ];
 

@@ -266,6 +266,10 @@ test("Source Plan and Contract Draft authoring responsibilities stay separate", 
     /recommended structure is optional input guidance/iu,
   );
   assert.match(
+    sourcePlan,
+    /dedicated external Product Design capability[\s\S]*neither invokes that capability nor generates design resources/iu,
+  );
+  assert.match(
     spec,
     /ordinary prose plan, research proposal, external proposal/iu,
   );
@@ -297,6 +301,10 @@ test("Source Plan and Contract Draft authoring responsibilities stay separate", 
     /Contract Draft authoring belongs inside `long-task-workflow`/iu,
   );
   assert.match(publicReadmes, /Source Plan is Source, not a Contract Draft/iu);
+  assert.match(
+    publicReadmes,
+    /External Design Resources[\s\S]*Candidates and inspiration authorize no fidelity[\s\S]*stable immutable identity/iu,
+  );
   assert.match(
     publicReadmes,
     /unknown user priority such as quality versus cost[\s\S]*change the research scope, candidate set or recommendation/iu,
@@ -353,7 +361,7 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "rolling runtime smoke",
     "proxy evidence",
     "stale report",
-    "why no authoring skill",
+    "why design generation stays external",
     "decision criteria",
     "tradeoff preference",
     "research before selection",

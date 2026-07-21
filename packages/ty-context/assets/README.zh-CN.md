@@ -44,7 +44,7 @@ npx --yes project-tiny-context-harness ty-context sync
 ty-context enable long-task
 ```
 
-它会安装 `/source-plan-authoring`、`/long-task-workflow` 与完成 Hook，不安装模型 Worker、Agent runtime、调度器或 Git 编排资产。
+启用长程能力会安装 `/source-plan-authoring`、`/long-task-workflow` 与完成 Hook。它不安装模型 Worker、Agent runtime、调度器、Git 编排资产或设计生成系统。
 
 ## Minimal Context 与默认工作流
 
@@ -103,13 +103,29 @@ Context: no durable fact change
 
 Harness 只路由仓库原生 lint/AST/dependency/contract check，不实现跨语言通用架构分析器。`check-modularity` 的语句数/分支风险会定位到最高风险函数和行号。
 
+### Product Surface 与 Screen Contract
+
+`context_surface_contract` 继续使用现有 `contract`、area/subdomain 和 verification 角色。`product-surface-contract.md` 负责跨页面、主层/下钻与共享职责；可选且按需读取的 `screen-contract.md` 负责单屏 entry/exit/shared state、信息层级、语义区域、导航/变体、material controls 和 target/verification 引用。它们不新增 `design`、`screen` 或 product-surface Context role，局部样式修复也不要求补建 Screen Contract。
+
+material UI 在实现前执行 **UI Authority Closure**：每个稳定 surface/control/target key 必须归类为现有 Context 已覆盖、需要 Context 更新、task-local、显式 out-of-scope 或真正 decision-required。Surface Context 负责跨页面职责，Screen/interaction Context 负责稳定层级和行为，`DESIGN.md` 负责视觉系统与引用解释，authored target 负责具体构图，Delivery Contract 只绑定并证明本次交付。出现冲突时 fail closed；当前代码、时间戳、YAML 或实现截图不能静默胜出。
+
 ### 视觉交付指导
 
-默认 Workflow 现在会在 material production UI 前执行条件式 Design Authority Check，包括新建/重做页面、主要布局/导航/主题/组件体系、高保真实现和大幅 visual polish。它读取 owning surface Context、`DESIGN.md`、唯一 authored token source/generation direction 和选定设计引用。引用分为 `exact-target`、`constraint`、`inspiration`；未配置 starter、只有风格文字或灵感图都不能授权 agent 自行发明生产布局。明确的设计任务路由到 `context_uiux_design`；已有充分权威的普通实现、局部样式修复和 throwaway prototype 仍保持轻量。
+默认 Workflow 现在会在 material production UI 前执行 UI Authority Closure 和条件式 Design Authority Check，包括新建/重做页面、主要布局/导航/主题/组件体系、高保真实现和大幅 visual polish。它读取 owning Surface/Screen/Control Context、`DESIGN.md`、唯一 authored token source/generation direction 和选定设计引用。引用分为 `exact-target`、`constraint`、`inspiration`；未配置 starter、候选稿、只有风格文字或灵感图都不能授权 agent 自行发明生产布局；全局视觉系统 configured 也不等于每个页面 implementation-ready。独立设计资源生成由外部专用 Product Design、Figma 或原型系统负责；进入开发流程后的耐久权威采纳/修复路由到 `context_uiux_design`。已有充分权威的普通实现、局部样式修复和 throwaway prototype 仍保持轻量。
 
 对 material 工作，`context_uiux_design` 在任务内部维护风险比例化的 Visual Coverage Set；耐久 surface/interaction 事实属于 `project_context/**`，耐久视觉语义和设计引用 registry 属于 `DESIGN.md`，versioned target 保留在项目原生路径。`context_development_engineer` 把这些意图绑定到生产组件/真实 route，只报告真正渲染和检查过的组合；实现截图不能成为它自己的目标。
 
-显式 Long-Task 会在 Compile 前解决缺失/冲突的视觉权威，再复用现有 Requirement、Control、Assertion、proof surface、verification input 与 `external_confirmation`。浏览器视觉 AC 使用 `ui_browser`；浏览器代理不能证明可独立失败的原生目标，因此原生 proof 只能使用项目自己的 current-execution target Check，无法真实表达时保留为外部确认。冻结截图 baseline 是 verifier input，生成截图/diff 是 review artifact，主观批准保持外部。这不新增视觉 Schema、risk level、lifecycle state、Gate、必需设计目录或通用像素阈值。
+显式 Long-Task 会在 Compile 前解决缺失/冲突的 UI 权威，并把每个 applicable Control 的 surface、region/location、type/label、user task、visibility/availability、trigger/input/validation/default、interaction/navigation、loading/empty/success/failure/recovery/permission/feedback/accessibility 完整投影为独立 Source-backed Control Claim 和受保护产品语义；空字段不生成 Claim。仍只复用现有 Requirement、Control、Assertion、Stage、Binding、proof surface、verification input、revision 与 `external_confirmation`。
+
+combined design-and-implementation 可以先用普通 Outcome/Stage 生成候选，但 candidate/planned target 不能解锁 fidelity implementation；选定结果必须先进入真实 marked Source 与 owning registry/target，并在 Authority Lock 后通过现有 protected revision 采用。浏览器视觉 AC 使用 `ui_browser`；浏览器代理不能证明可独立失败的原生目标，因此原生 proof 只能使用项目自己的 current-execution target Check，无法真实表达时保留为外部确认。冻结截图 baseline 是 verifier input，生成截图/diff 是 review artifact，主观批准保持外部。这不新增 `uiux_delivery`、视觉 Claim type、risk level、lifecycle state、Gate、必需设计目录或通用像素阈值。
+
+`ty-context doctor` 保留兼容的项目级 `missing | unconfigured | configured` 状态，并增加 Design Authority Index、token source 和已分类 reference 的 advisory 信号。它明确不推断页面实现就绪；material surface 仍需 owning Screen/Control meaning、selected target/constraints 与项目自己的验证路径。
+
+### 外部设计资源
+
+独立 flow、线框图、视觉候选、高保真目标、token、素材与原型由专用 Product Design、Figma、图片生成、原型工具或人工设计流程生成。Tiny Context 不复制这些成熟能力，也不要求专有插件、统一 pack schema、固定目录或固定产物数量。
+
+这些输出以普通 external Source 进入默认 Workflow 或 Long-Task。candidate 与 inspiration 不授权 fidelity；selected exact target 只控制其声明的 surface/viewport/mode/state/content 条件，并且需要稳定不可变身份后才能成为影响验收的 `verification_input`。`context_uiux_design` 在下游执行 UI Authority Closure，只把耐久事实采纳到 Context/`DESIGN.md`；实现截图与 diff 仍是证据 artifact，不能自我授权为目标。
 
 ### 可选 Source Plan Authoring
 

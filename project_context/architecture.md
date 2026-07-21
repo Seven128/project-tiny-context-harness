@@ -13,9 +13,11 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 - CLI and command routing: `packages/ty-context/src/commands/**`.
 - Context manifest, graph, validation, export, sync and doctor: `packages/ty-context/src/lib/context-*`, `validators.ts`, `sync-engine.ts`, `doctor.ts`.
-- Design Authority scaffold and advisory inspection: `packages/ty-context/src/lib/design-md.ts` and `doctor.ts`; project-authored visual targets remain referenced Source/verifier inputs rather than a package-owned design artifact tree.
+- Design Authority scaffold and advisory inspection: `packages/ty-context/src/lib/design-md.ts` and `doctor.ts`; inspection reports observable system-level index/token/reference signals but never infers per-surface implementation readiness. Project-authored visual targets remain referenced Source/verifier inputs rather than a package-owned design artifact tree.
+- UI authority authoring surfaces: managed `product-surface-contract.md` owns cross-surface responsibility and `screen-contract.md` provides optional on-demand Screen/Control Context structure using existing roles. Managed product, surface, UI/UX and engineering Skills apply UI Authority Closure and stable surface/control/target keys.
+- External design-resource boundary: dedicated Product Design, Figma, image-generation, prototype or human workflows own resource generation. Tiny Context consumes their stable selected targets/constraints as ordinary Source through UI Authority Closure and existing default/Long-Task Source, Context, verification-input and evidence mechanisms; it owns no design-generation Skill, pack schema, validator, fixed directory or plugin dependency.
 - Context Authority projection: `long-task-context-authority-topology.ts` separates selected delivery-authority structure from retrieval-only manifest guidance before `context-graph-snapshot.ts` freezes Long-Task Context.
-- Active Contract schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**` plus focused `long-task-*` parser/compiler/claims/risk modules.
+- Active Contract schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**` plus focused `long-task-*` parser/compiler/claims/risk modules. The existing Control projection carries control identity, placement/task, visibility/availability, input/validation/default, interaction/navigation, states/recovery/permission/feedback and accessibility; it does not create a UI-specific Contract block or lifecycle.
 - Shared activation safety: `long-task-activation-validation.ts`, used by collecting Preflight and fail-fast Compile.
 - Source authority: Source marker/parser/inventory/target-continuity modules derive text-bound Source/REQ/CTRL/OBL/NCOMP/AC projections without another editable Source authority.
 - Evidence Kernel: runner-derived adapters, explicit runners, structured/Playwright observations, Counterfactual and Population sensitivity, target-runtime-current-execution proof, targeted verifier, Git-aware snapshot and source-recompiled same-snapshot Live Final Gate.
@@ -48,7 +50,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 ## Default Workflow And Architecture Quality
 
 - Default execution uses manifest routing plus bounded Context search, one `Context Delta: none|required`, a conditional Design Authority Check for material production UI, platform-internal planning, precise implementation, project-owned verification, Contract Conformance and Context drift checking.
-- The UI check reads relevant screen/surface Context, `DESIGN.md`, one authored token source/generation direction and selected versioned design references. Exact targets may support fidelity claims, constraints prove only their declared scope, and inspiration never becomes an implicit reproduction target. Missing authority routes to explicit design authoring/delegation or a genuine decision before production styling; local style fixes and explicit prototypes stay lightweight.
+- The UI check first performs UI Authority Closure over affected stable surface/control/target keys, then reads relevant screen/surface Context, `DESIGN.md`, one authored token source/generation direction and selected versioned design references. Exact targets may support fidelity claims, constraints prove only their declared scope, and inspiration never becomes an implicit reproduction target. Missing authority routes to a Context update, task-local explicit design authoring/delegation or a genuine decision before production styling; local style fixes and explicit prototypes stay lightweight.
 - A risk-triggered architecture gate applies when work creates or changes a durable module/capability, public API/schema/data/persistence, state/source of truth, ownership/dependency direction, cross-area boundary, migration/security/recovery behavior or reusable abstraction.
 - The gate resolves owner, unique source of truth, dependency direction, interface/state/lifecycle, failure/retry/recovery/compatibility, forbidden shortcuts and the project-owned executable check that protects the boundary.
 - Durable results update owning Context; local implementation choices remain task-local. Small fixes do not pay architecture-ceremony cost.
@@ -57,7 +59,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Data / Control Flow
 
-`Source -> optional Source Plan -> one Contract Draft -> Outcome decomposition -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> one-time execution-model choice -> Rolling Frontier -> targeted verifier repair -> optional same-Contract stateless revision diagnosis -> exact pending approval when protected -> Authority Revision adoption -> Rolling Frontier under revised authority -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
+`Source -> optional Source Plan -> UI Authority Closure / owning Context and design targets -> one Contract Draft -> Outcome decomposition and full Control projection -> repository/Context binding -> read-only Preflight -> Compile / Authority Lock -> one-time execution-model choice -> Rolling Frontier -> targeted verifier repair -> optional same-Contract stateless revision diagnosis -> exact pending approval when protected -> Authority Revision adoption -> Rolling Frontier under revised authority -> clean candidate commit -> source-recompiled same-snapshot Live Final Gate`
 
 - Product, Technical Boundary and Acceptance are distinct logical authorities inside one Contract.
 - Outcomes are independently observable, decidable and target-verifiable acceptance/diagnosis units. Dependencies express readiness only; no scheduler or mandatory implementation DAG is persisted.
@@ -95,7 +97,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Verification Implications
 
-- `ty-context doctor` reports default Context footprint, exact duplicate default files and Design Authority status as advisory maintenance signals.
+- `ty-context doctor` reports default Context footprint, exact duplicate default files and Design Authority system/index/token/reference signals as advisory maintenance information; it explicitly does not compute surface-level implementation readiness.
 - `make validate-context` protects required recovery structure and registered role consistency; it is not relaxed to obtain a smaller Context.
 - Workflow guidance tests must prove manifest routing and bounded search are both present, search remains limited to `project_context/**`, and no index/state is introduced.
 - Context Authority topology tests prove retrieval-only edits preserve selected authority while selected area, role and dependency changes remain hash-visible; Context evolution tests prove the same boundary through Compile, Progress and status.

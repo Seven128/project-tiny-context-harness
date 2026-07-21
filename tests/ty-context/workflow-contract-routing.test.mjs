@@ -74,8 +74,8 @@ test("default Context routing combines manifest candidates with bounded search",
     );
   }
   assert.match(managed, /Before material production UI implementation/iu);
-  assert.match(managed, /unconfigured starter, style-only guidance or inspiration/iu);
-  assert.match(managed, /exact\/constraint target/iu);
+  assert.match(managed, /unconfigured starter, candidate, style-only guidance or inspiration/iu);
+  assert.match(managed, /selected exact\/constraint target with adequate declared coverage/iu);
 });
 
 test("CLI and managed guidance route only explicit or active work to long-task", async () => {
@@ -109,7 +109,7 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(guidance, /no model route or checkpoint state/iu);
   assert.match(
     guidance,
-    /installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook/iu,
+    /`ty-context enable long-task` installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook/iu,
   );
   assert.match(guidance, /Design Authority status/iu);
 });
@@ -121,7 +121,7 @@ test("Workflow Contract names the complete Draft-to-qualified-result lifecycle",
   const summary = workflow.match(/The workflow is:\r?\n\r?\n`([^`]+)`/u)?.[1];
   assert.ok(summary);
   for (const concept of [
-    "optional Source Plan",
+    "optional Source Plan and external design Source",
     "Contract Draft",
     "Draft Outcome decomposition",
     "Preflight repair loop",
@@ -158,10 +158,13 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /preflight/);
   assert.match(active, /delivery-set.*retired and non-executing/is);
   assert.match(active, /Final Gate/i);
-  assert.match(active, /ordinary prose plan or optional Source Plan/is);
   assert.match(
     active,
-    /does not need to.*match the recommended Source Plan structure/is,
+    /ordinary prose plan, optional Source Plan or externally authored design resource/is,
+  );
+  assert.match(
+    active,
+    /does not need to match a recommended authoring structure/is,
   );
   assert.match(active, /stable semantic keys and Markdown anchors/is);
   assert.match(
@@ -279,7 +282,7 @@ test("optional Source Plan authoring does not create a second Contract authority
   );
   assert.match(
     workflowContext,
-    /ordinary prose plan or optional Source Plan remains ordinary Source input/is,
+    /ordinary prose plan, optional Source Plan or external design resource remains ordinary Source input/is,
   );
   assert.match(
     workflowContext,

@@ -21,7 +21,8 @@ Project-specific product planning rules belong in a separate project-local Skill
 2. 和用户澄清或整理：目标用户、产品/页面定位、核心问题、用户需要什么、产品需要提供的内容/能力/反馈、主要流程、验收信号、非目标、约束、风险和受影响模块。
 3. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、前端布局、UI/UX、产品模块边界或信息放置时，把产品/页面定位检查作为前置动作：用户在这个 surface 要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、主层/下钻/运维/诊断/详情归属、布局和信息密度是否匹配任务。多 surface、多平台或多模块归属不清时，先读取相关 Context 并搜索入口，必要时使用 `context_surface_contract` 做 Surface Contract Audit，再收窄到具体实现。该检查是下一步变更分类的输入；只有形成长期产品归属、surface 职责、信息架构或模块边界结论时才更新 Context。
    - 若存在 Product Surface Contract，读取并对齐 primary user question、main allows/forbids、drilldown ownership、long-task state 和 verification。
-   - 若缺失且本任务改变 durable surface responsibility，输出 `Surface Contract Delta: required`，把具体答案写入 `project_context/**`，跨 surface 或跨 area 使用现有 `contract` role，不新增 surface-specific role。
+   - 若产品方案只到 surface/流程粒度而 material screen 的实现、验收需要更深事实，不要宣称已有控件级权威。使用稳定 surface/control key 将缺口分类为已有 Screen/interaction Context 覆盖、需要 Context 更新、task-local、out-of-scope 或 decision required；按需从 `screen-contract.md` 提炼 durable hierarchy/regions/navigation/variants/control semantics，视觉系统和 target 仍由 `DESIGN.md`/authored target 所有。
+   - 若缺失且本任务改变 durable surface responsibility，将唯一 `Context Delta` 设为 `required`，把具体答案写入 `project_context/**`，跨 surface 或跨 area 使用现有 `contract` role，不新增 surface-specific role。
 4. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件任务框架”重新理解用户任务和产品反馈；这只是通用判断框架，不是业务处方库。
 5. 当一个产品对象、能力或接口的增删改需要跨多个页面、模块、Context 或产品域同步调整时，将该影响范围视为产品边界复核信号；先判断它是否应沉淀为独立能力、subdomain 或 area，并明确对外契约、所有权和消费方边界，避免通过手工清单长期维护各消费面的重复映射。
 6. 产品意图、模块职责、边界和验收口径以 `project_context/**` 为准；代码和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码揭示“现在是什么”，代码不能静默重定义 Context。
@@ -42,7 +43,7 @@ Project-specific product planning rules belong in a separate project-local Skill
 ## 内部执行约束与 Conformance
 
 - `Context Delta` 只能是 `none` 或 `required`。`required` 先把足以指导实现的长期事实写入 owning Context；`none` 直接按现有 Context 工作，不制造 Context 噪音。
-- Agent 内部计划应保持目标、用户任务、信息 / 动作 / 状态 / 反馈、边界、非目标、验收信号和验证入口清晰。触及 Product Surface 时，同时保持 surface platform、primary user question、main allows/forbids、drilldown ownership 和 long-task state requirement 清晰。
+- Agent 内部计划应保持目标、用户任务、信息 / 动作 / 状态 / 反馈、边界、非目标、验收信号和验证入口清晰。触及 Product Surface 时，同时保持 surface platform、primary user question、main allows/forbids、drilldown ownership 和 long-task state requirement 清晰；material controls 还应覆盖 applicable 的 region/location、type/label、task、visibility/availability、trigger/input/validation/default、interaction/navigation、states/recovery/permission/feedback/accessibility，而不是由开发时临时猜测。
 - 外部来源的每项重要约束都在内部分类为 Context 已覆盖、Context 已更新、task-local、显式 out-of-scope 或需要用户决策；存在未处理项时不能声称全量完成。
 - 默认流程不要求或验证固定 `plan.md`、Task Contract 文件、Source-to-Context 表、Context-to-Implementation 表、matrix、verdict 或 evidence ledger；可选 scratch 没有固定名称或权威。
 - `Contract Conformance` 直接检查 controlling Context 是否到达正确产品域、surface、API、状态与验证路径并避开 forbidden shortcut。实现偏差修实现；缺少长期事实则返回 `Context Delta: required`，先更新 Context 再重新对齐。

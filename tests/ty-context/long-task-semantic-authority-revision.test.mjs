@@ -193,6 +193,27 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
         },
       },
       {
+        address: "outcomes.first.controls.submit.validation",
+        mutate(contract) {
+          contract.outcomes[0].product.controls[0].validation =
+            "A changed validation contract.";
+        },
+      },
+      {
+        address: "outcomes.first.controls.submit.recovery",
+        mutate(contract) {
+          contract.outcomes[0].product.controls[0].recovery =
+            "A changed recovery contract.";
+        },
+      },
+      {
+        address: "outcomes.first.controls.submit.accessibility",
+        mutate(contract) {
+          contract.outcomes[0].product.controls[0].accessibility =
+            "A changed accessibility contract.";
+        },
+      },
+      {
         address: "outcomes.first.non_completing.exit-zero-only",
         mutate(contract) {
           contract.outcomes[0].product.non_completing_outcomes[0].statement =

@@ -28,6 +28,12 @@ Write only project-specific facts that should guide future implementation. Do no
 
 - `<durable project-specific rule>`
 
+## Screen Contract Routing
+
+Keep this file at cross-surface responsibility depth. When one material screen needs durable entry/exit/shared-state, information hierarchy, semantic region order, fixed/scroll/overlay ownership, navigation, variants, material controls or design-target references, create an on-demand Screen Contract from `screen-contract.md` using an existing area/subdomain role (or `contract` only for a true cross-area interface).
+
+Link by stable surface/control/target keys. Do not duplicate the Screen Contract here, copy exact visual tokens from `DESIGN.md`, or embed authored target binaries and test evidence.
+
 ## Registration Example
 
 Use the existing `contract` role for cross-surface or cross-area contracts:
@@ -52,6 +58,7 @@ Update this Context when:
 - A durable main/drilldown/diagnostic ownership rationale, rejected alternative or tradeoff will guide future changes.
 - A repeated UI/product rule becomes reusable.
 - A platform-specific interaction rule becomes stable.
+- Cross-surface ownership changes which Screen Contract owns a detail.
 
 Do not update this Context for:
 

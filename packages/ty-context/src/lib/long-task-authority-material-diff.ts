@@ -135,14 +135,28 @@ function productClaimSemantics(
       });
     for (const control of outcome.product.controls)
       for (const [field, value] of [
+        ["surface", control.surface],
+        ["region", control.region],
         ["location", control.location],
+        ["control_type", control.control_type],
+        ["label_content", control.label_content],
+        ["user_task", control.user_task],
+        ["visibility", control.visibility],
+        ["availability", control.availability],
         ["trigger", control.trigger],
         ["input", control.input],
+        ["validation", control.validation],
+        ["default_value", control.default_value],
+        ["interaction", control.interaction],
+        ["navigation_result", control.navigation_result],
         ["loading", control.loading_state],
         ["empty", control.empty_state],
         ["success", control.success_state],
         ["failure", control.failure_state],
+        ["recovery", control.recovery],
+        ["permission", control.permission],
         ["feedback", control.feedback],
+        ["accessibility", control.accessibility],
       ] as const)
         if (value.trim())
           result.set(`${outcome.key}.control.${control.key}.${field}`, value);
@@ -217,14 +231,28 @@ function flattenProductSemantics(
     }
     for (const control of outcome.controls)
       for (const field of [
+        "surface",
+        "region",
         "location",
+        "control_type",
+        "label_content",
+        "user_task",
+        "visibility",
+        "availability",
         "trigger",
         "input",
+        "validation",
+        "default_value",
+        "interaction",
+        "navigation_result",
         "loading_state",
         "empty_state",
         "success_state",
         "failure_state",
+        "recovery",
+        "permission",
         "feedback",
+        "accessibility",
       ] as const)
         fields.set(
           `${prefix}.controls.${control.key}.${field}`,

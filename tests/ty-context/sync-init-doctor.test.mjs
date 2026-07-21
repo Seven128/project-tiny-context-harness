@@ -68,6 +68,7 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       "plan.md",
       ".agent/state/plan.yaml",
       ".agent/state/lifecycle.yaml",
+      ".agent/skills/design-resource-authoring/SKILL.md",
       ".agent/skills/source-plan-authoring/SKILL.md",
       ".agent/skills/prepare-composite-long-task/SKILL.md",
       ".agent/skills/composite-long-task-workflow/SKILL.md",
@@ -175,6 +176,60 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       configuredDoctor.info.some((line) =>
         line.includes("design authority: configured"),
       ),
+    );
+    assert.ok(
+      configuredDoctor.info.some((line) =>
+        line.includes("project-level visual-system configuration only"),
+      ),
+    );
+    assert.ok(
+      configuredDoctor.info.some((line) =>
+        line.includes("surface implementation readiness: not inferred"),
+      ),
+    );
+    assert.ok(
+      configuredDoctor.info.some((line) =>
+        line.includes(
+          "index=present, token_source=missing-or-unselected, classified_references=0",
+        ),
+      ),
+    );
+    assert.ok(
+      configuredDoctor.warnings.some((line) =>
+        line.includes("no selected authored token source"),
+      ),
+    );
+
+    await writeFile(
+      path.join(root, "DESIGN.md"),
+      `---\nname: "Custom System"\n---\n\n# Design Authority\n\nCustom visual system.\n`,
+      "utf8",
+    );
+    const systemOnlyDoctor = await runDoctor(root);
+    assert.ok(
+      systemOnlyDoctor.warnings.some((line) =>
+        line.includes("has no Design Authority Index"),
+      ),
+    );
+
+    await writeFile(
+      path.join(root, "DESIGN.md"),
+      `---\nname: "Ready System"\n---\n\n# Design Authority\n\n### Design Authority Index\n\n- Authored exact-value token source: src/theme/tokens.ts.\n- Reference screen.settings.default: exact-target at design/settings.png.\n\n## Colors\n`,
+      "utf8",
+    );
+    const indexedDoctor = await runDoctor(root);
+    assert.ok(
+      indexedDoctor.info.some((line) =>
+        line.includes(
+          "index=present, token_source=selected, classified_references=1",
+        ),
+      ),
+    );
+    assert.equal(
+      indexedDoctor.warnings.some((line) =>
+        line.includes("Design Authority Index"),
+      ),
+      false,
     );
 
     await writeFile(
@@ -285,6 +340,18 @@ test("long_task_disable_removes_only_owned_hooks_and_Skills", async () => {
           ".agent",
           "skills",
           "source-plan-authoring",
+          "SKILL.md",
+        ),
+      ),
+      false,
+    );
+    assert.equal(
+      await exists(
+        path.join(
+          root,
+          ".agent",
+          "skills",
+          "design-resource-authoring",
           "SKILL.md",
         ),
       ),

@@ -39,14 +39,28 @@ export interface ProductSemanticProjectionV2 {
     }>;
     controls: Array<{
       key: string;
+      surface: string;
+      region: string;
       location: string;
+      control_type: string;
+      label_content: string;
+      user_task: string;
+      visibility: string;
+      availability: string;
       trigger: string;
       input: string;
+      validation: string;
+      default_value: string;
+      interaction: string;
+      navigation_result: string;
       loading_state: string;
       empty_state: string;
       success_state: string;
       failure_state: string;
+      recovery: string;
+      permission: string;
       feedback: string;
+      accessibility: string;
     }>;
     non_completing_outcomes: Array<{ key: string; statement: string }>;
   }>;

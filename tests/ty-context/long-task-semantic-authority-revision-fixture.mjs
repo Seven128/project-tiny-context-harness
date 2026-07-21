@@ -17,11 +17,14 @@ export function prepareSemanticAuthority(contract) {
     location: "footer",
     trigger: "",
     input: "",
+    validation: "invalid input remains identified",
     loading_state: "",
     empty_state: "",
     success_state: "done",
     failure_state: "error",
+    recovery: "retry preserves valid input",
     feedback: "",
+    accessibility: "the named control supports keyboard activation",
   });
   outcome.product.non_completing_outcomes.push({
     key: "exit-zero-only",
@@ -61,8 +64,11 @@ export function prepareSemanticAuthority(contract) {
         criterion: "The submit control is placed correctly and reports terminal states.",
         claims: [
           "control.submit.location",
+          "control.submit.validation",
           "control.submit.success",
           "control.submit.failure",
+          "control.submit.recovery",
+          "control.submit.accessibility",
         ],
         observation: "playwright.case.submit-states.passed",
         evidence_capabilities: ["interaction_trace"],

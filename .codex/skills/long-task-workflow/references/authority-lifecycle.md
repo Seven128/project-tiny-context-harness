@@ -30,6 +30,8 @@ Every path-bearing field uses canonical grammar. Internal `.`/`..`, control char
 
 Controlling Context includes core Context, explicit `context_refs`, verification/deployment Context and every file in full snapshot mode. In referenced mode only graph-derived, non-explicit `implementation-index` and `archive` files are Supporting Context; a supporting-only `compile --revise` may preserve otherwise-fresh targeted Progress.
 
+A selected design target, its exact/constraint interpretation, an authored token source or any applicable Control semantic is product/verification authority, not generated evidence. External design resources are ordinary Source: a candidate or unresolved selection cannot authorize fidelity work, while a selected exact target still requires downstream UI Authority Closure and Contract adoption. Adding or changing its selected resource, selection basis, immutable identity, condition coverage or acceptance-affecting token/prototype fixture after Authority Lock follows the existing protected revision path and returns to rolling implementation; a candidate/planned target, implementation screenshot or historical diff cannot authorize fidelity work or preserve affected Progress by itself.
+
 `context.toml` retrieval guidance (`triggers`, `read_when`, `read_policy`, default selection and unselected nodes) is excluded from the selected delivery-authority projection. Selected area ownership, role/dependency structure and selected Context contents remain protected revision material. Retrieval-only edits may preserve scoped Progress, but a changed final Git tree still invalidates historical final acceptance and must pass the Live Final Gate again.
 
 ## Targeted Verification And Recovery

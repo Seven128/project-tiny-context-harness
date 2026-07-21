@@ -27,7 +27,9 @@ const [
   generatedSkill,
   packagedSkill,
   sourceTemplate,
-  packagedTemplate
+  packagedTemplate,
+  sourceScreenTemplate,
+  packagedScreenTemplate
 ] = await Promise.all([
   read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
   read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
@@ -46,13 +48,15 @@ const [
   read(".codex/skills/context_surface_contract/SKILL.md"),
   read("packages/ty-context/assets/skills/context_surface_contract/SKILL.md"),
   read(".codex/ty-context-managed/context_templates/product-surface-contract.md"),
-  read("packages/ty-context/assets/context_templates/product-surface-contract.md")
+  read("packages/ty-context/assets/context_templates/product-surface-contract.md"),
+  read(".codex/ty-context-managed/context_templates/screen-contract.md"),
+  read("packages/ty-context/assets/context_templates/screen-contract.md")
 ]);
 
 for (const content of [sourceAgents, packageAgents]) {
   assert.match(content, /product-surface/i);
   assert.match(content, /context_surface_contract/);
-  assert.match(content, /contract owns interfaces/);
+  assert.match(content, /Product Surface Contracts own cross-surface interfaces/);
   assert.match(content, /Workflow Contract/);
   assert.match(content, /internally classify every material constraint/);
   assert.match(content, /Conformance must confirm controlling Context reached/);
@@ -94,6 +98,8 @@ for (const content of [sourceTemplate, packagedTemplate]) {
   assert.match(content, /Verification/);
   assert.match(content, /role = "contract"/);
   assert.match(content, /read_policy = "on-demand"/);
+  assert.match(content, /Screen Contract Routing/);
+  assert.match(content, /screen-contract\.md/);
   assert.doesNotMatch(content, /screenshot observations.*test logs.*implementation summaries.*secret values/s);
 }
 
@@ -114,22 +120,52 @@ for (const content of [rootReadme, packageReadme, spec, globalContext]) {
   assert.match(content, /contract.*role/i);
   assert.match(content, /no new|not add|must not add/i);
 }
+
+for (const content of [sourceScreenTemplate, packagedScreenTemplate]) {
+  assert.match(content, /^# Screen Contract$/mu);
+  assert.match(content, /^## Authority Boundary$/mu);
+  assert.match(content, /^## Entry, Exit And Shared State$/mu);
+  assert.match(content, /^## Information Hierarchy$/mu);
+  assert.match(content, /^## Layout Contract$/mu);
+  assert.match(content, /^## Control Inventory$/mu);
+  assert.match(content, /Control Type/);
+  assert.match(content, /Visibility/);
+  assert.match(content, /Availability/);
+  assert.match(content, /Validation/);
+  assert.match(content, /Default Value/);
+  assert.match(content, /Recovery/);
+  assert.match(content, /Permission/);
+  assert.match(content, /Accessibility/);
+  assert.match(content, /^## Design Target References$/mu);
+  assert.match(content, /exact-target.*constraint.*inspiration/iu);
+  assert.match(content, /role = "subdomain"/);
+  assert.match(content, /read_policy = "on-demand"/);
+  assert.match(content, /Do not introduce `screen`, `design`/);
+  assert.match(content, /implementation screenshot.*own target/iu);
+}
 const publicSurfaceGuidance = [rootReadme, packageReadme, spec, globalContext].join("\n");
 assert.match(publicSurfaceGuidance, /product-surface-contract\.md/);
+assert.match(publicSurfaceGuidance, /screen-contract\.md/);
+assert.match(publicSurfaceGuidance, /UI Authority Closure/);
 assert.match(publicSurfaceGuidance, /Source-to-Context (?:judgment|table|表)/);
 assert.match(publicSurfaceGuidance, /(?:Context-to-Implementation|Contract Conformance)/);
 
-assert.match(packageContext, /Product Surface Contract workflow is prompt-level and project-owned/);
+assert.match(packageContext, /Product Surface\/Screen Contract workflow is prompt-level and project-owned/);
 assert.match(packageContext, /must not add a surface-specific Context role/);
 assert.match(workflowContract, /product-surface or information-placement work/);
 assert.match(workflowContract, /Source-to-Context judgment/);
 assert.match(workflowContract, /replaces the former Context-to-Implementation Markdown table/);
 assert.match(workflowContract, /surface\/page responsibility/);
+assert.match(workflowContract, /^## UI Authority Closure$/mu);
+assert.match(workflowContract, /context-covered.*context-update.*task-local.*out-of-scope.*decision-required/isu);
+assert.match(workflowContract, /surface, region\/location, type\/label/iu);
 assert.match(workflowContract, /Do not add Product, Architecture, Rationale or Verification delta fields/);
 assert.match(packageManagedSurfaces, /Product Surface Contract/);
 assert.match(packageManagedSurfaces, /must not generate project semantics, plan artifacts, lifecycle state or campaigns/);
+assert.match(packageManagedSurfaces, /screen-contract\.md/);
+assert.match(packageManagedSurfaces, /There is no `uiux_delivery` block/);
 
-for (const role of ["surface-contract", "product-surface", "web-contract", "app-contract", "game-surface"]) {
+for (const role of ["surface-contract", "product-surface", "web-contract", "app-contract", "game-surface", "screen", "design"]) {
   assert.doesNotMatch(validators, new RegExp(`["']${role}["']\\s*:`));
 }
 assert.match(validators, /contract: "contract"/);

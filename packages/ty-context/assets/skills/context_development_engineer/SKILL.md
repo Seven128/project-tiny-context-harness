@@ -66,6 +66,7 @@ sample provider / interface / page 证据不能替代 all-provider / all-interfa
 涉及 Web/移动/桌面/游戏 UI、CLI/TUI、表单、配置、输入、选择、搜索、筛选、调度、预算/配额/限流或状态反馈时：
 
 - 对照已有 Product Surface / Surface Contract、页面职责和控件任务，而不是只确认字段已暴露；
+- 对 material screen 同时读取 owning Screen/interaction Context（若存在），并用稳定 surface/control/target key 绑定真实 route/component、设计 target 和测试；产品方案只有粗粒度时，把缺失字段路由到 Context update、task-local Source 或 genuine decision，不能在代码里形成唯一隐藏事实源；
 - 内部保持 Surface Contract Hit、main allows/forbids、drilldown ownership、long-task state requirement、implementation drift 和 verification；
 - 缺失 durable surface responsibility 时设置 `Context Delta: required`，先用 `context_surface_contract` 或 owning Context 建立职责；
 - 收尾用简短 `Contract Conformance` 说明命中的 Context、实现满足方式、未满足项和验证入口。
@@ -81,9 +82,10 @@ For material production UI, first confirm Design Authority readiness; then carry
 - preserve approved semantic tokens and component APIs; do not bypass them with undeclared raw color, spacing, typography or motion values merely to match one screenshot;
 - implement the declared Visual Coverage Set across the applicable viewport, theme/mode, state, content-stress and accessibility/motion combinations, while avoiding an unrequested full Cartesian expansion;
 - run project-owned rendered/component/browser verification and report only the combinations actually checked. Static analysis, generated kits and screenshot artifacts are supporting review material rather than proof of every visual or behavioral claim.
+- For each applicable material control, preserve region/location, type/label, user task, visibility/availability, trigger/input/validation/default, interaction/navigation, loading/empty/success/failure/recovery/permission/feedback and accessibility semantics. An omitted field is not permission to invent durable product behavior; resolve it through UI Authority Closure.
 - never promote the implementation's own generated screenshot/diff into its target; exact targets and acceptance-affecting baselines are selected Source/verifier inputs before comparison.
 
-If an active Long-Task applies, express material visual expectations through its existing Requirement, Control, Assertion, Check and external-confirmation mechanisms. Do not introduce a second visual plan, acceptance document or lifecycle.
+If an active Long-Task applies, express material visual expectations through its existing Requirement, full Control projection, Assertion, Check, Stage, Binding and external-confirmation mechanisms. A design candidate or planned target cannot unlock fidelity implementation: selection must become real Source/registry authority and an adopted protected revision first. Do not introduce a second visual plan, acceptance document or lifecycle.
 
 ## Modularity Check
 

@@ -8,7 +8,7 @@ import {
   inspectDefaultContextFootprint,
 } from "./context-default-footprint.js";
 import { readConfig } from "./config.js";
-import { inspectDesignAuthorityStatus } from "./design-md.js";
+import { inspectDesignAuthority } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { pathExists } from "./fs.js";
 import { unsupportedSchemaMessage } from "./schema-guard.js";
@@ -91,14 +91,40 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
     );
   }
 
-  const designAuthority = await inspectDesignAuthorityStatus(projectRoot);
-  if (designAuthority === "unconfigured") {
+  const designAuthority = await inspectDesignAuthority(projectRoot);
+  if (designAuthority.status === "unconfigured") {
     report.info.push(
       "design authority: unconfigured; DESIGN.md is a starter scaffold and does not authorize material production UI until project-specific tokens and exact-target/constraint/inspiration references are selected",
     );
   } else {
-    report.info.push(`design authority: ${designAuthority}`);
+    report.info.push(
+      `design authority: ${designAuthority.status}${designAuthority.status === "configured" ? "; project-level visual-system configuration only" : ""}`,
+    );
   }
+  if (designAuthority.status === "configured") {
+    report.info.push(
+      `design authority signals: index=${designAuthority.has_authority_index ? "present" : "missing"}, token_source=${designAuthority.token_source_selected ? "selected" : "missing-or-unselected"}, classified_references=${designAuthority.classified_reference_count}`,
+    );
+    if (!designAuthority.has_authority_index) {
+      report.warnings.push(
+        "configured DESIGN.md has no Design Authority Index; add the authored token source/generation direction and classified exact-target/constraint/inspiration references when material UI depends on them",
+      );
+    } else {
+      if (!designAuthority.token_source_selected) {
+        report.warnings.push(
+          "Design Authority Index has no selected authored token source; generated tokens or current CSS must not become competing visual authority",
+        );
+      }
+      if (designAuthority.classified_reference_count === 0) {
+        report.warnings.push(
+          "Design Authority Index has no classified durable design references; inspiration, constraints and exact targets remain undeclared for material surfaces",
+        );
+      }
+    }
+  }
+  report.info.push(
+    "surface implementation readiness: not inferred; inspect owning Product Surface/Screen/Control Context, selected target or constraints, authored token source and project-owned verification for each material surface",
+  );
 
   for (const location of await findUserSuperpowersSkills()) {
     report.warnings.push(

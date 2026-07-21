@@ -18,14 +18,17 @@ test("Product Surface Contract assets install without business contract files", 
     await runInit(root, { adopt: true, force: false });
     await stat(path.join(root, ".harness/skills/context_surface_contract/SKILL.md"));
     await stat(path.join(root, ".harness/ty-context-managed/context_templates/product-surface-contract.md"));
+    await stat(path.join(root, ".harness/ty-context-managed/context_templates/screen-contract.md"));
     await assert.rejects(stat(path.join(root, "project_context/areas/product-surface-contracts.md")));
 
     await rm(path.join(root, ".harness/skills/context_surface_contract"), { recursive: true, force: true });
     await rm(path.join(root, ".harness/ty-context-managed/context_templates/product-surface-contract.md"), { force: true });
+    await rm(path.join(root, ".harness/ty-context-managed/context_templates/screen-contract.md"), { force: true });
     const report = await runUpgrade(root);
     assert.ok(report.some((line) => line.startsWith("sync changed=")));
     await stat(path.join(root, ".harness/skills/context_surface_contract/SKILL.md"));
     await stat(path.join(root, ".harness/ty-context-managed/context_templates/product-surface-contract.md"));
+    await stat(path.join(root, ".harness/ty-context-managed/context_templates/screen-contract.md"));
     await assert.rejects(stat(path.join(root, "project_context/areas/product-surface-contracts.md")));
 
     const manifest = await readFile(path.join(root, "project_context/context.toml"), "utf8");

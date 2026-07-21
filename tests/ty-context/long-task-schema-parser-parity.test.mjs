@@ -7,6 +7,7 @@ import YAML from "yaml";
 import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-authoring-preflight.js";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
+import { parseControls } from "../../packages/ty-context/dist/lib/long-task-product-shape.js";
 import {
   createDeliveryFixture,
   deliveryContract,
@@ -31,6 +32,42 @@ const activeOperators = [
   "subset_of",
   "superset_of",
 ];
+
+test("Control Schema and Parser preserve the complete control-level UI vocabulary", async () => {
+  const input = {
+    key: "submit",
+    surface: "settings",
+    region: "footer",
+    location: "settings footer",
+    control_type: "button",
+    label_content: "Save",
+    user_task: "Save settings",
+    visibility: "visible while editing",
+    availability: "enabled when valid",
+    trigger: "click",
+    input: "form values",
+    validation: "identify invalid fields",
+    default_value: "persisted values",
+    interaction: "commit once",
+    navigation_result: "remain on settings",
+    loading_state: "pending",
+    empty_state: "disabled",
+    success_state: "saved",
+    failure_state: "actionable error",
+    recovery: "retry without data loss",
+    permission: "read-only when denied",
+    feedback: "announce result",
+    accessibility: "named keyboard-operable button",
+  };
+  const [parsed] = parseControls([input], "controls");
+  const schema = await deliverySchema();
+  assert.deepEqual(
+    Object.keys(parsed).sort(),
+    Object.keys(schema.$defs.control.properties).sort(),
+  );
+  assert.deepEqual(parsed, input);
+  assert.deepEqual(schema.$defs.control.required, ["key", "location"]);
+});
 
 test("negative-only Global Check and zero positive Assertions have Schema/Parser parity", async () => {
   const contract = deliveryContract();

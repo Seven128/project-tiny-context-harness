@@ -7,6 +7,13 @@ export const UNCONFIGURED_DESIGN_AUTHORITY_MARKER =
 
 export type DesignAuthorityStatus = "missing" | "unconfigured" | "configured";
 
+export interface DesignAuthorityInspection {
+  status: DesignAuthorityStatus;
+  has_authority_index: boolean;
+  token_source_selected: boolean;
+  classified_reference_count: number;
+}
+
 export async function createDesignMdIfMissing(
   projectRoot: string,
 ): Promise<boolean> {
@@ -20,18 +27,70 @@ export async function createDesignMdIfMissing(
 export async function inspectDesignAuthorityStatus(
   projectRoot: string,
 ): Promise<DesignAuthorityStatus> {
+  return (await inspectDesignAuthority(projectRoot)).status;
+}
+
+export async function inspectDesignAuthority(
+  projectRoot: string,
+): Promise<DesignAuthorityInspection> {
   const target = path.join(projectRoot, DESIGN_MD_PATH);
-  if (!(await pathExists(target))) return "missing";
-  const content = await readText(target);
-  if (content.includes(UNCONFIGURED_DESIGN_AUTHORITY_MARKER)) {
-    return "unconfigured";
+  if (!(await pathExists(target))) {
+    return {
+      status: "missing",
+      has_authority_index: false,
+      token_source_selected: false,
+      classified_reference_count: 0,
+    };
   }
+  const content = await readText(target);
   const legacyStarter =
     content.includes('name: "Starter Design System"') &&
     content.includes(
       'description: "Neutral baseline design guidance for projects that have not defined their own visual system."',
     );
-  return legacyStarter ? "unconfigured" : "configured";
+  const status =
+    content.includes(UNCONFIGURED_DESIGN_AUTHORITY_MARKER) || legacyStarter
+      ? "unconfigured"
+      : "configured";
+  const index = designAuthorityIndex(content);
+  return {
+    status,
+    has_authority_index: index !== null,
+    token_source_selected: index ? tokenSourceSelected(index) : false,
+    classified_reference_count: index ? classifiedReferenceCount(index) : 0,
+  };
+}
+
+function designAuthorityIndex(content: string): string | null {
+  const match = /^###\s+Design Authority Index\s*$/imu.exec(content);
+  if (!match) return null;
+  const remainder = content.slice(match.index + match[0].length);
+  const nextSection = /^#{1,3}\s+/mu.exec(remainder);
+  return nextSection ? remainder.slice(0, nextSection.index) : remainder;
+}
+
+function tokenSourceSelected(index: string): boolean {
+  const line = index
+    .split(/\r?\n/u)
+    .find((candidate) =>
+      /authored(?: exact-value)? token source\s*:/iu.test(candidate),
+    );
+  if (!line) return false;
+  const value = line.slice(line.indexOf(":") + 1).trim();
+  return (
+    value.length > 0 &&
+    !/(?:not selected|unselected|none|n\/a|tbd|todo|unknown)/iu.test(value)
+  );
+}
+
+function classifiedReferenceCount(index: string): number {
+  return index.split(/\r?\n/u).filter((line) => {
+    if (/(?:none|not) selected/iu.test(line)) return false;
+    const matches = line.match(
+      /\b(?:exact-target|constraint|inspiration)\b/giu,
+    );
+    return matches?.length === 1;
+  }).length;
 }
 
 function designMdTemplate(): string {

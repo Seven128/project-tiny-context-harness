@@ -85,7 +85,7 @@ Default profiles are `core-portable` and `workflow-default`. Explicitly enable l
 ty-context enable long-task
 ```
 
-This installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. Disable only those package-owned surfaces with `ty-context disable long-task`.
+Enabling Long-Task installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. Disable only those Long-Task-owned surfaces with `ty-context disable long-task`. Tiny Context does not install a design-generation system.
 
 ## Positioning
 
@@ -137,7 +137,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.4.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.5.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -187,15 +187,27 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 ### Product Surface Contract
 
-`context_surface_contract` compiles durable screen/page/CLI responsibility using the existing `contract`, area/subdomain and verification roles; `product-surface-contract.md` is the package template. Product Surface Contract authoring uses Source-to-Context judgment and Contract Conformance; it must not add a new product-surface Context role or claim product-quality proof.
+`context_surface_contract` compiles durable screen/page/CLI responsibility using existing `contract`, area/subdomain and verification roles. `product-surface-contract.md` owns cross-surface/main-versus-drilldown responsibility; optional on-demand `screen-contract.md` goes deeper for one screen's entry/exit/shared state, information hierarchy, semantic regions, navigation/variants, material controls and target/verification references. This workflow must not add a new Context role or claim product-quality proof, and local style fixes do not require a Screen Contract.
+
+For material UI, **UI Authority Closure** reconciles each stable surface/control/target key as covered by existing Context, requiring a Context update, task-local, explicitly out of scope or genuinely decision-required. Product Surface Context owns cross-surface responsibility, Screen/interaction Context owns durable hierarchy and behavior, `DESIGN.md` owns visual-system/reference semantics, authored targets own concrete declared composition and the Delivery Contract only binds/proves this delivery. Conflicts fail closed; current code, timestamps, YAML or implementation screenshots do not silently win.
 
 ### Visual Delivery Guidance
 
-The default Workflow performs a conditional Design Authority Check before material production UI. It reads the owning surface Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, style-only prose or inspiration does not authorize invented production layout. Explicit design work routes through `context_uiux_design`; ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
+The default Workflow performs UI Authority Closure and a conditional Design Authority Check before material production UI. It reads the owning Surface/Screen/Control Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, candidate, style-only prose or inspiration does not authorize invented production layout, and a configured project visual system does not claim every page is implementation-ready. Standalone resource generation stays with dedicated external Product Design/Figma/prototype systems; downstream durable adoption/repair routes through `context_uiux_design`. Ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
 
 For material work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set; durable interaction facts remain in `project_context/**`, durable visual semantics and the design-reference registry remain in `DESIGN.md`, and versioned targets stay at project-native paths. `context_development_engineer` binds that intent to production routes and reports only combinations actually rendered and checked. An implementation screenshot cannot become its own target.
 
-An explicit Long-Task resolves missing/conflicting visual authority before Compile, then uses existing Requirement, Control, Assertion, proof-surface, verification-input and `external_confirmation` mechanisms. Browser visual ACs use `ui_browser`; a browser proxy cannot prove an independently failing native target, so native proof remains a project-owned current-execution Check when representable or an external confirmation. Frozen screenshot baselines are verifier inputs, generated screenshots/diffs are review artifacts, and subjective approval remains external. No visual Schema, risk level, lifecycle state, Gate, required design directory or universal pixel threshold is added.
+An explicit Long-Task resolves missing/conflicting UI authority before Compile, then preserves every applicable Control field through the existing projection: surface, region/location, type/label, user task, visibility/availability, trigger/input/validation/default, interaction/navigation, loading/empty/success/failure/recovery/permission/feedback and accessibility. Each non-empty field is an independent Source-backed Control Claim and protected product semantic; omitted fields create no Claim. Existing Requirement, Control, Assertion, Stage, Binding, proof-surface, verification-input, revision and `external_confirmation` mechanisms remain the only lifecycle.
+
+Combined design-and-implementation work may author candidates in ordinary Outcomes/Stages, but a candidate or planned target cannot authorize fidelity implementation. Selection must become real marked Source plus the owning registry/target input and, after Authority Lock, an adopted protected revision. Browser visual ACs use `ui_browser`; a browser proxy cannot prove an independently failing native target, so native proof remains a project-owned current-execution Check when representable or an external confirmation. Frozen screenshot baselines are verifier inputs, generated screenshots/diffs are review artifacts, and subjective approval remains external. No `uiux_delivery` block, visual Claim type, risk level, lifecycle state, Gate, required design directory or universal pixel threshold is added.
+
+`ty-context doctor` keeps its compatible `missing | unconfigured | configured` project-level status and adds advisory Design Authority Index, token-source and classified-reference signals. It explicitly does not infer surface implementation readiness; that requires the owning Screen/Control meaning, selected target/constraints and project-owned verification.
+
+### External Design Resources
+
+Use dedicated Product Design, Figma, image-generation, prototype or human design systems to create standalone flows, wireframes, visual candidates, high-fidelity targets, tokens, assets and prototypes. Tiny Context does not duplicate those mature generation workflows or require a proprietary plugin, pack schema, fixed directory or artifact count.
+
+Their outputs enter the default Workflow or Long-Task as ordinary external Source. Candidates and inspiration authorize no fidelity. A selected exact target controls only its declared surface/viewport/mode/state/content conditions and needs a stable immutable identity before it can become an acceptance-affecting `verification_input`. `context_uiux_design` performs downstream UI Authority Closure and adopts only durable facts into Context/`DESIGN.md`; implementation renders and diffs remain evidence artifacts rather than self-authorizing targets.
 
 ### Optional Source Plan Authoring
 
@@ -320,7 +332,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.7.4.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.5.tgz`.
 
 ## Community And Further Reading
 

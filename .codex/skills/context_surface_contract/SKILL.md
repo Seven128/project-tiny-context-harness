@@ -17,6 +17,8 @@ Help agents turn broad product/UI principles into concrete, project-owned Produc
 
 A Product Surface is any user-facing interface where users make judgments, take actions and receive feedback. Covered platforms include Web apps, dashboards, admin or operations UI, mobile screens, desktop windows, game UI/HUD/menu scenes, CLI/TUI output, browser extension or plugin UI, and embedded, kiosk or device UI.
 
+Use two depths without creating new roles: Product Surface Contract for cross-surface/main-versus-drilldown ownership, and an optional on-demand Screen Contract when one screen needs stable entry/exit/shared-state, information hierarchy, layout regions, navigation, variants or material-control semantics. Start from managed `product-surface-contract.md` or `screen-contract.md`; do not require both for every task.
+
 ## Context Roles
 
 Do not add a new `context_role`.
@@ -32,6 +34,8 @@ Use existing roles:
 Forbidden roles include `surface-contract`, `product-surface`, `web-contract`, `app-contract` and `game-surface`.
 
 Use `DESIGN.md` only for visual identity, visual tokens and visual rationale. Do not put surface responsibility, main/drilldown ownership or diagnostic placement into `DESIGN.md`.
+
+Keep one meaning owner: Surface Context owns cross-surface responsibility, Screen/interaction Context owns durable screen/control behavior, `DESIGN.md` owns visual-system semantics and target interpretations, authored targets own concrete declared composition, and verification Context owns repeatable proof paths. Link them with stable surface/control/target keys instead of copying facts.
 
 ## Mode Selection
 
@@ -128,6 +132,16 @@ For each touched surface, answer only what is relevant:
 - What validation path can prove conformance?
 - If this came from an external plan/source, which source constraints are covered by existing Context, require new Context, are task-local only, are explicitly out of scope, need user decision or remain under-scoped?
 
+When screen depth is material, also answer only the applicable questions:
+
+- What stable surface/route key, entry context, exit outcome, inherited state and committed state identify the screen?
+- What is the semantic information order and which regions are fixed, scrolling or overlay-owned?
+- Which navigation, back/cancel, focus restoration, interruption and responsive/mode/state variants are durable?
+- For each material stable control key, what are its region/location, type/label, user task, visibility/availability, trigger/input/validation/default, interaction/navigation, loading/empty/success/failure/recovery/permission/feedback and accessibility semantics?
+- Which exact-target/constraint/inspiration IDs govern which declared conditions, and which verification path proves each independent claim?
+
+Before applying material UI facts, perform UI Authority Closure: classify each item as Context-covered, Context update, task-local, out of scope or decision-required. Conflicting controlling owners fail closed; current code, timestamps and Contract YAML do not silently win.
+
 ## Repo-Local Task Block Candidate
 
 When the user wants project-local enforcement, propose a separate project-local Skill block like this and tailor only the project-specific answers:
@@ -173,4 +187,5 @@ Conformance must internally confirm that every important external-source constra
 - Do not treat current backend fields, enums, JSON, screenshots or terminal output as product intent.
 - Do not invent rationale; rejected alternatives or tradeoffs belong in Context only when they are stable enough to affect future surface decisions.
 - Do not add a surface-specific validator, edit-order gate, plan-contract validator or package-level mandatory Surface Contract gate.
+- Do not create a `design`/`screen` Context role, per-surface readiness state, UI/UX Contract lifecycle or required Screen Contract for local fixes.
 - Do not include business-domain examples in this package-managed Skill.

@@ -26,10 +26,12 @@ Record every product, technical and acceptance meaning that later work must not 
 ## Relationship To Other Skills
 
 - Keep `source-plan-authoring` focused on high-fidelity Source expression and traceability.
+- For material UI, preserve stable surface/control/target keys and enough independent Control meaning for later UI Authority Closure. Do not assume a coarse product flow, `DESIGN.md` configuration or inspiration reference already supplies missing visibility, availability, validation, recovery, permission or accessibility semantics.
 - This Skill authors Source, not a Contract Draft.
 - It does not replace Contract Draft authoring inside `long-task-workflow`.
 - Its recommended structure is optional input guidance.
 - Use `context_product_plan` separately when a Tiny Context project needs product decisions classified and written as durable facts in `project_context/**`. This Skill does not replace or invoke that responsibility.
+- A dedicated external Product Design capability may consume the Source Plan to create low/high-fidelity targets, visual candidates, a Figma handoff or an isolated interaction prototype. This Skill neither invokes that capability nor generates design resources.
 - Use `long-task-workflow` later to read ordinary Source or a Source Plan with real Context/repository evidence, author one Delivery Contract, bind owners/paths/runners/proof, implement and run the Live Final Gate.
 
 ## Intake Modes And Source Coverage
@@ -477,6 +479,7 @@ Do not create:
 - a Source Plan CLI, Preflight or Compile step;
 - a Source Plan Receipt, Coverage Cache, Authority or state file;
 - a Delivery Contract, runner, verification input or Assertion observation;
+- a low/high-fidelity artifact, visual candidate, Figma handoff or design prototype;
 - a Context update, implementation, verification run or completion judgment.
 
 The Source Plan improves the quality of declared Source. It cannot prove that the user has expressed every real requirement.

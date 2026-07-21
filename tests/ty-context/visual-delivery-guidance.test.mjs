@@ -28,6 +28,27 @@ const referenceCopies = (name) =>
     ),
   ]);
 
+test("page-level UI authority Source Plan is indexed without becoming Context", async () => {
+  const [plan, spec, implementationIndex, manifest] = await Promise.all([
+    read("docs/page-level-uiux-authority-source-plan.md"),
+    read("PROJECT_SPEC.md"),
+    read("project_context/areas/harness-package/implementation-index.md"),
+    read("project_context/context.toml"),
+  ]);
+  assert.match(plan, /Plan key: `PLAN-UIAUTH-001`/u);
+  assert.match(plan, /IN-USER-001/);
+  assert.match(plan, /IN-EXT-001/);
+  assert.match(plan, /^## Design Context Depth Model$/mu);
+  assert.match(plan, /^## Single-Owner And Conflict Rules$/mu);
+  assert.match(plan, /^## Canonical Control Field Semantics$/mu);
+  assert.match(plan, /REQ-VER-003/);
+  assert.match(plan, /AC-UIAUTH-012/);
+  assert.match(plan, /not Context, a Delivery Contract, runtime state or completion proof/iu);
+  assert.match(spec, /docs\/page-level-uiux-authority-source-plan\.md/);
+  assert.match(implementationIndex, /docs\/page-level-uiux-authority-source-plan\.md/);
+  assert.doesNotMatch(manifest, /page-level-uiux-authority-source-plan/);
+});
+
 test("visual design and implementation guidance reaches every managed copy", async () => {
   const [uiuxCopies, developmentCopies] = await Promise.all([
     skillCopies("context_uiux_design"),
@@ -40,6 +61,17 @@ test("visual design and implementation guidance reaches every managed copy", asy
   }
 
   const uiux = uiuxCopies[0];
+  assert.match(uiux, /^## Design Context Depth \/ 设计上下文深度$/mu);
+  assert.match(
+    uiux,
+    /^## External Design Resource Consumption \/ 外部设计资源消费$/mu,
+  );
+  assert.match(uiux, /专用 Product Design 能力/u);
+  assert.doesNotMatch(uiux, /design-resource-authoring/iu);
+  assert.match(uiux, /不改 `project_context\/\*\*`、`DESIGN\.md` 或 production code/u);
+  assert.match(uiux, /只有进入默认开发流程或 Long-Task、需要采纳稳定结论时/u);
+  assert.match(uiux, /UI Authority Closure/iu);
+  assert.match(uiux, /stable surface\/control\/target key/iu);
   assert.match(uiux, /^## Design Authority Readiness \/ 设计权威就绪$/mu);
   assert.match(uiux, /material production UI lacks sufficient or consistent Design Authority/iu);
   assert.match(uiux, /`exact-target`, `constraint` or `inspiration`/iu);
@@ -61,6 +93,7 @@ test("visual design and implementation guidance reaches every managed copy", asy
   );
   assert.match(uiux, /production components or real product routes/iu);
   assert.match(uiux, /never claim an unchecked combination/iu);
+  assert.match(uiux, /configured.*not.*implementation-ready/iu);
 
   const development = developmentCopies[0];
   assert.match(
@@ -80,6 +113,8 @@ test("visual design and implementation guidance reaches every managed copy", asy
   );
   assert.match(development, /report only the combinations actually checked/iu);
   assert.match(development, /Do not introduce a second visual plan/iu);
+  assert.match(development, /region\/location.*type\/label.*validation.*recovery.*accessibility/isu);
+  assert.match(development, /planned target cannot unlock fidelity implementation/iu);
 });
 
 test("Long-Task visual guidance reuses existing authoring and evidence mechanisms", async () => {
@@ -97,6 +132,7 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   assert.match(authoring, /^## Visual Delivery Authoring$/mu);
   assert.match(authoring, /existing Contract semantics/iu);
   assert.match(authoring, /resolve Design Authority before Compile/iu);
+  assert.match(authoring, /perform UI Authority Closure/iu);
   assert.match(authoring, /unconfigured starter, style-only prose, inspiration-only set/iu);
   assert.match(authoring, /generated implementation screenshot\/diff is an Artifact, not the target/iu);
   assert.match(authoring, /browser or Expo-Web proxy cannot prove a native/iu);
@@ -108,7 +144,15 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   assert.match(authoring, /explicit external confirmation/iu);
   assert.match(
     authoring,
-    /adds no visual Schema, Claim kind, risk level, lifecycle state/iu,
+    /adds no UI-specific Contract block, Claim kind, risk level, lifecycle state/iu,
+  );
+  assert.match(authoring, /`surface`.*`region`.*`validation`.*`recovery`.*`accessibility`/isu);
+  assert.match(authoring, /candidate\/planned artifacts cannot authorize fidelity Claims/iu);
+  assert.match(authoring, /external design resources.*selected exact target/isu);
+  assert.match(authoring, /Treat candidates and unresolved decisions honestly/iu);
+  assert.match(
+    authoring,
+    /source_paths.*verification_inputs.*input_paths.*artifact_globs/isu,
   );
 
   const evidence = evidenceCopies[0];
@@ -130,6 +174,12 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   assert.match(evidence, /selected `exact-target`/iu);
   assert.match(evidence, /implementation's current screenshot is never its own target/iu);
   assert.match(evidence, /`ui_browser` proves browser UI only/iu);
+  assert.match(evidence, /stable surface\/control\/target keys/iu);
+  assert.match(evidence, /one broad screenshot or UI pass cannot prove all Control fields/iu);
+  assert.match(
+    evidence,
+    /Candidate comparison, a Figma link or an isolated prototype run is authoring\/review material/iu,
+  );
 });
 
 test("default workflow routes Design Authority readiness without adding a visual lifecycle", async () => {
@@ -159,7 +209,7 @@ test("default workflow routes Design Authority readiness without adding a visual
 
   for (const content of [spec, managedSurface]) {
     assert.match(content, /Visual Coverage Set/iu);
-    assert.match(content, /no visual Schema/iu);
+    assert.match(content, /no (?:visual Schema|`uiux_delivery` block)/iu);
     assert.match(content, /no[^\n]*lifecycle state/iu);
   }
   assert.match(
@@ -169,20 +219,37 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(spec, /cannot infer completeness beyond declared coverage/iu);
   assert.match(verification, /Design Authority and visual delivery guidance/iu);
   assert.match(workflow, /^## Design Authority Readiness$/mu);
+  assert.match(workflow, /^## External Design Resources$/mu);
+  assert.match(workflow, /^## UI Authority Closure$/mu);
   assert.match(workflow, /material production UI/iu);
   assert.match(workflow, /`exact-target`, `constraint` or `inspiration`/iu);
   assert.match(workflow, /conditional order-of-thought guidance/iu);
+  assert.match(
+    workflow,
+    /dedicated Product Design capability outside Tiny Context[\s\S]*context_uiux_design.*adopt or repair durable authority/isu,
+  );
   assert.doesNotMatch(workflow, /Visual Coverage Set/u);
   assert.match(agents, /Before material production UI implementation/iu);
-  assert.match(agents, /unconfigured starter, style-only guidance or inspiration/iu);
-  assert.match(agents, /Local style fixes and explicit prototypes remain lightweight/iu);
+  assert.match(agents, /stable surface\/control\/target key/iu);
+  assert.match(agents, /unconfigured starter, candidate, style-only guidance or inspiration/iu);
+  assert.match(
+    agents,
+    /Local style fixes and explicit non-fidelity prototypes remain lightweight/iu,
+  );
+  assert.match(
+    agents,
+    /Externally authored design resources such as Figma frames, images, prototypes/iu,
+  );
 
   for (const content of [rootReadme, packageReadme]) {
     assert.match(content, /^### Visual Delivery Guidance$/mu);
     assert.match(content, /default Workflow.*conditional Design Authority Check/iu);
-    assert.match(content, /No visual Schema|adds no visual Schema/iu);
+    assert.match(content, /no `uiux_delivery` block/iu);
+    assert.match(content, /surface implementation readiness/iu);
+    assert.match(content, /visibility\/availability.*validation\/default.*recovery\/permission.*accessibility/isu);
   }
   assert.match(chineseReadme, /^### 视觉交付指导$/mu);
   assert.match(chineseReadme, /默认 Workflow.*Design Authority Check/u);
-  assert.match(chineseReadme, /不新增视觉 Schema/u);
+  assert.match(chineseReadme, /不新增 `uiux_delivery`/u);
+  assert.match(chineseReadme, /UI Authority Closure/u);
 });

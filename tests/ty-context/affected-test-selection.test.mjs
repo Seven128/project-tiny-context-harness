@@ -47,6 +47,28 @@ test("Design Authority scaffold and advisory changes select focused coverage", (
   ]);
 });
 
+test("control-level UI authority changes select parser, Claim and revision coverage", () => {
+  const shape = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-product-shape.ts",
+  ]);
+  assert.equal(shape.mode, "selected");
+  assert.equal(shape.requires_build, true);
+  assert.deepEqual(shape.tests, [
+    "tests/ty-context/long-task-claim-coverage.test.mjs",
+    "tests/ty-context/long-task-delivery-parser.test.mjs",
+    "tests/ty-context/long-task-schema-parser-parity.test.mjs",
+  ]);
+
+  const policy = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-authority-policy.ts",
+  ]);
+  assert.equal(policy.mode, "selected");
+  assert.deepEqual(policy.tests, [
+    "tests/ty-context/long-task-authority-field-completeness.test.mjs",
+    "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+  ]);
+});
+
 test("Long-Task command changes include the one-time model-choice regression", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/commands/long-task.ts",

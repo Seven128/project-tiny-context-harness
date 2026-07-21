@@ -28,8 +28,46 @@ const HOTSPOT_TESTS = new Map([
     ["sync-init-doctor.test.mjs"],
   ],
   [
+    "packages/ty-context/src/lib/long-task-contract-types.ts",
+    [
+      "long-task-authority-field-completeness.test.mjs",
+      "long-task-claim-coverage.test.mjs",
+      "long-task-schema-parser-parity.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-product-shape.ts",
+    [
+      "long-task-claim-coverage.test.mjs",
+      "long-task-delivery-parser.test.mjs",
+      "long-task-schema-parser-parity.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-claim-definitions.ts",
+    [
+      "long-task-authoring-claims.test.mjs",
+      "long-task-claim-coverage.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-source-target-index.ts",
+    [
+      "long-task-claim-coverage.test.mjs",
+      "long-task-source-authority-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-policy.ts",
+    [
+      "long-task-authority-field-completeness.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
+  ],
+  [
     "packages/ty-context/src/lib/long-task-authority-types.ts",
     [
+      "long-task-authority-field-completeness.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
     ],
@@ -182,6 +220,7 @@ const HOTSPOT_TESTS = new Map([
     "packages/ty-context/src/lib/long-task-authority-materials.ts",
     [
       "long-task-active-authority-continuity.test.mjs",
+      "long-task-authority-field-completeness.test.mjs",
       "long-task-authority-progress-retry.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
@@ -190,6 +229,7 @@ const HOTSPOT_TESTS = new Map([
   [
     "packages/ty-context/src/lib/long-task-authority-material-diff.ts",
     [
+      "long-task-authority-field-completeness.test.mjs",
       "long-task-authority-progress-retry.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",

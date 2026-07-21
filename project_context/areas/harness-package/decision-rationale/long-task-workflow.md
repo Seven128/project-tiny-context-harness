@@ -100,6 +100,20 @@ Long-Task therefore reuses existing Source and authoring boundaries rather than 
 
 The selected target must exist as Source or a frozen verification input before fidelity implementation is accepted. Generated implementation screenshots and diffs remain artifacts and cannot promote themselves into target authority. Browser Claims continue to use `ui_browser`; native/mobile/desktop target proof remains a project-owned current-execution Check when representable and otherwise an explicit external confirmation. This closes the circular-self-baseline and undeclared-design paths with authoring guidance only: no visual Schema, new risk level, second Gate, approval state or required design directory is introduced.
 
+## Why Control Projection Expands Instead Of Adding UI/UX Workflow State
+
+The remaining false-completion path is lossy authoring: an interactive Source Plan can state a control's task, visibility, availability, validation, default, navigation, recovery, permission and accessibility while the Contract preserves only location, trigger, input and four broad states. The executing agent then has to invent discarded semantics, and a broad Result/UI check can pass without proving them.
+
+The smallest fail-closed invariant is that every applicable, independently decided Control field survives as one Source-backed Control Claim and protected product semantic. The existing `controls` array, Source-target index, semantic projection, Authority Revision and Assertions already provide the lifecycle and proof boundary, so additive optional Control fields close this path with less authoring/runtime/state/recovery cost than a `uiux_delivery` block or per-surface state machine. Empty fields create no Claims and legacy Contracts remain valid.
+
+Combined design-and-implementation work likewise reuses ordinary Outcomes, Stages and protected revision. Design Outcomes may author candidates before a selected target exists, but candidate/planned artifacts authorize no fidelity Claim. Selection first becomes real Source plus owning registry/target input; after Authority Lock its adoption is a protected revision that returns to rolling implementation. This keeps one Contract, one Active Authority and one Final Gate while preventing a planned-target bypass.
+
+## Why Design Resource Generation Stays Outside Tiny Context
+
+The page-level authority model can consume rich design resources but does not need to recreate the mature generation workflows already owned by dedicated Product Design, Figma, image-generation, prototype and human design systems. A package-owned authoring Skill, pack schema and validator would duplicate upstream logic, increase maintenance cost and still provide no additional implementation or acceptance authority.
+
+External resources therefore enter as ordinary Source in project-native formats. Candidates and unresolved selections authorize no fidelity. A selected exact target needs selection basis, declared condition coverage and stable immutable identity, yet downstream UI Authority Closure and `Context Delta` still decide adoption. Existing Contract Source markers, Controls, Requirements, verification inputs, Bindings, Artifacts, Assertions, Checks, protected revision and Final Gate remain the only Long-Task authority/proof path.
+
 ## Why One Contract And One Final Gate Remain
 
 Draft Outcomes make rolling work cheaper to reason about, but they do not create separate authorities. The first successful formal Compile locks the complete Contract, including all Outcomes. Targeted verification is repair evidence for selected Checks or Outcomes and never accepts the task.
