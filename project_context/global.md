@@ -20,6 +20,8 @@
 - Context owns intended durable truth; code owns current implementation; tests, CI, runtime evidence and human observation prove behavior. A disagreement is implementation drift, missing work or stale Context, never permission for code convenience to silently redefine intent.
 - Every task decides exactly one `Context Delta: none|required`. Durable ownership, architecture, API/schema/data, state/recovery, dependency, security, product-surface responsibility or repeatable verification/deployment changes are `required` and update the owning Context. Semantics-preserving local fixes are `none`.
 - Context is not a plan, implementation summary, log, evidence ledger, Receipt or result claim. Do not store one-off output, secrets, screenshots, temporary JSON, raw evidence or delivery state in it.
+- Material production UI uses a conditional Design Authority Check before implementation: relevant surface/interaction Context, `DESIGN.md`, its authored token source and selected design references must distinguish exact targets, partial constraints and inspiration. An unconfigured starter, style-only prose or inspiration reference cannot silently authorize invented production layout.
+- Versioned authored design targets may remain project Source or verifier inputs referenced from Context/`DESIGN.md`; generated implementation screenshots, diffs and one-off review output remain evidence artifacts rather than durable Context.
 
 ## Design Rationale
 
@@ -30,7 +32,7 @@
 
 ## Non-goals / Boundaries
 
-- The default Workflow Contract reads minimum relevant Context through manifest routing plus bounded Context search, uses platform-internal planning, implements, runs project-owned verification, performs Contract Conformance and checks Context drift. It requires no `plan.md`, matrix, verdict, evidence ledger or result artifact.
+- The default Workflow Contract reads minimum relevant Context through manifest routing plus bounded Context search, conditionally resolves Design Authority readiness for material production UI, uses platform-internal planning, implements, runs project-owned verification, performs Contract Conformance and checks Context drift. It requires no `plan.md`, matrix, verdict, evidence ledger or result artifact.
 - Product Surface Contract work uses `context_surface_contract` with existing `contract`, area/subdomain and verification roles. It must not add a new product-surface Context role; durable surface responsibility remains project-owned Context.
 - The active long-task design is **Single-Goal Rolling Delivery V2**: one user-selected delivery, one complete Contract authority, one native Goal, one selected workspace, one user model-choice checkpoint after first Authority Lock, dependency-ready rolling implementation, targeted verifier repair evidence and one source-recompiled same-snapshot Live Final Gate.
 - `delivery-contract.yaml` is the only Contract authoring file and remains a non-authoritative Draft until the first successful formal Compile creates Authority Lock. New authoring uses inline Outcomes; existing `outcome_files` are physical compatibility only and create no semantic or completion boundary.
@@ -64,7 +66,7 @@
 - Package version `0.7.2` defines the public `long-task-delivery-v2` path, explicit `long-task` profile, package-owned Stop Hook, stateless Authority Revision diagnosis, revision-to-rolling return and declared-machine/native-Goal terminal boundary.
 - Managed source lives under `.codex/ty-context-managed/**`; packaged assets live under `packages/ty-context/assets/**`; `packages/ty-context/source-mappings.yaml` is the copy authority.
 - Root `AGENTS.md` is a startup router and hard-boundary surface. Skills own role procedures, `PROJECT_SPEC.md` owns the full stable design explanation, role Context owns durable facts, README owns human usage, and tests own machine proof.
-- `ty-context doctor` reports the deterministic default Context read footprint and warns on excessive or byte-identical default content without creating a new validation gate.
+- `ty-context doctor` reports the deterministic default Context read footprint, excessive/byte-identical default content and `DESIGN.md` authority status without creating a new validation gate.
 - `ty-context long-task compile` exposes the first-lock model choice as additive JSON rather than a persistent workflow state.
 
 ## Verification Entry Points

@@ -33,8 +33,9 @@ function assertMixedInputAndControlAuthoring(frontmatter, body) {
   assert.match(body, /never silently sample a multi-part artifact/iu);
   assert.match(
     body,
-    /Treat them as inspiration rather than an exact reproduction target/iu,
+    /classify the interpretation as `exact-target`, `constraint` or `inspiration`/iu,
   );
+  assert.match(body, /Treat it as inspiration unless the user or a higher-authority input/iu);
   assert.match(body, /Input Inventory/iu);
   assert.match(body, /^## Preference And Research Gate$/mu);
   assert.match(

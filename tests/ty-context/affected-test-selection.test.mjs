@@ -24,6 +24,27 @@ test("hotspot source changes select focused regression tests", () => {
   ]);
 });
 
+test("Design Authority scaffold and advisory changes select focused coverage", () => {
+  const design = selectAffectedTests([
+    "packages/ty-context/src/lib/design-md.ts",
+  ]);
+  assert.equal(design.mode, "selected");
+  assert.equal(design.requires_build, true);
+  assert.deepEqual(design.tests, [
+    "tests/ty-context/sync-init-doctor.test.mjs",
+    "tests/ty-context/visual-delivery-guidance.test.mjs",
+  ]);
+
+  const doctor = selectAffectedTests([
+    "packages/ty-context/src/lib/doctor.ts",
+  ]);
+  assert.equal(doctor.mode, "selected");
+  assert.equal(doctor.requires_build, true);
+  assert.deepEqual(doctor.tests, [
+    "tests/ty-context/sync-init-doctor.test.mjs",
+  ]);
+});
+
 test("Long-Task command changes include the one-time model-choice regression", () => {
   const selection = selectAffectedTests([
     "packages/ty-context/src/commands/long-task.ts",

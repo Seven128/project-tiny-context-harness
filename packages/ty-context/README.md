@@ -137,7 +137,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.2.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.3.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -148,7 +148,7 @@ Use this tarball path for source-preview testing, private review or package deve
 
 The default read path is `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, the default area root, then minimum graph-relevant role Context.
 
-Only near-universal recovery facts should use `read_policy = "default"`; specialized detail should be task-triggered `on-demand`. `ty-context doctor` reports the deterministic default Context footprint, soft-budget overages and byte-identical default files as advisory maintenance signals, not a new gate.
+Only near-universal recovery facts should use `read_policy = "default"`; specialized detail should be task-triggered `on-demand`. `ty-context doctor` reports the deterministic default Context footprint, soft-budget overages, byte-identical default files and `DESIGN.md` authority status as advisory maintenance signals, not a new gate.
 
 ### Bounded Context discovery
 
@@ -191,9 +191,11 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 ### Visual Delivery Guidance
 
-For material design-system, redesign, high-fidelity or visual-polish work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set across production surfaces/components, viewports, themes/modes, states, content stress and accessibility/motion conditions. It is internal planning, not a required matrix or authority. Durable surface/interaction facts remain in `project_context/**`; durable visual-system semantics and rationale remain in `DESIGN.md`; the project names one authored exact token source and generation direction. `context_development_engineer` binds that intent to production components/routes and reports only combinations actually rendered and checked.
+The default Workflow performs a conditional Design Authority Check before material production UI. It reads the owning surface Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, style-only prose or inspiration does not authorize invented production layout. Explicit design work routes through `context_uiux_design`; ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
 
-An explicit Long-Task uses its existing Requirement, Control, Assertion, `ui_browser`, verification-input and `external_confirmation` mechanisms for material visual expectations. Acceptance-affecting screenshot baselines are frozen verifier inputs, generated screenshots/diffs remain review artifacts, and subjective design or new-baseline approval remains external. No visual Schema, risk level, lifecycle state, Gate or required artifact is added.
+For material work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set; durable interaction facts remain in `project_context/**`, durable visual semantics and the design-reference registry remain in `DESIGN.md`, and versioned targets stay at project-native paths. `context_development_engineer` binds that intent to production routes and reports only combinations actually rendered and checked. An implementation screenshot cannot become its own target.
+
+An explicit Long-Task resolves missing/conflicting visual authority before Compile, then uses existing Requirement, Control, Assertion, proof-surface, verification-input and `external_confirmation` mechanisms. Browser visual ACs use `ui_browser`; a browser proxy cannot prove an independently failing native target, so native proof remains a project-owned current-execution Check when representable or an external confirmation. Frozen screenshot baselines are verifier inputs, generated screenshots/diffs are review artifacts, and subjective approval remains external. No visual Schema, risk level, lifecycle state, Gate, required design directory or universal pixel threshold is added.
 
 ### Optional Source Plan Authoring
 
@@ -318,7 +320,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.7.2.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.3.tgz`.
 
 ## Community And Further Reading
 

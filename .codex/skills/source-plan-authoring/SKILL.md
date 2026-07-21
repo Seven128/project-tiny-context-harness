@@ -46,7 +46,7 @@ Before authoring:
 
 1. Assign every supplied artifact a stable input ID and inspect it with format-appropriate capabilities. Cover all pages, frames, screens, tables, diagrams, annotations and visible states that can carry material meaning; never silently sample a multi-part artifact.
 2. Classify each input as user instruction, authoritative product requirement, authoritative technical constraint, existing plan, repository/Context evidence, reference or inspiration. User-stated precedence wins; otherwise report material conflicts as `DEC` instead of merging them silently.
-3. For screenshots or visual references, inventory visible surfaces, regions, controls, content hierarchy, navigation cues and represented states. Treat them as inspiration rather than an exact reproduction target unless the user says otherwise; do not import unrelated branding, sample data or product scope.
+3. For screenshots or visual references, inventory visible surfaces, regions, controls, content hierarchy, navigation cues and represented states, then classify the interpretation as `exact-target`, `constraint` or `inspiration`. Treat it as inspiration unless the user or a higher-authority input makes exact/constraint scope explicit; do not import unrelated branding, sample data or product scope.
 4. Record an Input Inventory in the Source Plan with each input ID, role, authority, material content incorporated and any unreadable or intentionally unused portion. The inventory is traceability, not a new semantic type or authority.
 5. Make the resulting plan self-contained: incorporate every material requirement or constraint into a keyed item. Keep an external artifact reference only when the artifact itself remains necessary for exact visual, legal or other non-textual comparison.
 
@@ -206,7 +206,7 @@ Include a `CTRL` when:
 
 For each included control, state every independently decided field separately: `Surface`, `Region`, `Control type`, `Label/content`, `Location`, `User task`, `Visibility`, `Availability`, `Trigger`, `Input`, `Validation`, `Default`, `Interaction`, `Navigation/result`, `Loading`, `Empty`, `Success`, `Failure`, `Recovery`, `Permission`, `Feedback` and `Accessibility`. Use `not applicable` when a field was considered and genuinely does not apply; do not hide an undecided product choice behind that phrase.
 
-Give every decided Control field its own stable semantic meaning. Do not compress placement, behavior, state or feedback into one broad sentence when more than one field has been decided; later repository-aware authoring must be able to map each field independently. Do not claim exact visual styling, animation, copy or responsive behavior unless it is direct, evidence-backed or within recorded delegation.
+Give every decided Control field its own stable semantic meaning. Do not compress placement, behavior, state or feedback into one broad sentence when more than one field has been decided; later repository-aware authoring must be able to map each field independently. Do not claim exact visual styling, animation, copy or responsive behavior unless it is direct, evidence-backed or within recorded delegation. When exact non-textual comparison remains necessary, preserve the selected reference id/path/URI and its covered viewport/theme/state instead of replacing it with prose.
 
 ## Acceptance Scenarios
 

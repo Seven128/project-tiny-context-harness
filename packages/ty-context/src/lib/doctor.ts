@@ -8,6 +8,7 @@ import {
   inspectDefaultContextFootprint,
 } from "./context-default-footprint.js";
 import { readConfig } from "./config.js";
+import { inspectDesignAuthorityStatus } from "./design-md.js";
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { pathExists } from "./fs.js";
 import { unsupportedSchemaMessage } from "./schema-guard.js";
@@ -88,6 +89,15 @@ export async function runDoctor(projectRoot: string): Promise<DoctorReport> {
     report.warnings.push(
       `default Context footprint unavailable: ${error instanceof Error ? error.message : String(error)}`,
     );
+  }
+
+  const designAuthority = await inspectDesignAuthorityStatus(projectRoot);
+  if (designAuthority === "unconfigured") {
+    report.info.push(
+      "design authority: unconfigured; DESIGN.md is a starter scaffold and does not authorize material production UI until project-specific tokens and exact-target/constraint/inspiration references are selected",
+    );
+  } else {
+    report.info.push(`design authority: ${designAuthority}`);
   }
 
   for (const location of await findUserSuperpowersSkills()) {

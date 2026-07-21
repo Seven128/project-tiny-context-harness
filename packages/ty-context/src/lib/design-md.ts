@@ -1,7 +1,11 @@
 import path from "node:path";
-import { pathExists, writeTextIfChanged } from "./fs.js";
+import { pathExists, readText, writeTextIfChanged } from "./fs.js";
 
 export const DESIGN_MD_PATH = "DESIGN.md";
+export const UNCONFIGURED_DESIGN_AUTHORITY_MARKER =
+  "Design authority status: `unconfigured`";
+
+export type DesignAuthorityStatus = "missing" | "unconfigured" | "configured";
 
 export async function createDesignMdIfMissing(
   projectRoot: string,
@@ -13,12 +17,29 @@ export async function createDesignMdIfMissing(
   return writeTextIfChanged(target, designMdTemplate());
 }
 
+export async function inspectDesignAuthorityStatus(
+  projectRoot: string,
+): Promise<DesignAuthorityStatus> {
+  const target = path.join(projectRoot, DESIGN_MD_PATH);
+  if (!(await pathExists(target))) return "missing";
+  const content = await readText(target);
+  if (content.includes(UNCONFIGURED_DESIGN_AUTHORITY_MARKER)) {
+    return "unconfigured";
+  }
+  const legacyStarter =
+    content.includes('name: "Starter Design System"') &&
+    content.includes(
+      'description: "Neutral baseline design guidance for projects that have not defined their own visual system."',
+    );
+  return legacyStarter ? "unconfigured" : "configured";
+}
+
 function designMdTemplate(): string {
   return [
     "---",
     'version: "alpha"',
-    'name: "Starter Design System"',
-    'description: "Neutral baseline design guidance for projects that have not defined their own visual system."',
+    'name: "Unconfigured Project Design"',
+    'description: "Starter tokens for explicit prototypes only; not an approved production visual system or page-layout target."',
     "colors:",
     '  canvas: "#F8FAFC"',
     '  surface: "#FFFFFF"',
@@ -30,22 +51,22 @@ function designMdTemplate(): string {
     '  on-primary: "#FFFFFF"',
     "typography:",
     "  display:",
-    '    fontFamily: "Public Sans"',
+    '    fontFamily: "system-ui"',
     '    fontSize: "2.5rem"',
     "    fontWeight: 700",
     "    lineHeight: 1.1",
     "  title:",
-    '    fontFamily: "Public Sans"',
+    '    fontFamily: "system-ui"',
     '    fontSize: "1.5rem"',
     "    fontWeight: 700",
     "    lineHeight: 1.25",
     "  body:",
-    '    fontFamily: "Public Sans"',
+    '    fontFamily: "system-ui"',
     '    fontSize: "1rem"',
     "    fontWeight: 400",
     "    lineHeight: 1.6",
     "  label:",
-    '    fontFamily: "Public Sans"',
+    '    fontFamily: "system-ui"',
     '    fontSize: "0.875rem"',
     "    fontWeight: 600",
     "    lineHeight: 1.3",
@@ -59,79 +80,59 @@ function designMdTemplate(): string {
     "  md: 16px",
     "  lg: 24px",
     "  xl: 32px",
-    "components:",
-    "  app-shell:",
-    '    backgroundColor: "{colors.canvas}"',
-    '    textColor: "{colors.text}"',
-    "  surface-card:",
-    '    backgroundColor: "{colors.surface}"',
-    '    textColor: "{colors.text}"',
-    '    rounded: "{rounded.md}"',
-    "    padding: 16px",
-    "  quiet-control:",
-    '    backgroundColor: "{colors.surface-muted}"',
-    '    textColor: "{colors.text-muted}"',
-    '    rounded: "{rounded.sm}"',
-    "    padding: 8px",
-    "  primary-action:",
-    '    backgroundColor: "{colors.primary}"',
-    '    textColor: "{colors.on-primary}"',
-    '    typography: "{typography.label}"',
-    '    rounded: "{rounded.md}"',
-    "    padding: 12px",
-    "  primary-action-hover:",
-    '    backgroundColor: "{colors.primary-hover}"',
-    '    textColor: "{colors.on-primary}"',
-    '    typography: "{typography.label}"',
-    '    rounded: "{rounded.md}"',
-    "    padding: 12px",
+    "components: {}",
     "---",
     "",
-    "# Design System",
+    "# Design Authority",
     "",
     "## Overview",
     "",
-    "- This is a starter visual system for projects that have not defined their own design rules yet.",
-    "- User-authored tokens, brand rules and later product decisions take precedence over this starter baseline.",
-    "- Keep durable color, typography, spacing, radius, component and interaction choices here so future UI work does not drift.",
+    `- ${UNCONFIGURED_DESIGN_AUTHORITY_MARKER}.`,
+    "- This file is a non-authoritative scaffold, not an approved brand, component system or page-layout target.",
+    "- Material production UI must not use these starter tokens as permission to invent information hierarchy, layout or visual language.",
+    "- Replace this status and the provisional tokens only after project-specific visual decisions stabilize.",
+    "",
+    "### Design Authority Index",
+    "",
+    "- Authored exact-value token source: not selected.",
+    "- Generation direction and generated token targets: not selected.",
+    "- Durable design references: none selected.",
+    "- For each selected reference, record a stable id, surface/route/component, project path or URI, `exact-target` / `constraint` / `inspiration` interpretation, and the viewport/theme/state conditions it covers.",
     "",
     "## Colors",
     "",
-    "- Use `canvas` for the page background, `surface` for panels and `surface-muted` for quiet controls or secondary regions.",
-    "- Keep primary actions on `primary` with `on-primary` text; use `primary-hover` for hover and active emphasis.",
-    "- Avoid introducing decorative gradients, random accent colors or single-hue palettes unless the product brand explicitly calls for them.",
+    "- These colors are provisional accessibility-oriented prototype values only; they are not a project palette or brand decision.",
+    "- Replace them from one authored token source before material production styling.",
     "",
     "## Typography",
     "",
-    "- Use `display` only for true page-level emphasis, `title` for section and panel headings, `body` for readable content and `label` for controls.",
-    "- Preserve hierarchy through size, weight and spacing before adding extra colors or decoration.",
+    "- The system-font typography is provisional prototype scaffolding only.",
+    "- Record the selected type family, hierarchy and loading behavior before fidelity implementation.",
     "",
     "## Layout",
     "",
-    "- Start with clear page structure: canvas, surfaces, primary action, secondary controls and readable content regions.",
-    "- Use the spacing scale consistently; dense operational screens can reduce vertical whitespace, while marketing or editorial surfaces can breathe more.",
-    "- On small screens, stack content in priority order and keep primary actions reachable without overlapping other UI.",
+    "- This scaffold declares no production page composition, information hierarchy or responsive layout.",
+    "- Put durable screen responsibility and interaction structure in `project_context/**`; reference selected visual targets in the Design Authority Index.",
     "",
     "## Components",
     "",
-    "- Buttons, inputs, cards, navigation and dialogs need default, hover, active, focus, disabled, loading and error states when they are user-facing.",
-    "- Use `surface-card` for contained groups, `quiet-control` for low-emphasis controls and `primary-action` for the main command.",
-    "- Prefer clear affordances, visible focus states and stable dimensions so labels, icons and dynamic text do not resize the layout.",
+    "- No production component visual language is selected yet.",
+    "- When components are selected, record their visual tokens and relevant default, hover, active, focus, disabled, loading and error states without duplicating an authored code token source.",
     "",
     "## Do's and Don'ts",
     "",
-    "- Do use this file as the first design fact source before generating mockups, Figma screens or frontend UI.",
-    "- Do replace or extend this starter when the project has a real brand, product category or design system.",
-    "- Do keep accessibility, responsive behavior and interaction states explicit.",
-    "- Don't treat this starter as a user brand decision once project-specific rules exist.",
-    "- Don't add generic AI-looking hero gradients, oversized cards or decorative blobs unless the product direction asks for them.",
+    "- Do treat `unconfigured` as a stop/routing signal for material production UI, not as visual permission.",
+    "- Do classify selected references as `exact-target`, `constraint` or `inspiration` before implementation.",
+    "- Do use these tokens only for an explicitly throwaway prototype while authority remains unconfigured.",
+    "- Don't promote an implementation screenshot or diff into its own target baseline.",
+    "- Don't add generic AI-looking gradients, oversized cards, excessive rounding or decorative blobs without selected design authority.",
     "",
     "## Design Change Workflow",
     "",
-    "- Read this file before creating design drafts, redesigning UI, changing visual systems or polishing frontend styling.",
+    "- Read this file before creating design drafts, redesigning UI, changing visual systems or implementing material production UI.",
     "- When there is a scan target such as UI source, page files, build output or a local/remote URL, run `npx impeccable detect <target>` before finalizing design changes.",
     "- Treat Impeccable findings as design-review signals: fix issues that affect clarity, consistency, accessibility or trust, and note when there is no suitable scan target.",
-    "- After design decisions stabilize, update this file with durable tokens, component rules and do/don't guidance so later UI work stays aligned.",
+    "- After design decisions stabilize, replace the unconfigured marker, index the selected targets and authored token source/generation direction, and record durable tokens, component rules and do/don't guidance.",
     "",
   ].join("\n");
 }

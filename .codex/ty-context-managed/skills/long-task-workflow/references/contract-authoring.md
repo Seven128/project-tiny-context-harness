@@ -61,15 +61,19 @@ A proxy check, static repository shape, tracked status report, prior screenshot,
 
 ## Visual Delivery Authoring
 
-When Source or controlling Context declares a design system, redesign, high-fidelity UI or other material visual result, author it through existing Contract semantics:
+When the selected delivery includes a new/redesigned screen, primary layout/navigation/theme/component system, high-fidelity implementation or other material production UI, resolve Design Authority before Compile and author the result through existing Contract semantics:
 
+- inspect owning surface/interaction Context, `DESIGN.md`, its authored token source/generation direction and material design references. Classify every reference as `exact-target`, `constraint` or `inspiration`, with its surface/route/component, path/URI and covered viewport/theme/mode/state;
+- an unconfigured starter, style-only prose, inspiration-only set or conflicting target is not sufficient production authority. Resolve it by explicitly scoping Source to a prototype/non-fidelity result, recording an explicitly delegated and selected design target in real Source after material preferences are known, or keeping the unresolved/user-reserved direction `decision_required`;
+- never let implementation output authorize itself: a generated implementation screenshot/diff is an Artifact, not the target. An acceptance-affecting target or baseline must be selected Source/verifier input before fidelity implementation can be accepted;
 - derive a task-local, risk-proportional Visual Coverage Set from declared Source, `project_context/**` and `DESIGN.md`: production surface/route/component, viewport, theme or product mode, interaction/state, content stress and accessibility/motion conditions;
 - select representative combinations rather than silently creating a full Cartesian requirement; an omitted combination remains unproven, while Source that explicitly requires full coverage must retain that scope;
 - encode each independently falsifiable visual expectation as an atomic Requirement, applicable Control field or named AC Assertion. Name the surface, viewport, theme/state/content condition and observable result when they matter to the claim;
-- bind the declared result to the owning Context/`DESIGN.md`, one authored token source and generation direction, production component/route carriers, path envelopes and project-owned browser checks. Detached kits, mocks or marketing specimens may be references but not substitute implementation carriers;
+- bind the declared result to the owning Context/`DESIGN.md`, one authored token source and generation direction, selected target/constraint inputs, production component/route carriers, path envelopes and project-owned target checks. Detached kits, mocks or marketing specimens may be references but not substitute implementation carriers;
+- use `ui_browser` only for declared browser ACs. A browser or Expo-Web proxy cannot prove a native/mobile/desktop target that can fail independently; use a project-owned current-execution target Check when existing proof surfaces can truthfully represent the claim, otherwise retain named human/device confirmation as an external confirmation rather than inventing machine proof;
 - keep subjective visual direction, taste or approval outside false machine proof. Resolve an undecided direction as `decision_required`; represent required human design or new-baseline approval as an explicit external confirmation.
 
-This guidance adds no visual Schema, Claim kind, risk level, lifecycle state, coverage artifact or Gate. It only makes visual meaning explicit enough for the existing Requirement/Control/Assertion and `ui_browser` mechanisms to verify what was actually declared.
+This guidance adds no visual Schema, Claim kind, risk level, lifecycle state, coverage artifact, required design directory or Gate. It only makes visual meaning explicit enough for existing Source, Requirement/Control/Assertion, proof-surface, verification-input and external-confirmation mechanisms to verify what was actually declared.
 
 ## Compact Authoring
 

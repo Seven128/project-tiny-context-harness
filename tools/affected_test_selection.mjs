@@ -17,6 +17,17 @@ export {
 
 const HOTSPOT_TESTS = new Map([
   [
+    "packages/ty-context/src/lib/design-md.ts",
+    [
+      "sync-init-doctor.test.mjs",
+      "visual-delivery-guidance.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/doctor.ts",
+    ["sync-init-doctor.test.mjs"],
+  ],
+  [
     "packages/ty-context/src/lib/long-task-authority-types.ts",
     [
       "long-task-context-evolution.test.mjs",

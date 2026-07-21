@@ -73,6 +73,9 @@ test("default Context routing combines manifest candidates with bounded search",
       /no index, cache, state or second authority|不创建索引、缓存或第二权威/iu,
     );
   }
+  assert.match(managed, /Before material production UI implementation/iu);
+  assert.match(managed, /unconfigured starter, style-only guidance or inspiration/iu);
+  assert.match(managed, /exact\/constraint target/iu);
 });
 
 test("CLI and managed guidance route only explicit or active work to long-task", async () => {
@@ -108,6 +111,7 @@ test("CLI and managed guidance route only explicit or active work to long-task",
     guidance,
     /installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook/iu,
   );
+  assert.match(guidance, /Design Authority status/iu);
 });
 
 test("Workflow Contract names the complete Draft-to-qualified-result lifecycle", async () => {
@@ -262,6 +266,10 @@ test("optional Source Plan authoring does not create a second Contract authority
     /does not replace Contract Draft authoring inside `long-task-workflow`/iu,
   );
   assert.match(sourcePlan, /Do not create:[\s\S]*Source Plan Schema/);
+  assert.match(
+    sourcePlan,
+    /classify the interpretation as `exact-target`, `constraint` or `inspiration`/iu,
+  );
   assert.doesNotMatch(
     sourcePlan,
     /ty-context long-task (?:init|preflight|compile)/,

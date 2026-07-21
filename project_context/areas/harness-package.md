@@ -12,6 +12,7 @@
 - `delivery-contract.yaml` is the only Contract authoring file and is non-authoritative until formal Compile. Real marked Source is mandatory; compiled inventories and coverage are projections, not editable state.
 - Read-only Preflight and Compile share one activation-safety kernel. Only Compile creates Authority Lock; targeted verify never accepts; Final Gate, Stop and close recompile Source authority and rerun the complete Contract on one snapshot.
 - Product Surface Contract workflow is prompt-level and project-owned through `context_surface_contract` and existing roles; the package must not add a surface-specific Context role.
+- Material production UI uses a conditional Design Authority Check: screen/surface Context, `DESIGN.md`, one authored token source/generation direction and exact-target/constraint/inspiration references are resolved before implementation. An unconfigured starter or implementation-generated screenshot is not production design authority; no required design directory or visual workflow state is added.
 - The platform Goal owns mutable implementation sequencing. Harness never launches models/agents/AppServer, creates branches/worktrees, merges, pushes, opens PRs or deploys.
 - `/long-task-workflow` is the only active long-task Skill. `/normal-long-task`, `delivery-set` and historical composite commands are retirement pointers/tombstones only.
 - Runtime floor is Node.js `>=24`; public package behavior is documented in English with aligned Chinese translation.
@@ -20,11 +21,12 @@
 
 - This area root is default because it identifies package responsibility and routing.
 - Detailed Context Model, Workflow Contract, package-managed-surface rules and verification paths are `on-demand`, selected by task triggers. Their authority is unchanged; only near-universal read cost is reduced.
-- `ty-context doctor` reports the deterministic default Context footprint and exact duplicate default files as advisory findings, with no new validation or workflow state.
+- `ty-context doctor` reports the deterministic default Context footprint, exact duplicate default files and `DESIGN.md` authority status as advisory findings, with no new validation or workflow state.
 
 ## Architecture And Quality Contract
 
 - Package behavior changes keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, public README and behavior tests aligned.
+- Default UI guidance routes missing/conflicting Design Authority through `context_uiux_design`, keeps local fixes/prototypes lightweight and requires project-owned rendered/token/target-runtime verification only for the claims actually declared.
 - Risk-triggered architecture decisions resolve owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, forbidden shortcuts and project-owned verification.
 - Long-Task architecture invariants use existing obligations/constraints/forbidden shortcuts, path/Binding ownership and executable Checks; no architecture-specific authority layer or generic dependency engine is added.
 - A Claim that can pass on a proxy while failing in its target runtime uses a current-execution Check in the earliest owning Outcome. Existing input freshness drives coalesced rolling feedback, while the one Final Gate reruns the live Check; no platform-impact fields, per-platform state or per-Outcome rebuild mandate is added.

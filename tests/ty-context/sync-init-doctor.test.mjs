@@ -103,6 +103,15 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
     assert.match(agents, /Contract Conformance/);
     assert.match(agents, /Context drift check/);
     assert.match(agents, /Context: no durable fact change/);
+    assert.match(agents, /Before material production UI implementation/iu);
+
+    const design = await readFile(path.join(root, "DESIGN.md"), "utf8");
+    assert.match(design, /name: "Unconfigured Project Design"/u);
+    assert.match(design, /Design authority status: `unconfigured`/u);
+    assert.match(design, /^### Design Authority Index$/mu);
+    assert.match(design, /`exact-target` \/ `constraint` \/ `inspiration`/u);
+    assert.doesNotMatch(design, /name: "Starter Design System"/u);
+    assert.doesNotMatch(design, /surface-card/u);
 
     const manifest = await readFile(
       path.join(root, "project_context/context.toml"),
@@ -141,11 +150,43 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
     assert.ok(
       doctor.info.some((line) => line.includes("default Context read path:")),
     );
+    assert.ok(
+      doctor.info.some((line) =>
+        line.includes("design authority: unconfigured"),
+      ),
+    );
     assert.equal(
       doctor.warnings.some(
         (line) => line.includes("above the") && line.includes("soft budget"),
       ),
       false,
+    );
+
+    await writeFile(
+      path.join(root, "DESIGN.md"),
+      design.replace(
+        "Design authority status: `unconfigured`",
+        "Design authority status: `configured`",
+      ),
+      "utf8",
+    );
+    const configuredDoctor = await runDoctor(root);
+    assert.ok(
+      configuredDoctor.info.some((line) =>
+        line.includes("design authority: configured"),
+      ),
+    );
+
+    await writeFile(
+      path.join(root, "DESIGN.md"),
+      `---\nname: "Starter Design System"\ndescription: "Neutral baseline design guidance for projects that have not defined their own visual system."\n---\n`,
+      "utf8",
+    );
+    const legacyStarterDoctor = await runDoctor(root);
+    assert.ok(
+      legacyStarterDoctor.info.some((line) =>
+        line.includes("design authority: unconfigured"),
+      ),
     );
   });
 });

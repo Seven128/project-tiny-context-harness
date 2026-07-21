@@ -72,13 +72,16 @@ sample provider / interface / page 证据不能替代 all-provider / all-interfa
 
 ## Visual Delivery Implementation / 视觉交付实现
 
-When controlling Context, `DESIGN.md` or explicit Source declares material visual work, carry that intent into the real implementation without creating another workflow:
+For material production UI, first confirm Design Authority readiness; then carry declared Context, `DESIGN.md` and Source intent into the real implementation without creating another workflow:
 
+- treat an unconfigured starter, style-only guidance, inspiration-only references or conflicting targets as insufficient authority for invented production layout; route explicit design authoring through `context_uiux_design` or return for a genuine material decision;
+- classify referenced targets as `exact-target`, `constraint` or `inspiration` and bind fidelity claims only to the named target/constraint conditions;
 - identify the production token source, its generation direction, the owning components/routes and any project-local UI/UX Skill before choosing implementation values;
 - reuse production components and real product routes for states/specimens instead of building a detached static imitation as the acceptance target;
 - preserve approved semantic tokens and component APIs; do not bypass them with undeclared raw color, spacing, typography or motion values merely to match one screenshot;
 - implement the declared Visual Coverage Set across the applicable viewport, theme/mode, state, content-stress and accessibility/motion combinations, while avoiding an unrequested full Cartesian expansion;
 - run project-owned rendered/component/browser verification and report only the combinations actually checked. Static analysis, generated kits and screenshot artifacts are supporting review material rather than proof of every visual or behavioral claim.
+- never promote the implementation's own generated screenshot/diff into its target; exact targets and acceptance-affecting baselines are selected Source/verifier inputs before comparison.
 
 If an active Long-Task applies, express material visual expectations through its existing Requirement, Control, Assertion, Check and external-confirmation mechanisms. Do not introduce a second visual plan, acceptance document or lifecycle.
 

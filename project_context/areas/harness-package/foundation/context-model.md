@@ -18,6 +18,8 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 - Repo-owned intent layer is the durable project fact surface that tells agents which product, architecture, ownership and dependency facts outrank current-code convenience.
 - Durable facts include product/domain ownership, surface responsibility, information architecture, API/schema semantics, state/runtime/recovery semantics, cross-domain boundaries, security boundaries and repeatable verification/deployment paths.
 - Workflow Contract is prompt-level order of thought, not a validator, phase gate, artifact schema, edit-order gate or long-task detector.
+- **Design Authority Check** is the conditional default-workflow routing step for material production UI. It reads relevant screen/surface Context, `DESIGN.md`, the declared authored token source/generation direction and selected design references before implementation. It is not a lifecycle phase, required document tree, generic pixel gate or new `Context Delta`.
+- A design reference has one declared interpretation: `exact-target` authorizes fidelity comparison for its named surface/viewport/mode/state, `constraint` authorizes only the named partial rule, and `inspiration` guides exploration but proves no reproduction claim. An unconfigured starter is not production design authority.
 - Internal plan means the agent's current reasoning about goal, boundaries, controlling Context, implementation surfaces and verification. It has no mandatory file, name or schema.
 - **Context discovery search** is one bounded text search over `project_context/**` before `Context Delta`, using a small set of high-signal terms from the task such as explicit area/module names and API/schema/state/security/verification/deployment language. It supplements manifest triggers and semantic judgment, reads only relevant matches and creates no index, cache, state or authority.
 - Small code task means a local implementation task where existing Context is sufficient and the change does not alter durable product, architecture, API/schema/data, runtime/state/recovery, verification/deployment, security/redaction or surface-ownership facts. It is not defined by lines changed.
@@ -36,7 +38,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 ## Fact-Source Authority
 
 - `project_context/**` is authoritative for ownership, responsibility, architecture boundaries, integration direction, dependency constraints and repeatable verification/deployment paths.
-- `DESIGN.md` is authoritative for durable visual design-system facts when a project uses it.
+- `DESIGN.md` is authoritative for durable visual design-system facts when a project uses it and indexes the selected authored token source/generation direction plus durable design-reference interpretations. Versioned non-textual target assets remain project Source or verifier inputs at their project-native paths rather than being copied into Context.
 - Foundation, contract, decision-rationale, architecture, verification and deployment Context interpret current implementation paths before code convenience is allowed to redefine product or architecture intent. Verification and deployment Context remain controlling because changing a repeatable proof or release boundary can change what the delivery means.
 - `implementation-index` and `archive` may be Supporting Context only when they are graph-derived and non-explicit in referenced mode. An explicit reference or full snapshot makes them controlling.
 - Code is current implementation evidence. It shows what is implemented now but cannot silently redefine intended product, architecture or ownership.
@@ -72,7 +74,7 @@ This foundation Context defines the durable vocabulary and fact-source priority 
 
 ## Evidence Boundaries
 
-- Do not store one-off logs, command output, screenshots, CI artifacts, release ledgers, temporary JSON, raw payloads, secrets, tokens, cookies or result claims in Context.
+- Do not store one-off logs, command output, generated implementation screenshots/diffs, CI artifacts, release ledgers, temporary JSON, raw payloads, secrets, tokens, cookies or result claims in Context. Context/`DESIGN.md` may reference a reviewed versioned design target without embedding its binary contents or a review log.
 - Do not copy full implementation summaries into Context when code, tests or comments are clearer.
 - Do not invent rationale from current code shape.
 - Do not register scratch files, exported source packs, Delivery Contracts, optional source provenance, compiled long-task state or verification runs in `project_context/context.toml`.

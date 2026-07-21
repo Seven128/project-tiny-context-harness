@@ -92,6 +92,14 @@ Ordinary user requests, prose plans, research plans and external proposals are e
 
 Contract authoring may add meaning-preserving structural decomposition and repository/Context bindings supported by real evidence. It may carry a defensible recommended product choice only after material preferences are known and after appending or revising real Source to record the delegation, evidence basis and exact meaning without rewriting the user's original text. When an unknown preference could materially change comparative research or selection, Authoring asks before proceeding and keeps the choice `decision_required` until answered. Conflicting, user-reserved or otherwise unsupported choices remain `decision_required`; real high-risk external actions remain external confirmations. The executing Agent cannot place an unrecorded product inference only in Contract YAML or present it as a necessary derivation.
 
+## Why Visual Design Authority Resolves Before Compile
+
+A material production UI can satisfy functional checks while still inventing its information hierarchy, layout and component language from an unconfigured starter or style-only prose. Screenshot-checking that implementation against a baseline created from the same implementation is circular and cannot prove fidelity to user intent.
+
+Long-Task therefore reuses existing Source and authoring boundaries rather than adding a visual lifecycle. Before Compile, visual references are classified as exact targets, partial constraints or inspiration; `DESIGN.md` names the authored token source/generation direction; and every material surface either has sufficient selected authority, is explicitly scoped as a prototype/non-fidelity result, or records delegated design Source after material preferences are known. A missing or user-reserved visual direction remains `decision_required`.
+
+The selected target must exist as Source or a frozen verification input before fidelity implementation is accepted. Generated implementation screenshots and diffs remain artifacts and cannot promote themselves into target authority. Browser Claims continue to use `ui_browser`; native/mobile/desktop target proof remains a project-owned current-execution Check when representable and otherwise an explicit external confirmation. This closes the circular-self-baseline and undeclared-design paths with authoring guidance only: no visual Schema, new risk level, second Gate, approval state or required design directory is introduced.
+
 ## Why One Contract And One Final Gate Remain
 
 Draft Outcomes make rolling work cheaper to reason about, but they do not create separate authorities. The first successful formal Compile locks the complete Contract, including all Outcomes. Targeted verification is repair evidence for selected Checks or Outcomes and never accepts the task.
@@ -148,6 +156,7 @@ When a rolling blocker motivates revision, implementation difficulty alone canno
 - **Non-completing Source kind** prevents explicit “does not count as done” meaning from being weakened into an ordinary Requirement or non-goal and makes its negative sensitivity independently traceable.
 - **Affected developer test routing** reduces repeated full-suite cost without lowering release proof because unknown or broad changes widen and focused results remain non-authoritative.
 - **Managed source, generated copy and package asset parity** prevent source-workspace rules and consumer-installed rules from diverging.
+- **Pre-Compile Design Authority readiness** prevents a material UI implementation from treating an unconfigured starter, style prose, inspiration or its own generated screenshot as an exact production target; existing Source decisions, verification inputs and external confirmations carry the result without a visual state machine.
 
 These mappings explain existing value; they are not a runtime mechanism matrix or a second Authority.
 

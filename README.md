@@ -137,7 +137,7 @@ The smoke packs the local workspace, installs it into a disposable repo and vali
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.2.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.3.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -166,7 +166,7 @@ minimum graph-relevant area/role Context
 
 Only near-universal recovery facts should use `read_policy = "default"`; specialized architecture, contract, deployment and historical detail should be task-triggered `on-demand` Context. Before deciding `Context Delta`, the Agent also runs one bounded text search over `project_context/**` using a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment language. Matching files are merged with manifest candidates and filtered by semantic relevance. This is not a vector or persistent retrieval system and creates no index, cache, registry, search state or authority.
 
-`ty-context doctor` reports the deterministic default read footprint, per-file/total soft-budget overages and byte-identical default files. These are advisory maintenance signals, not a new validation gate or workflow state.
+`ty-context doctor` reports the deterministic default read footprint, per-file/total soft-budget overages, byte-identical default files and `DESIGN.md` authority status. These are advisory maintenance signals, not a new validation gate or workflow state.
 
 Typical roles are area/domain, contract, foundation, decision-rationale, implementation-index, verification and deployment. Context owns durable intended boundaries; code owns current implementation; tests, CI, browser/runtime evidence and people own behavior and product acceptance.
 
@@ -212,9 +212,11 @@ Newly generated Harness configs default to `strict_except_generated`. Generated/
 
 ### Visual Delivery Guidance
 
-For material design-system, redesign, high-fidelity or visual-polish work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set across production surfaces/components, viewports, themes/modes, states, content stress and accessibility/motion conditions. It is internal planning, not a required matrix or authority. Durable surface/interaction facts remain in `project_context/**`; durable visual-system semantics and rationale remain in `DESIGN.md`; the project names one authored exact token source and generation direction. `context_development_engineer` binds that intent to production components/routes and reports only combinations actually rendered and checked, so a detached static kit or mock cannot substitute for product UI evidence.
+The default Workflow now performs a conditional Design Authority Check before material production UI: new/redesigned screens, primary layout/navigation/theme/component-system work, high-fidelity implementation and substantial visual polish. It reads the owning surface Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, style-only prose or inspiration does not authorize invented production layout. Explicit design work routes through `context_uiux_design`; ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
 
-An explicit Long-Task expresses material visual expectations through the existing Requirement, Control, Assertion, `ui_browser`, verification-input and `external_confirmation` mechanisms. Acceptance-affecting screenshot baselines are frozen verifier inputs, generated screenshots/diffs are review artifacts, and subjective design or new-baseline approval remains external. This guidance adds no visual Schema, risk level, lifecycle state, Gate or required artifact and does not change the default Workflow Contract.
+For material work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set across production surfaces/components, viewports, themes/modes, states, content stress and accessibility/motion conditions. Durable surface/interaction facts remain in `project_context/**`; durable visual semantics and the design-reference registry remain in `DESIGN.md`; versioned targets stay at project-native paths. `context_development_engineer` binds that intent to production routes and reports only combinations actually rendered and checked. An implementation screenshot cannot become its own target.
+
+An explicit Long-Task resolves missing/conflicting visual authority before Compile, then uses existing Requirement, Control, Assertion, proof-surface, verification-input and `external_confirmation` mechanisms. Browser visual ACs use `ui_browser`; a browser proxy cannot prove a native target that can fail independently, so native target proof remains a project-owned current-execution Check when representable or an external confirmation. Frozen screenshot baselines are verifier inputs, generated screenshots/diffs are review artifacts, and subjective approval remains external. This adds no visual Schema, risk level, lifecycle state, Gate, required design directory or universal pixel threshold.
 
 ### Optional Source Plan Authoring
 
@@ -463,7 +465,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.2.tgz` under the preview output directory.
+`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.3.tgz` under the preview output directory.
 
 ## Community And Further Reading
 

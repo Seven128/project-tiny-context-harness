@@ -23,7 +23,7 @@ Unless an active Long-Task binding exists:
 
 1. Read `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml` and the default area root, then collect graph/trigger candidates.
 2. Before deciding `Context Delta`, run one bounded text search over `project_context/**` using a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment terms. Merge matching Context with manifest candidates and read only relevant files; search supplements rather than replaces semantic judgment.
-3. For UI/product-surface work, confirm information/action/feedback ownership and use `context_surface_contract` when durable responsibility is unclear or changes; contract owns interfaces and existing area/subdomain/verification roles own the project facts.
+3. For UI/product-surface work, confirm information/action/feedback ownership and use `context_surface_contract` when durable responsibility is unclear or changes; the contract owns interfaces and existing area/subdomain/verification roles own the project facts. Before material production UI implementation, also read `DESIGN.md`, its token source and referenced design targets: an unconfigured starter, style-only guidance or inspiration does not authorize invented production layout; use a declared exact/constraint target, route explicit design work through `context_uiux_design`, or stop for a genuine design decision. Local style fixes and explicit prototypes remain lightweight.
 4. Decide exactly one `Context Delta: none|required`. Update owning Context before code when durable product ownership, architecture, API/schema/data, state/recovery, dependency, security, product-surface responsibility or repeatable verification/deployment changes. Local fixes preserving durable semantics are `none`.
 5. Use the agent/platform internal plan. For high-risk work keep `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` as internal routing and maintenance questions, not artifacts or extra deltas.
 6. Implement precisely, run project-owned verification, perform Contract Conformance and a Context drift check, then report implementation, verification, Context status and blockers.
@@ -55,7 +55,7 @@ Tiny Context does not create or restore platform Goals, invoke models, spawn age
 ## Durable Facts And Generated Surfaces
 
 - Context is intended ownership/boundary/contract truth; code is current implementation truth. Treat disagreement as drift, missing work or stale Context.
-- Long-term facts live only in `project_context/**` or `DESIGN.md`; logs, raw evidence, secrets, runtime state and receipts do not.
+- Long-term facts live only in `project_context/**` or `DESIGN.md`; versioned authored design targets may remain referenced project Source/verifier inputs, while generated screenshots/diffs, logs, raw evidence, secrets, runtime state and receipts do not become Context.
 - Managed `AGENTS.md` blocks, `<harnessRoot>/ty-context-managed/**` and package-managed Skills are generated and sync-overwritten.
 - Explicit upgrades use `context_harness_upgrade`; package sync never imports retired Campaign or development-period authority state.
 
@@ -63,7 +63,7 @@ Tiny Context does not create or restore platform Goals, invoke models, spawn age
 
 - `make validate-context`: Context recoverability.
 - `make validate-harness`: Context plus touched-source modularity.
-- `ty-context doctor`: installation health plus advisory default Context footprint.
+- `ty-context doctor`: installation health plus advisory default Context footprint and Design Authority status.
 - `node packages/ty-context/dist/cli.js package check-source`: managed-source/package parity in this source workspace.
 
 Every handoff reports exactly one of `Context: updated ...` or `Context: no durable fact change`. Never claim tests, deployment or acceptance from Context alone.

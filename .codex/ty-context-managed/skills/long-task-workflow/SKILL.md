@@ -44,6 +44,7 @@ A Draft Outcome is an Outcome in that pre-Authority-Lock Draft, not a new schema
 ## Entry And Authoring Loop
 
 1. Read the user request or external proposal plus minimum controlling Context and decide `Context Delta: none|required`.
+   - For material production UI, read the Contract-authoring visual guidance before Compile. An unconfigured starter, style-only rule or inspiration-only reference is incomplete design authority unless Source explicitly scopes the result as prototype/non-fidelity or delegates a separate selected target before implementation.
 2. If a valid active binding exists, run `ty-context long-task resume <workdir>` and read the lifecycle reference.
 3. Otherwise author one complete Delivery Contract for the whole selected delivery. Do not create a second Contract plan, matrix or top-level Contract split.
 4. Preserve at least one real `source_path`. Wrap every material Source item in its original Markdown with non-rendering `ty-source-item:start/end` markers without rewriting the text; marked Source Item keys and `source_claim` keys are exactly equal.

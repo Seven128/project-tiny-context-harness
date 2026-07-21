@@ -1,6 +1,6 @@
 ---
 name: context_uiux_design
-description: Use when the user explicitly asks for 设计稿, 重做设计, UI/UX 设计方案, UI 设计师, UX 设计师, 视觉设计方案, 视觉专家, 交互设计方案, 界面设计方案, 页面设计方案, 原型设计, 线框图方案, 视觉规范, 设计系统方案, DESIGN.md, Impeccable review, UX designer, UI designer, frontend redesign, visual polish, or design system spec in a Minimal Context Harness project. Do not trigger for ordinary UI implementation, CSS tweaks, bug fixes, or generic mentions of 设计, design, or user experience.
+description: Use when the user explicitly asks for 设计稿, 重做设计, UI/UX 设计方案, UI 设计师, UX 设计师, 视觉设计方案, 视觉专家, 交互设计方案, 界面设计方案, 页面设计方案, 原型设计, 线框图方案, 视觉规范, 设计系统方案, DESIGN.md, Impeccable review, UX designer, UI designer, frontend redesign, visual polish, or design system spec, or when material production UI lacks sufficient or consistent Design Authority in a Minimal Context Harness project. Do not trigger for routine implementation that already has sufficient design authority, local CSS tweaks, UI bug fixes, explicit throwaway prototypes, or generic mentions of 设计, design, or user experience.
 ---
 
 # Context UIUX Design
@@ -18,13 +18,13 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 ## 工作方式
 
 1. 先读取 `project_context/global.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
-2. 如果项目存在 `DESIGN.md`，先读取它；如果用户要求视觉体系、设计稿或界面风格，按 Google `@google/design.md` 的 DESIGN.md 格式创建或更新根目录 `DESIGN.md`。
-3. 整理或生成：用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y 要求、视觉约束和设计 token。
+2. 如果项目存在 `DESIGN.md`，先读取其 Design Authority 状态、唯一 token 源/生成方向和设计引用；如果用户要求视觉体系、设计稿或界面风格，按 Google `@google/design.md` 的 DESIGN.md 格式创建或更新根目录 `DESIGN.md`。
+3. 整理或生成：用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y 要求、视觉约束、设计 token，以及需要长期复用的 design reference registry。
 4. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、前端布局、UI/UX、产品模块边界或信息放置时，把产品/页面定位检查作为前置动作：用户在这个 surface 要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、主层/下钻/运维/诊断/详情归属、布局和信息密度是否匹配任务。多 surface、多平台或多模块归属不清时，先读取相关 Context、搜索入口并结合已有 UI 代码/截图做信息架构 sweep，必要时使用 `context_surface_contract` 做 Surface Contract Check，再收窄到具体视觉或交互实现。该检查是下一步变更分类的输入；只有形成长期 surface 职责、信息架构、交互契约或模块边界结论时才更新 Context 或 `DESIGN.md`。
    - 若存在 Product Surface Contract，读取并对齐 primary user question、main allows/forbids、drilldown ownership、long-task state 和 verification。
    - 若缺失且本任务改变 durable surface responsibility，输出 `Surface Contract Delta: required`，把界面职责写入 `project_context/**`；视觉 token、颜色、字体、间距、圆角和视觉 rationale 仍写入 `DESIGN.md`。
 5. 涉及输入、选择、搜索、筛选、表单/配置、调度/时间窗口、预算/配额/限流或加载/空态/错误态等 UI 控件时，用“控件交互框架”检查控件语义、反馈状态、校验、错误预防、可供性和信息密度；这只是通用判断框架，不是固定控件处方。
-6. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token 和视觉 rationale；代码、截图和搜索结果只说明当前实现状态。Context 决定“应该是什么”，代码和截图揭示“现在是什么”，代码不能静默重定义 Context。
+6. 界面职责、流程归属和长期交互契约以 `project_context/**` 为准；`DESIGN.md` 负责视觉 token、视觉 rationale、唯一 authored token source/generation direction 和设计引用解释；versioned authored targets 保留在项目原生路径，代码与生成截图只说明当前实现状态。Context 决定“应该是什么”，代码和实现截图揭示“现在是什么”，代码不能静默重定义 Context。
 7. 设计判断或第一处实现编辑前，先给出唯一长期事实判断 `Context Delta: none|required`。若输入包含产品、架构、技术、界面或验收来源，在 agent 内部逐项判断 durable surface / IA / interaction / verification constraint 已被 Context / `DESIGN.md` 覆盖、需要先更新、仅属 task-local、显式 out-of-scope 或需要真实用户决策；不要创建 `plan.md`、Task Contract 文件或 Markdown 映射表。
 8. 普通 UI bug、局部样式或 CSS 修复、测试修复或探索性 spike 不更新 Context，可先改代码；一旦形成长期交互或视觉结论，继续对齐或交付前必须回写 Context 或 `DESIGN.md`。不要把 Context 机械补成代码改动摘要。
 9. 如果二者冲突，显式标记为实现漂移、缺失工作或 Context 过期。
@@ -82,6 +82,17 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - 视觉审查时先分清问题类型：a11y / responsive / theming / interaction / copy / performance / anti-pattern。把真正影响用户理解、操作或品牌信任的问题列为高优先级；少量纯审美偏好不要淹没关键问题。
 - Harness 默认携带 Impeccable CLI 能力；做设计稿、重做设计、视觉设计方案、设计系统方案、frontend redesign、visual polish 或既有 UI 视觉审查时，默认尝试运行 `npx impeccable detect <target>` 作为辅助证据，不必等待用户点名。其输出只能作为设计缺陷线索，不是 Harness gate，也不能替代人工截图检查、项目测试或 `validate-context`。
 
+## Design Authority Readiness / 设计权威就绪
+
+Use this check before material production UI: a new or redesigned screen, primary layout/navigation/theme/component system, high-fidelity implementation or substantial visual polish. Routine implementation with sufficient authority, local style fixes and explicit throwaway prototypes stay on the lightweight path.
+
+- Read the owning surface/interaction Context, `DESIGN.md`, the authored exact-value token source and generation direction, existing production components/routes and every material design reference.
+- Classify each reference as `exact-target`, `constraint` or `inspiration`. Record the affected surface/route/component, project path or URI and relevant viewport/theme/mode/state. Exact targets authorize fidelity comparison only for those conditions; constraints authorize only their named rule; inspiration proves no reproduction claim.
+- Treat a missing `DESIGN.md`, its package starter with Design authority status: `unconfigured`, style-only prose, an inspiration-only set or conflicting references as insufficient authority for invented production layout.
+- If the user explicitly delegates design, use known product goals, preferences and references to author/select a separate target before implementation and update durable Context/`DESIGN.md` when the choice is stable. Ask only when an unknown material preference could change the result or the user reserves the choice.
+- Never use the implementation's own generated screenshot or diff as the target it claims to match. A target is selected Source; an implementation render is evidence. Baseline replacement requires deliberate review and cannot merely erase a failure.
+- Do not require Figma, a fixed `docs/design/**` tree, an image for every local change or universal pixel-perfect thresholds. Use project-native design assets and the smallest authority sufficient for the claimed fidelity.
+
 ## Visual Delivery Coverage / 视觉交付覆盖
 
 For material design-system, redesign, high-fidelity implementation or visual-polish work, keep a task-local **Visual Coverage Set** before implementation and verification. It is internal planning, not a required file, matrix, Context role, workflow artifact or completion authority.
@@ -89,6 +100,7 @@ For material design-system, redesign, high-fidelity implementation or visual-pol
 - Select risk-proportional representative combinations across production surface/route/component, viewport, theme or product mode, interaction/state, content stress and accessibility/motion conditions. Do not expand the full Cartesian product unless Source explicitly requires full combination coverage, and never claim an unchecked combination.
 - Cover relevant states such as default, hover, focus, active, disabled, loading, empty/no-results, error, success and long/extreme content. Use the project's declared viewport, contrast, target-size, reduced-motion and localization rules rather than inventing universal thresholds.
 - Keep the authority split explicit: `project_context/**` owns durable surface/interaction responsibility and `DESIGN.md` owns durable visual-system semantics and rationale. Record one authored exact-value token source and one generation direction; generated CSS/theme/export files are implementation outputs, not competing authored truth. If `DESIGN.md` is not the machine-token source, name the project-native source it governs instead of hand-maintaining the same exact values twice.
+- Map every claimed fidelity combination to its selected `exact-target` or named `constraint`; do not let the Visual Coverage Set turn inspiration or missing authority into an implicit target.
 - Inspect production components or real product routes. A detached static kit, mock, poster, marketing specimen or generated showcase may guide design review, but it cannot be the only evidence for product UI behavior or fidelity.
 - Render and inspect the declared coverage with project-owned browser/component tests plus screenshots or manual review as appropriate. Report the combinations actually checked and any omitted or external review explicitly. A screenshot baseline may be updated only through deliberate review; replacing it merely to erase a diff is not verification.
 
@@ -98,12 +110,13 @@ For material design-system, redesign, high-fidelity implementation or visual-pol
 - 不要求 lifecycle phase、plan task、phase gate 或阶段 Skill。
 - 如果用户明确要求独立设计稿、mock 或页面说明，可以临时生成；长期事实仍要提炼回 `project_context/**` 和 `DESIGN.md`。
 - `DESIGN.md` 是视觉设计系统事实源；项目流程、模块契约和下一步动作仍以 `project_context/**` 为准。
-- 如果用户只是要求实现页面、修复 UI bug、局部改 CSS、换颜色，或只是泛泛提到“设计 / design / user experience”，不需要触发本 Skill；只有明确角色名或强相关产物名指向设计方向、界面方案、视觉体系、交互规则或长期设计事实沉淀时才使用。
+- 如果普通页面实现已经有充分 Design Authority，或用户只要求修复 UI bug、局部改 CSS、换颜色、明确的 throwaway prototype，或只是泛泛提到“设计 / design / user experience”，不需要触发本 Skill；明确角色/产物、视觉体系工作，或 material production UI 缺失/冲突的 Design Authority 才使用。
 
 ## DESIGN.md 使用规则
 
 - 使用 Google `@google/design.md` 格式：YAML front matter 存 tokens，Markdown body 存设计理由。
 - 优先包含 `name`、`colors`、`typography`、`spacing`、`rounded` 和必要 `components` token。
+- 在 `Overview` 内维护 Design Authority 状态、唯一 authored token source/generation direction 和 design reference registry；每个 durable reference 记录稳定 id、surface/route/component、path/URI、`exact-target` / `constraint` / `inspiration` 解释及覆盖条件。不要添加 Google schema 不支持的 front-matter keys。
 - Markdown section 顺序优先为：`Overview`、`Colors`、`Typography`、`Layout`、`Elevation & Depth`、`Shapes`、`Components`、`Do's and Don'ts`。
 - 写入或修改后，如本地可用，运行 `npx @google/design.md lint DESIGN.md` 检查结构；不要把 lint 结果写成“已通过”除非本轮真实执行。
 - 需要给工程消费 token 时，可用 `npx @google/design.md export --format css-tailwind DESIGN.md` 或 `json-tailwind` 生成临时输出。
@@ -118,6 +131,6 @@ For material design-system, redesign, high-fidelity implementation or visual-pol
 - `areas/*/verification.md` 或 role=`verification` Context：UI smoke、截图验收、可访问性检查或项目自己的关键验证重复执行路径。
 - `areas/*/deployment.md` 或 role=`deployment` Context：前端部署、预览环境、运行拓扑或健康检查重复执行路径。
 - `project_context/context.toml`：复杂项目的产品域 area/context_unit、role、触发词、按需读取策略和可选边界规则。
-- `DESIGN.md`：视觉 identity、design tokens、组件视觉规则、do/don't 和视觉 rationale。
+- `DESIGN.md`：视觉 identity、design tokens、组件视觉规则、do/don't、视觉 rationale、唯一 token source/generation direction 和 design reference registry。
 
 不要编造 rationale；仅由当前代码或截图形态反推的理由、实现摘要、PR notes、命令输出、测试通过声明、截图审查、debug 过程和 agent reasoning 不进入 Context 或 `DESIGN.md`。

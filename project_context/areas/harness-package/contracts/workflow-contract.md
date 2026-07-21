@@ -15,10 +15,11 @@ When no active long-task binding or explicit `/long-task-workflow` invocation ap
 1. Read `project_context/global.md`, `project_context/architecture.md`, `project_context/context.toml`, the default area root and graph/trigger candidate role Context.
 2. Before deciding `Context Delta`, run one bounded text search over `project_context/**` using a small set of high-signal terms from the task, including explicit area/module names and relevant API/schema/state/security/verification/deployment terms. Merge matching Context with manifest candidates and read only relevant files.
 3. For product-surface or information-placement work, perform the lightweight positioning check for information ownership/layout and role placement before narrowing to code.
-4. Decide exactly one `Context Delta: none|required`; update owning Context first when required.
-5. Use platform-internal planning with no required `plan.md` to keep goal, boundaries, controlling Context, likely implementation surfaces and verification clear.
-6. Implement, run project-owned verification in proportion to risk, perform Contract Conformance and check Context drift.
-7. Hand off implementation, verification, Context status and blockers without a result artifact.
+4. For material production UI, perform the conditional Design Authority Check below before the first implementation edit.
+5. Decide exactly one `Context Delta: none|required`; update owning Context or `DESIGN.md` first when required.
+6. Use platform-internal planning with no required `plan.md` to keep goal, boundaries, controlling Context, likely implementation surfaces and verification clear.
+7. Implement, run project-owned verification in proportion to risk, perform Contract Conformance and check Context drift.
+8. Hand off implementation, verification, Context status and blockers without a result artifact.
 
 The bounded search supplements manifest routing and Agent semantic judgment. It creates no persistent index, cache, search state, Context registry or second authority. The default path requires no `plan.md`, Task Contract, mapping table, matrix, verdict, evidence ledger or implementation-summary file. Existing `plan.md` files remain ordinary user files; other existing artifacts likewise have no Harness authority.
 
@@ -34,6 +35,15 @@ The bounded search supplements manifest routing and Agent semantic judgment. It 
 - Product-surface and surface/page responsibility remains project-owned Context using existing `contract`, area/subdomain and verification roles.
 - Source-to-Context judgment replaces the former Context-to-Implementation Markdown table; Contract Conformance is the internal implementation-alignment check.
 - Do not add Product, Architecture, Rationale or Verification delta fields. `Context Delta: none|required` remains the only durable-fact result.
+
+## Design Authority Readiness
+
+- Material production UI means a new or redesigned screen, primary layout/navigation/theme/component system, high-fidelity implementation or substantial visual polish. Local style bugs, narrow existing-component edits and explicitly throwaway prototypes remain on the lightweight path.
+- Before material implementation, read the owning surface/interaction Context, `DESIGN.md`, its one authored exact-value token source and generation direction, and the design references for the affected production routes/components.
+- Classify each material reference as `exact-target`, `constraint` or `inspiration`. An exact target supports only its declared surface/viewport/mode/state fidelity; a constraint supports only its named rule; inspiration and an unconfigured starter never authorize an implicit reproduction or invented production layout.
+- If authority is incomplete, either route an explicitly requested/delegated design task through `context_uiux_design` and select/freeze its target before implementation, or stop for the material preference/decision that would change the result. Do not promote the implementation's own generated screenshot into its target.
+- Fidelity verification renders the production route/component in the declared combinations and compares it with the selected target when one exists. Token/raw-value checks, layout/DOM/accessibility assertions and target-runtime checks remain project-owned. Report only checked combinations and keep subjective approval external.
+- This is conditional order-of-thought guidance, not a required design directory, new Context role, new delta, workflow state, generic validator or pixel-perfect mandate.
 
 ## Routing And Activation
 

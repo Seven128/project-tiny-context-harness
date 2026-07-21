@@ -40,6 +40,11 @@ test("visual design and implementation guidance reaches every managed copy", asy
   }
 
   const uiux = uiuxCopies[0];
+  assert.match(uiux, /^## Design Authority Readiness \/ 设计权威就绪$/mu);
+  assert.match(uiux, /material production UI lacks sufficient or consistent Design Authority/iu);
+  assert.match(uiux, /`exact-target`, `constraint` or `inspiration`/iu);
+  assert.match(uiux, /Design authority status: `unconfigured`/iu);
+  assert.match(uiux, /implementation's own generated screenshot or diff as the target/iu);
   assert.match(uiux, /^## Visual Delivery Coverage \/ 视觉交付覆盖$/mu);
   assert.match(uiux, /task-local \*\*Visual Coverage Set\*\*/u);
   assert.match(
@@ -66,6 +71,8 @@ test("visual design and implementation guidance reaches every managed copy", asy
     development,
     /production token source, its generation direction/iu,
   );
+  assert.match(development, /first confirm Design Authority readiness/iu);
+  assert.match(development, /`exact-target`, `constraint` or `inspiration`/iu);
   assert.match(development, /production components and real product routes/iu);
   assert.match(
     development,
@@ -89,6 +96,10 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   const authoring = authoringCopies[0];
   assert.match(authoring, /^## Visual Delivery Authoring$/mu);
   assert.match(authoring, /existing Contract semantics/iu);
+  assert.match(authoring, /resolve Design Authority before Compile/iu);
+  assert.match(authoring, /unconfigured starter, style-only prose, inspiration-only set/iu);
+  assert.match(authoring, /generated implementation screenshot\/diff is an Artifact, not the target/iu);
+  assert.match(authoring, /browser or Expo-Web proxy cannot prove a native/iu);
   assert.match(
     authoring,
     /atomic Requirement, applicable Control field or named AC Assertion/iu,
@@ -116,14 +127,18 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
     /after Authority Lock is verifier-material revision/iu,
   );
   assert.match(evidence, /subjective visual quality and approval external/iu);
+  assert.match(evidence, /selected `exact-target`/iu);
+  assert.match(evidence, /implementation's current screenshot is never its own target/iu);
+  assert.match(evidence, /`ui_browser` proves browser UI only/iu);
 });
 
-test("visual guidance remains outside the default workflow and core Long-Task mechanism", async () => {
+test("default workflow routes Design Authority readiness without adding a visual lifecycle", async () => {
   const [
     spec,
     managedSurface,
     verification,
     workflow,
+    agents,
     rootReadme,
     chineseReadme,
     packageReadme,
@@ -136,6 +151,7 @@ test("visual guidance remains outside the default workflow and core Long-Task me
     read(
       "project_context/areas/harness-package/contracts/workflow-contract.md",
     ),
+    read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
     read("README.md"),
     read("README.zh-CN.md"),
     read("packages/ty-context/README.md"),
@@ -151,16 +167,22 @@ test("visual guidance remains outside the default workflow and core Long-Task me
     /authoring\/evidence specialization, not a new mechanism/iu,
   );
   assert.match(spec, /cannot infer completeness beyond declared coverage/iu);
-  assert.match(verification, /Visual delivery guidance/iu);
+  assert.match(verification, /Design Authority and visual delivery guidance/iu);
+  assert.match(workflow, /^## Design Authority Readiness$/mu);
+  assert.match(workflow, /material production UI/iu);
+  assert.match(workflow, /`exact-target`, `constraint` or `inspiration`/iu);
+  assert.match(workflow, /conditional order-of-thought guidance/iu);
   assert.doesNotMatch(workflow, /Visual Coverage Set/u);
+  assert.match(agents, /Before material production UI implementation/iu);
+  assert.match(agents, /unconfigured starter, style-only guidance or inspiration/iu);
+  assert.match(agents, /Local style fixes and explicit prototypes remain lightweight/iu);
 
   for (const content of [rootReadme, packageReadme]) {
     assert.match(content, /^### Visual Delivery Guidance$/mu);
-    assert.match(
-      content,
-      /does not change the default Workflow Contract|No visual Schema/iu,
-    );
+    assert.match(content, /default Workflow.*conditional Design Authority Check/iu);
+    assert.match(content, /No visual Schema|adds no visual Schema/iu);
   }
   assert.match(chineseReadme, /^### 视觉交付指导$/mu);
-  assert.match(chineseReadme, /不修改默认 Workflow Contract/u);
+  assert.match(chineseReadme, /默认 Workflow.*Design Authority Check/u);
+  assert.match(chineseReadme, /不新增视觉 Schema/u);
 });

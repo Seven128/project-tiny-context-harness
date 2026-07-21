@@ -13,6 +13,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 - CLI and command routing: `packages/ty-context/src/commands/**`.
 - Context manifest, graph, validation, export, sync and doctor: `packages/ty-context/src/lib/context-*`, `validators.ts`, `sync-engine.ts`, `doctor.ts`.
+- Design Authority scaffold and advisory inspection: `packages/ty-context/src/lib/design-md.ts` and `doctor.ts`; project-authored visual targets remain referenced Source/verifier inputs rather than a package-owned design artifact tree.
 - Context Authority projection: `long-task-context-authority-topology.ts` separates selected delivery-authority structure from retrieval-only manifest guidance before `context-graph-snapshot.ts` freezes Long-Task Context.
 - Active Contract schema: `packages/ty-context/src/schemas/long-task-delivery-v2/**` plus focused `long-task-*` parser/compiler/claims/risk modules.
 - Shared activation safety: `long-task-activation-validation.ts`, used by collecting Preflight and fail-fast Compile.
@@ -31,7 +32,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Foundation, workflow-contract, package-managed-surface and verification detail is task-triggered `on-demand` Context. This changes loading cost, not fact authority.
 - Before `Context Delta`, the Agent combines graph/trigger candidates with one bounded text search over `project_context/**`, using a small set of high-signal task terms such as explicit area/module names and API/schema/state/security/verification/deployment language.
 - The bounded search only discovers candidates. Semantic judgment decides relevance; it creates no vector/persistent index, cache, registry, search state or second authority.
-- `ty-context doctor` deterministically reports selected default files, bytes, soft-budget overages and exact duplicate content. The report is advisory and creates no Context state or completion authority.
+- `ty-context doctor` deterministically reports selected default files, bytes, soft-budget overages, exact duplicate content and `DESIGN.md` authority status. The report is advisory and creates no Context state or completion authority.
 - A Context fact has one primary owning file. Other high-frequency surfaces use short routing pointers instead of copying detailed rules.
 - `context.toml` retrieval fields (`triggers`, `read_when`, `read_policy`, default selection and unselected nodes) guide future Agent reads. Referenced Long-Task authority instead hashes the selected area/role/dependency projection plus selected Context contents, so retrieval-only maintenance does not create an Authority Revision or stale scoped Progress.
 
@@ -46,7 +47,8 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Default Workflow And Architecture Quality
 
-- Default execution uses manifest routing plus bounded Context search, one `Context Delta: none|required`, platform-internal planning, precise implementation, project-owned verification, Contract Conformance and Context drift checking.
+- Default execution uses manifest routing plus bounded Context search, one `Context Delta: none|required`, a conditional Design Authority Check for material production UI, platform-internal planning, precise implementation, project-owned verification, Contract Conformance and Context drift checking.
+- The UI check reads relevant screen/surface Context, `DESIGN.md`, one authored token source/generation direction and selected versioned design references. Exact targets may support fidelity claims, constraints prove only their declared scope, and inspiration never becomes an implicit reproduction target. Missing authority routes to explicit design authoring/delegation or a genuine decision before production styling; local style fixes and explicit prototypes stay lightweight.
 - A risk-triggered architecture gate applies when work creates or changes a durable module/capability, public API/schema/data/persistence, state/source of truth, ownership/dependency direction, cross-area boundary, migration/security/recovery behavior or reusable abstraction.
 - The gate resolves owner, unique source of truth, dependency direction, interface/state/lifecycle, failure/retry/recovery/compatibility, forbidden shortcuts and the project-owned executable check that protects the boundary.
 - Durable results update owning Context; local implementation choices remain task-local. Small fixes do not pay architecture-ceremony cost.
@@ -73,6 +75,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Stable architecture requirements are represented through existing Source-backed technical obligations, global constraints or forbidden shortcuts, owner/path envelopes, Bindings and project-owned executable Checks.
 - Functional behavior and architecture structure are separate claims when either can pass without the other. Both must have falsifiable proof when both are required.
 - Unsupported architecture preference, inferred product semantics or an unverifiable “good design” claim must not become false authority. Resolve it as durable Context, task-local judgment or `decision_required`.
+- A material UI request with only an unconfigured starter, style prose or inspiration cannot use the implementation itself as its own target. A design authored under explicit delegation must be selected and frozen as Source before fidelity implementation or comparison begins.
 - Scope/path escape, duplicate authority, bypass of an owning service/facade, wrong dependency direction or second source of truth blocks only when the Contract or controlling Context declares the invariant and a reliable check can observe it.
 
 ## Constraints And Tradeoffs
@@ -92,7 +95,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Verification Implications
 
-- `ty-context doctor` reports default Context footprint and exact duplicate default files as advisory maintenance signals.
+- `ty-context doctor` reports default Context footprint, exact duplicate default files and Design Authority status as advisory maintenance signals.
 - `make validate-context` protects required recovery structure and registered role consistency; it is not relaxed to obtain a smaller Context.
 - Workflow guidance tests must prove manifest routing and bounded search are both present, search remains limited to `project_context/**`, and no index/state is introduced.
 - Context Authority topology tests prove retrieval-only edits preserve selected authority while selected area, role and dependency changes remain hash-visible; Context evolution tests prove the same boundary through Compile, Progress and status.
