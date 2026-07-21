@@ -4,22 +4,23 @@ Use this reference to derive a bounded design-resource commission from the actua
 
 ## 1. Establish the scope ceiling
 
-Extract the smallest explicit output boundary before interpreting the background:
+Extract the smallest explicit output or development boundary before interpreting the background:
 
-- subject: one control/component, one page, named pages, a flow or a reusable system;
+- subject: one control/component, one region, one page, named pages, a flow or a reusable system;
+- development coverage when the resource is an implementation handoff: named surfaces/routes, regions, component families, unique controls and conditions that will actually be built;
 - platform and viewport when known;
 - modes, states and transitions explicitly requested;
 - fidelity or editability requested, if any;
 - exclusions such as “other pages not included,” “preview only,” “no Figma” or “do not update files.”
 
-Rich background improves a bounded artifact. It never authorizes more artifacts. If the user supplies a complete app plan but asks to preview one button, generate at most the one-control resource.
+Rich background improves a bounded artifact. It never authorizes more artifacts. Necessary surrounding context may show where a partial feature lives, but it does not place the rest of that page or product in scope. If the user supplies a complete app plan but asks to preview one button, generate at most the one-control resource. If the user asks for design resources for one development slice, cover that slice through its material controls and conditions, not the whole background product.
 
 ## 2. Choose the intent
 
 | Intent | User decision being supported | Default stopping point |
 | --- | --- | --- |
 | `exploration` | “What might this look or feel like?” | Visible scoped candidate plus minimal sanity review |
-| `handoff` | “Can another designer/developer reliably consume this?” | Project-native artifact plus provenance, coverage, limitations and relevant checks |
+| `handoff` | “Can another designer/developer reliably consume this without inventing material in-scope UI/UX decisions?” | Minimum sufficient project-native resources plus scope-bound coverage, provenance, limitations and relevant checks |
 | `selected-source-preparation` | “Preserve this explicitly selected direction for later use.” | Immutable identity or approved snapshot, explicit selection basis and downstream notes |
 
 Intent is task-local and need not be persisted. Selected-source preparation does not itself adopt Design Authority.
@@ -36,9 +37,40 @@ Preserve each supplied item's actual role:
 
 An optional Source Plan is one possible input. Raw notes or an initial proposal are equally valid. Never require one merely to make the other usable.
 
-## 4. Identify independent gaps
+## 4. Derive development-corresponding coverage
 
-Ask what remains uncertain inside the scope:
+For an implementation handoff, use this task-local equation:
+
+```text
+resources to commission
+  = material UI/UX decisions inside the explicit development scope
+  - decisions sufficiently covered by selected existing Source
+```
+
+A decision is material when changing it would materially change what the user sees, understands, can do or receives as feedback. Pure code structure and non-user-visible implementation choices are not design gaps.
+
+Account for the applicable meaning at each level; do not require filler for non-applicable dimensions:
+
+| Coverage level | Material UI/UX meaning |
+| --- | --- |
+| Surface/flow | information hierarchy, page/route composition, layout grid/constraints, region relationships, stacking/overlay, scrolling/overflow, navigation, branching and recovery context |
+| Visual treatment/content | typography, color, spacing, border, radius, elevation, iconography, imagery, density, exact copy/labels, formatting, localization and content presentation |
+| Component/control | anatomy, dimensions, hit area, variants, defaults, visibility/availability and mapping of repeated controls to an existing component family |
+| State/interaction | trigger/input, validation, loading/empty/success/failure/disabled/permission states, transitions, gestures, navigation result, focus/selection behavior, feedback and recovery |
+| Motion | animated property, start/end state, duration, easing, sequencing, interruption and reduced-motion behavior when motion matters |
+| Adaptation/input | viewport/breakpoint, safe area, theme/mode, platform convention, pointer/touch/keyboard behavior, orientation and content stress |
+| Accessibility | label/role, focus order/visibility, keyboard path, touch target, contrast and other applicable assistive behavior |
+| Assets | exact icons, illustrations, media, sound/haptic cues or other bespoke content whose appearance or feedback affects the result |
+
+For every material in-scope item, record one task-local disposition: `existing-covered`, `new-resource-needed`, `not-applicable`, `excluded-by-scope`, `decision-required` or `unavailable`. This accounting is reasoning/handoff metadata, not a required file, persistent coverage registry, Design Authority or acceptance result.
+
+Existing coverage is sufficient only for the conditions it explicitly specifies or demonstrates. Seeing a control in one default page frame does not cover its variants, dynamic states, feedback, motion, responsive behavior or accessibility. Conversely, a selected component source may cover many control instances, so do not commission duplicate designs merely because several stable control keys map to it.
+
+Design resources express user-visible interaction semantics and the presentation of product rules. Business, data, permission and algorithmic rules remain owned by product/technical Source; reference those rules and show their visible consequences without inventing them or making a visual artifact their sole owner.
+
+## 5. Identify independent gaps
+
+For exploration, ask what remains uncertain inside the scope. For a handoff, ask which material coverage items remain `new-resource-needed`:
 
 - **structure:** information hierarchy, layout regions or page relationships;
 - **flow:** navigation, branching, recovery or multi-step sequence;
@@ -50,23 +82,25 @@ Ask what remains uncertain inside the scope:
 
 Do not manufacture a gap already resolved by selected Source.
 
-## 5. Consider resources conditionally
+## 6. Consider resources conditionally
 
 | Resource | Select when it closes this gap | Usually omit when |
 | --- | --- | --- |
-| Control/component state study | One control's variants, anatomy, feedback or edge states are the decision | The page target already specifies those states precisely |
+| Control/component state study | A unique or complex control has uncovered anatomy, variants, feedback, motion or edge states | A selected page/prototype or component source explicitly specifies and demonstrates the applicable conditions |
 | Low-fidelity wireframe | Hierarchy, topology or flow must be judged without visual-style distraction | Structure is settled and only visual direction is unknown |
 | High-fidelity visual candidate | Visual hierarchy, tone or composition needs selection | Existing selected targets already govern the requested conditions |
 | Interactive prototype | Transitions, navigation, state retention or task feel must be experienced | A static decision is sufficient or the provider cannot produce genuine interaction |
 | Flow/journey board | Multiple surfaces, branches or recovery paths must be compared together | The request is one isolated surface/control |
 | Design-system slice | Several requested artifacts need shared tokens/components or reuse rules | One exploratory candidate does not justify a system |
-| Component inventory/specification | Development handoff needs explicit reusable variants and states | Exploration is visual only and no reuse decision is requested |
+| Component inventory/specification | Development handoff needs explicit reusable families, variants, state behavior or mappings for several control instances | Exploration is visual only, or selected component sources already cover every mapped instance |
 | Figma handoff | Editable collaborative frames/libraries are explicitly valuable and operational | A screenshot/HTML/project-native source is sufficient or connector/auth/export is unavailable |
 | Image/illustration/icon/media study | Bespoke content materially defines the selected direction | Generic placeholders answer the present decision |
 
-A prototype is often valuable for new Web/App flows, but it is never automatically required. Low- and high-fidelity resources may both be selected only when they answer independent questions.
+A prototype is often valuable for new Web/App flows, but it is never automatically required. Low- and high-fidelity resources may both be selected only when they answer independent questions. One comprehensive, inspectable artifact may cover page composition and several component families; a static frame cannot claim unseen interaction or state coverage merely because all controls appear in it.
 
-## 6. Assign a disposition to every considered resource
+Do not translate control-level completeness into one artifact per control. Map ordinary controls to selected shared component variants, group related states in one component-family board or workbench, and reserve dedicated resources for unique or complex controls whose material meaning is otherwise uncovered.
+
+## 7. Assign a disposition to every considered resource
 
 - `selected`: required to close a current gap;
 - `optional`: useful, but not necessary for the current decision;
@@ -76,21 +110,26 @@ A prototype is often valuable for new Web/App flows, but it is never automatical
 
 Give one concrete reason. Do not turn `optional` into automatic extra work.
 
-## 7. Build the commission envelope
+## 8. Build the commission envelope
 
 The task-local envelope should contain only product-specific information:
 
 ```yaml
 intent: exploration | handoff | selected-source-preparation
 scope:
-  subjects: [named control/surface/flow keys]
-  ceiling: one-control | one-page | named-pages | named-flow | system-slice
+  subjects: [named surface/flow/region/component/control keys]
+  ceiling: one-control | one-region | one-page | named-pages | named-flow | system-slice
+  necessary_context: []
+  excluded: []
   platform: known-or-unknown
   viewports: []
 coverage:
-  required_content: []
-  required_states: []
-  required_transitions: []
+  material_needs: []
+  existing_mappings: []
+  required_content_visual: []
+  required_components_states: []
+  required_interactions_motion: []
+  required_adaptation_accessibility: []
 inputs:
   exact_targets: []
   constraints: []
@@ -99,19 +138,19 @@ inputs:
 selected_capability:
   kind: runtime-discovered-kind
   id: runtime-discovered-id
-exclusions: []
 expected_entry: known-or-provider-native
 review_promise: minimal-sanity | handoff-checks | selected-source-snapshot
 ```
 
 This is an explanatory shape, not a required file or schema. Never paste or paraphrase the Open Design capability's own seed/template prompt into it.
 
-## 8. Iterate and stop
+## 9. Iterate and stop
 
 - Keep each revision inside the original scope ceiling unless the user explicitly expands it.
 - Reuse the current Open Design project when that preserves context and provenance; preserve the prior artifact hash before overwriting a selected candidate.
 - Do not create low-fi, high-fi, component boards and Figma copies merely because a process diagram lists them.
-- Stop as soon as the requested decision is supported.
+- For exploration, stop as soon as the requested decision is supported.
+- For an implementation handoff, stop only when every material in-scope coverage item has an explicit disposition and the resource mapping leaves no material user-visible design decision for the implementer to invent. Honest `decision-required` or `unavailable` items may stop generation but remain visible blockers/limitations; this does not claim Design Authority or implementation acceptance.
 
 When a human explicitly selects or rejects a direction, return an accepted-design-decision delta when requested rather than editing the initial proposal. Include accepted, rejected and unresolved choices; product, information, control/state and visual implications; affected stable keys; and selected artifact locators/hashes. Do not require a delta after every iteration. Interim observations remain task-local and may be returned once as a consolidated delta after the design direction is final. A separate plan owner decides whether, when and what to revise.
 
@@ -119,6 +158,9 @@ When a human explicitly selects or rejects a direction, return an accepted-desig
 
 - **Large draft, one filter control:** select a control-state study if anatomy and states are uncertain; omit page/flow resources.
 - **One page, style preview:** select one high-fidelity candidate; do not add a design-system pack or validator run.
+- **One page scheduled for development:** use a page/flow target for layout and context, map ordinary buttons/inputs to selected component variants, and add grouped component-state or dedicated complex-control studies only where relevant static/dynamic states, feedback, motion, responsiveness or accessibility remain uncovered.
+- **Local panel inside a large app:** include enough surrounding page context to place and size the panel, but generate detailed resources only for the panel, its in-scope controls and affected states.
+- **One comprehensive interactive artifact:** accept it as the minimum set when its sections and reachable states explicitly cover every material in-scope item; do not add duplicate control boards. If it exposes only a static/default view, commission the missing state/interaction coverage instead of inferring it.
 - **Three-screen interaction flow:** select a low-fi flow and an interactive high-fi prototype only if topology and interaction/visual behavior are independently unresolved.
 - **Local style fix with exact target:** select no new design resource and route to implementation.
 - **Raw draft before Source Plan:** iterate only requested candidates, optionally return one consolidated accepted-decision delta when requested after selection, and leave both draft revision and later Source Plan authoring separate.

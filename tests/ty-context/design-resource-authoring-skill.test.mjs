@@ -40,8 +40,10 @@ test("Skill triggers are explicit and keep adjacent workflows independent", asyn
   for (const trigger of [
     "generate",
     "use Open Design",
+    "design resources needed for an explicitly named development scope",
     "生成设计资源",
     "使用 Open Design",
+    "为开发准备设计资源",
     "生成原型图",
     "先看一个控件/页面效果",
   ])
@@ -67,6 +69,14 @@ test("Skill triggers are explicit and keep adjacent workflows independent", asyn
     skill,
     /Route ordinary implementation.*default Workflow Contract/iu,
   );
+  assert.match(
+    skill,
+    /explicitly requested output or development scope[\s\S]*every material user-visible UI\/UX decision[\s\S]*without forcing one artifact per control/iu,
+  );
+  assert.match(
+    skill,
+    /must not invent or become the sole owner of business, data, permission or algorithmic logic/iu,
+  );
 });
 
 test("selection contract enforces a smallest sufficient set and hard scope ceiling", async () => {
@@ -76,7 +86,7 @@ test("selection contract enforces a smallest sufficient set and hard scope ceili
   ]);
   const contract = `${skill}\n${selection}`;
   assert.match(contract, /hard (?:scope )?ceiling/iu);
-  assert.match(contract, /One control.*one page.*three pages/isu);
+  assert.match(contract, /one control\/component.*one page.*named pages/isu);
   assert.match(contract, /smallest sufficient/iu);
   for (const disposition of [
     "selected",
@@ -106,7 +116,92 @@ test("selection contract enforces a smallest sufficient set and hard scope ceili
   );
   assert.match(
     contract,
-    /stop as soon as the requested decision is supported/iu,
+    /For exploration, stop as soon as the requested decision is supported/iu,
+  );
+  assert.match(
+    contract,
+    /implementation handoff stops only when every material in-scope UI\/UX need|For an implementation handoff, stop only when every material in-scope coverage item/iu,
+  );
+});
+
+test("implementation handoff is development-corresponding and complete through material controls", async () => {
+  const [skill, selection, handoff] = await Promise.all([
+    copies("SKILL.md").then((items) => items[0]),
+    copies("references/resource-selection.md").then((items) => items[0]),
+    copies("references/downstream-handoff.md").then((items) => items[0]),
+  ]);
+  const contract = `${skill}\n${selection}\n${handoff}`;
+
+  assert.match(
+    contract,
+    /explicit output or development (?:scope|boundary)[\s\S]*hard ceiling/iu,
+  );
+  assert.match(
+    contract,
+    /necessary surrounding context[\s\S]*does not (?:place|put).*rest of (?:that page|the page|the product)/iu,
+  );
+  assert.match(
+    selection,
+    /resources to commission[\s\S]*material UI\/UX decisions inside the explicit development scope[\s\S]*decisions sufficiently covered by selected existing Source/iu,
+  );
+  for (const disposition of [
+    "existing-covered",
+    "new-resource-needed",
+    "not-applicable",
+    "excluded-by-scope",
+    "decision-required",
+    "unavailable",
+  ])
+    assert.match(contract, new RegExp(`\\b${disposition}\\b`, "u"));
+  for (const coverage of [
+    "Surface/flow",
+    "Visual treatment/content",
+    "Component/control",
+    "State/interaction",
+    "Motion",
+    "Adaptation/input",
+    "Accessibility",
+    "Assets",
+  ])
+    assert.match(selection, new RegExp(coverage, "iu"));
+  assert.match(
+    selection,
+    /layout grid\/constraints.*stacking\/overlay.*scrolling\/overflow/iu,
+  );
+  assert.match(
+    selection,
+    /exact copy\/labels.*formatting.*localization/iu,
+  );
+  assert.match(selection, /dimensions.*hit area/iu);
+  assert.match(selection, /focus\/selection behavior/iu);
+  assert.match(selection, /sound\/haptic cues/iu);
+  assert.match(
+    contract,
+    /Seeing a control in one default page frame does not cover|static frame covers only the conditions it actually shows/iu,
+  );
+  assert.match(
+    contract,
+    /Do not (?:translate control-level completeness into|require) one (?:artifact|separate file) per control/iu,
+  );
+  assert.match(
+    contract,
+    /repeated controls.*component family|Map ordinary controls to selected shared component variants/iu,
+  );
+  assert.match(
+    contract,
+    /unique or complex controls.*dedicated|dedicated (?:study|resources).*unique or complex/isu,
+  );
+  assert.match(
+    contract,
+    /Business, data, permission and algorithmic rules remain owned by product\/technical Source/iu,
+  );
+  assert.match(
+    handoff,
+    /stable-key mapping[\s\S]*material surface\/flow\/region\/component\/control condition/iu,
+  );
+  assert.match(
+    handoff,
+    /not a required pack, persistent coverage authority or acceptance record/iu,
   );
 });
 
@@ -259,6 +354,9 @@ test("product, Context and public surfaces expose the same thin-commissioner bou
   assert.match(plan, /Plan key: `PLAN-DRA-001`/u);
   assert.match(plan, /REQ-DRA-037/u);
   assert.match(plan, /AC-DRA-016/u);
+  assert.match(plan, /IN-DRA-USER-002/u);
+  assert.match(plan, /REQ-DRA-019/u);
+  assert.match(plan, /AC-DRA-021/u);
   assert.match(plan, /optional Source Plan/iu);
   assert.match(
     plan,
@@ -294,7 +392,119 @@ test("product, Context and public surfaces expose the same thin-commissioner bou
   assert.match(chineseReadme, /^### 可选 Design Resource Authoring$/mu);
   assert.match(chineseReadme, /最小充分资源集/u);
   assert.match(chineseReadme, /互不调用/u);
+  assert.match(chineseReadme, /明确输出或开发内容.*硬 scope ceiling/u);
+  assert.match(chineseReadme, /不要求逐控件一份稿|逐控件一份稿.*不是全局必选项/u);
   assert.match(profileSource, /"design-resource-authoring"/u);
   assert.match(manifest, /design-resource-authoring/u);
   assert.match(manifest, /生成设计资源/u);
+  assert.match(manifest, /为开发准备设计资源/u);
+});
+
+test("development-corresponding design purpose is recoverable through owning Context and indexes", async () => {
+  const [
+    plan,
+    spec,
+    globalContext,
+    architecture,
+    area,
+    foundation,
+    workflow,
+    packageSurface,
+    rationale,
+    implementationIndex,
+    verification,
+    manifest,
+    agents,
+    rootReadme,
+    chineseReadme,
+    packageReadme,
+  ] = await Promise.all([
+    read("docs/design-resource-authoring-source-plan.md"),
+    read("PROJECT_SPEC.md"),
+    read("project_context/global.md"),
+    read("project_context/architecture.md"),
+    read("project_context/areas/harness-package.md"),
+    read("project_context/areas/harness-package/foundation/context-model.md"),
+    read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+    read(
+      "project_context/areas/harness-package/contracts/package-managed-surfaces.md",
+    ),
+    read(
+      "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+    ),
+    read("project_context/areas/harness-package/implementation-index.md"),
+    read("project_context/areas/harness-package/verification.md"),
+    read("project_context/context.toml"),
+    read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
+    read("README.md"),
+    read("README.zh-CN.md"),
+    read("packages/ty-context/README.md"),
+  ]);
+
+  for (const content of [
+    plan,
+    spec,
+    globalContext,
+    architecture,
+    area,
+    foundation,
+    workflow,
+    packageSurface,
+    rationale,
+    implementationIndex,
+    verification,
+    agents,
+    rootReadme,
+    packageReadme,
+  ]) {
+    assert.match(content, /design-resource-authoring/u);
+    assert.match(
+      content,
+      /development (?:content|scope)|development-scope|implementation handoff/iu,
+    );
+  }
+
+  const aligned = [
+    plan,
+    spec,
+    globalContext,
+    architecture,
+    area,
+    foundation,
+    workflow,
+    packageSurface,
+    rationale,
+    implementationIndex,
+    verification,
+    agents,
+    rootReadme,
+    chineseReadme,
+    packageReadme,
+  ].join("\n");
+  assert.match(aligned, /hard scope ceiling|hard ceiling|硬 scope ceiling/iu);
+  assert.match(aligned, /material user-visible UI\/UX|材料性的 UI\/UX/iu);
+  assert.match(aligned, /one-file-per-control|one artifact per control|逐控件一份稿/iu);
+  assert.match(aligned, /static\/default.*(?:unshown|unseen|自动代表)/iu);
+  assert.match(
+    aligned,
+    /business.*data.*permission.*algorithmic|业务.*数据.*权限.*算法/isu,
+  );
+  assert.match(
+    implementationIndex,
+    /resource-selection\.md[\s\S]*downstream-handoff\.md/iu,
+  );
+  assert.match(
+    implementationIndex,
+    /design-resource-authoring-skill\.test\.mjs/iu,
+  );
+  assert.match(
+    verification,
+    /existing-source subtraction|subtracting sufficient selected Source/iu,
+  );
+  assert.match(manifest, /development-scope design/iu);
+  assert.match(manifest, /control-level design coverage/iu);
+  assert.match(manifest, /为开发准备设计资源/u);
+  assert.match(manifest, /与开发内容对应的设计资源/u);
+  assert.match(manifest, /控件粒度 UI\/UX 信息/u);
+  assert.doesNotMatch(manifest, /docs\/design-resource-authoring-source-plan\.md/u);
 });

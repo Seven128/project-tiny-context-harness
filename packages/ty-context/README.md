@@ -137,7 +137,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.6.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.7.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -205,11 +205,13 @@ Combined design-and-implementation work may author candidates in ordinary Outcom
 
 ### Optional Design Resource Authoring
 
-Use `/design-resource-authoring` only for an explicit request to generate, iterate or prepare standalone design resources, or to use Open Design. It accepts raw notes or an initial proposal, product/technical plans, a visual brief, screenshots, existing resources or an optional Source Plan. Source Plan authoring is not a prerequisite; both Skills consume raw inputs independently and neither invokes the other.
+Use `/design-resource-authoring` only for an explicit request to generate, iterate or prepare standalone design resources, prepare resources for a named development scope, or use Open Design. It accepts raw notes or an initial proposal, product/technical plans, a visual brief, screenshots, existing resources or an optional Source Plan. Source Plan authoring is not a prerequisite; both Skills consume raw inputs independently and neither invokes the other.
 
-The Skill enforces the requested scope ceiling, discovers current Open Design capabilities and assigns every considered resource a reasoned `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` disposition. It commissions only the smallest sufficient set through structured MCP with bounded fallback. No prototype, low/high-fidelity pair, component board, Figma handoff, artifact count or directory is mandatory, and Tiny Context copies no provider prompt/template or catalogue.
+The Skill makes the explicit output or development content its hard ceiling; a local slice includes only necessary surrounding context. For an implementation handoff it accounts for material UI/UX meaning through relevant surfaces/flows/regions/components/controls and applicable visual/content, state, interaction/feedback/motion, responsive/platform/input, accessibility and asset conditions, then subtracts only explicit selected-source coverage. It discovers current Open Design capabilities and assigns every considered resource a reasoned `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` disposition.
 
-Exploration returns a visible scoped candidate after minimal sanity review; handoff adds provenance, explicit entry, declared coverage and limitations; selected-source preparation requires explicit human selection and immutable identity. Iteration stays task-local. A final consolidated accepted/rejected/unresolved delta may inform a separately owned proposal revision, but the Skill never edits that proposal, Context, `DESIGN.md`, production code or a Delivery Contract and creates no Design Authority.
+It commissions only the smallest sufficient set through structured MCP with bounded fallback. Repeated controls may map to one component family, one inspectable artifact may cover several needs and only unique/complex uncovered controls need dedicated studies. Static/default views do not imply unseen behavior. No prototype, low/high-fidelity pair, component board, Figma handoff, one-file-per-control rule, artifact count or directory is mandatory, and Tiny Context copies no provider prompt/template or catalogue. Designs carry user-visible interaction semantics, not sole ownership of business/data/permission/algorithmic rules.
+
+Exploration returns a visible scoped candidate after minimal sanity review. An implementation handoff adds provenance, explicit entry, declared coverage, limitations and a concise stable-key mapping from every material in-scope item to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition; it is sufficient only when implementation need not invent a material user-visible choice inside scope. This mapping creates no pack, registry or acceptance authority. Selected-source preparation requires explicit human selection and immutable identity. Iteration stays task-local. A final consolidated accepted/rejected/unresolved delta may inform a separately owned proposal revision, but the Skill never edits that proposal, Context, `DESIGN.md`, production code or a Delivery Contract and creates no Design Authority.
 
 Actual generation remains with configured Open Design/Product Design, Figma, image-generation, prototype or human systems. Their outputs enter the default Workflow or Long-Task as ordinary external Source. Candidates and inspiration authorize no fidelity. A selected exact target controls only its declared conditions and needs stable immutable identity before it can affect a `verification_input`. `context_uiux_design` performs downstream UI Authority Closure; implementation renders and diffs remain evidence rather than self-authorizing targets.
 
@@ -338,7 +340,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.7.6.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.7.tgz`.
 
 ## Community And Further Reading
 

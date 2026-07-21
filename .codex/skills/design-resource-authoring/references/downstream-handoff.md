@@ -10,6 +10,16 @@ Generated resources remain ordinary external Source. This reference preserves en
 
 The Skill may preserve an input already classified as `exact-target`; it may not promote its own candidate to `exact-target`. Unknown coverage remains unknown.
 
+## Development-scope coverage
+
+An implementation-facing handoff is complete at the authoring layer only for the user's explicit development scope. Record the in-scope surfaces/flows/regions/component families/unique controls, the minimum surrounding context needed to place them and the explicit exclusions. Broader product Source remains background and does not authorize generating detailed resources for unaffected areas.
+
+Map every material in-scope UI/UX item to selected existing Source, a newly generated resource, `not-applicable`, `excluded-by-scope`, `decision-required` or `unavailable`. The mapping may be concise prose or a task-local structured block; it is not a required pack, persistent coverage authority or acceptance record.
+
+A page target, interactive prototype, component-family workbench or one larger addressable design board may each cover several items. Do not require a separate file per control. Reuse selected component variants for repeated controls and commission dedicated resources only for unique or complex uncovered meaning. A static frame covers only the conditions it actually shows; it does not silently cover dynamic states, interaction, motion, responsiveness or accessibility.
+
+The handoff may specify user-visible triggers, transitions, states, feedback, recovery and the presentation of product rules. Business, data, permission and algorithmic rules remain owned by product/technical Source and must be referenced rather than invented or made authoritative only in visuals.
+
 ## Intent-sized response
 
 ### Exploration
@@ -28,11 +38,13 @@ Do not require files, schemas, packs, hashes or validator runs for a throwaway u
 
 Add only the fields needed for another person or workflow to consume it:
 
+- explicit output/development scope, necessary surrounding context and exclusions;
 - stable resource key plus surface/control/state/target keys when known;
 - classification: candidate, inspiration, constraint or pre-existing exact target;
 - provider version, project/run, selected capability/template, agent/model and design-system provenance as reported live;
 - explicit source entry or preview locator and immutable hash/snapshot when available;
 - declared platform, viewport, mode, state, content and interaction coverage;
+- for an implementation handoff, a stable-key mapping from each material surface/flow/region/component/control condition to its owning existing/generated resource or unresolved disposition;
 - selection basis if a human selection already exists;
 - unresolved decisions, known limitations and forbidden inferences;
 - outer review performed and provider status qualifier.

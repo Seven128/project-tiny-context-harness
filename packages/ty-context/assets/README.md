@@ -137,7 +137,7 @@ The smoke packs the local workspace, installs it into a disposable repo and vali
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.6.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.7.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -226,11 +226,13 @@ Combined design-and-implementation work may author candidates in ordinary Outcom
 
 ### Optional Design Resource Authoring
 
-Use `/design-resource-authoring` only when explicitly asking to generate, iterate or prepare standalone design resources, or to use Open Design. Inputs may be raw notes or an initial proposal, product/technical plans, a specialized visual brief, screenshots, existing resources or an optional Source Plan. Source Plan authoring is not a prerequisite: both Skills can consume raw inputs independently and neither invokes the other.
+Use `/design-resource-authoring` only when explicitly asking to generate, iterate or prepare standalone design resources, prepare the design resources for a named development scope, or use Open Design. Inputs may be raw notes or an initial proposal, product/technical plans, a specialized visual brief, screenshots, existing resources or an optional Source Plan. Source Plan authoring is not a prerequisite: both Skills can consume raw inputs independently and neither invokes the other.
 
-The Skill fixes the requested output as a hard scope ceiling, discovers current Open Design agents/models, functional skills, rendering templates, design systems, plugins and export routes, then gives every considered resource a reasoned `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` disposition. It commissions only the smallest sufficient set through structured MCP, with bounded CLI/daemon and UI fallback. A prototype, low/high-fidelity pair, component board, Figma handoff, variant count or directory is never universally required, and Tiny Context never copies Open Design prompts/templates or vendors a provider catalogue.
+The Skill fixes the requested output or development content as a hard scope ceiling. A partial feature includes only the surrounding context needed to place it; broad background never expands generation to the rest of the page or product. For an implementation handoff, the Skill accounts for material UI/UX meaning from surface/flow structure through relevant regions and controls: visual/content treatment, component anatomy and variants, static/dynamic states, interaction/feedback/recovery/motion, responsive/platform/input behavior, accessibility and necessary assets. It subtracts only coverage explicitly supplied by selected existing Source, then discovers current Open Design agents/models, functional skills, rendering templates, design systems, plugins and export routes and gives every considered resource a reasoned `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` disposition.
 
-Exploration returns the requested visible candidate after minimal sanity review. Handoff adds project/run/capability provenance, explicit entry, declared coverage and known limitations. Selected-source preparation requires a real human selection basis and immutable hash or approved snapshot, but still creates no Design Authority. Candidate iterations stay task-local; the Skill may return one final consolidated accepted/rejected/unresolved delta for a separately owned proposal revision, but never edits the proposal, `project_context/**`, `DESIGN.md`, production code or a Delivery Contract.
+It commissions only the smallest sufficient set through structured MCP, with bounded CLI/daemon and UI fallback. One page/prototype or component-family workbench may cover many items when its conditions are addressable and inspectable; repeated controls map to shared variants, while unique or complex uncovered controls may need dedicated state/interaction studies. A static/default frame never silently covers unseen state, interaction, motion, responsiveness or accessibility. A prototype, low/high-fidelity pair, component board, Figma handoff, one-file-per-control rule, variant count or directory is never universally required, and Tiny Context never copies Open Design prompts/templates or vendors a provider catalogue. Designs may express user-visible interaction semantics and the presentation of product rules, but business/data/permission/algorithmic rules remain owned by product/technical Source.
+
+Exploration returns the requested visible candidate after minimal sanity review. An implementation handoff adds project/run/capability provenance, explicit entry, declared coverage, known limitations and a concise stable-key mapping from each material in-scope surface/flow/region/component/control condition to existing/generated Source or a non-applicable/excluded/unresolved disposition. The mapping is not a required pack, registry or acceptance result; handoff authoring is sufficient only when no material user-visible choice inside the explicit scope is silently left for implementation to invent. Selected-source preparation requires a real human selection basis and immutable hash or approved snapshot, but still creates no Design Authority. Candidate iterations stay task-local; the Skill may return one final consolidated accepted/rejected/unresolved delta for a separately owned proposal revision, but never edits the proposal, `project_context/**`, `DESIGN.md`, production code or a Delivery Contract.
 
 The actual generation remains with configured Open Design/Product Design, Figma, image-generation, prototype or human systems. Their outputs enter the default Workflow or Long-Task as ordinary external Source. Candidates and inspiration authorize no fidelity. A selected exact target controls only its declared surface/viewport/mode/state/content conditions and needs stable immutable identity before it can affect a `verification_input`. `context_uiux_design` performs downstream UI Authority Closure and adopts only durable facts into Context/`DESIGN.md`; implementation renders and diffs remain evidence artifacts rather than self-authorizing targets.
 
@@ -516,7 +518,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.6.tgz` under the preview output directory.
+`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.7.tgz` under the preview output directory.
 
 ## Community And Further Reading
 

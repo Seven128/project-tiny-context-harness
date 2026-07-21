@@ -123,11 +123,13 @@ combined design-and-implementation 可以先用普通 Outcome/Stage 生成候选
 
 ### 可选 Design Resource Authoring
 
-只有在用户明确要求生成、迭代、准备独立设计资源或使用 Open Design 时，才使用 `/design-resource-authoring`。输入可以是零散笔记或初版方案、产品/技术方案、专门视觉 brief、截图、已有资源或可选 Source Plan。Source Plan 不是前置项：两个 Skill 都可以独立读取原始输入，互不调用。
+只有在用户明确要求生成、迭代、准备独立设计资源、为一段明确开发内容准备设计资源或使用 Open Design 时，才使用 `/design-resource-authoring`。输入可以是零散笔记或初版方案、产品/技术方案、专门视觉 brief、截图、已有资源或可选 Source Plan。Source Plan 不是前置项：两个 Skill 都可以独立读取原始输入，互不调用。
 
-Skill 先把明确输出当作硬 scope ceiling，再实时发现 Open Design 当前 agent/model、functional skill、rendering template、design system、plugin 与 export route，并把每种候选资源说明为 `selected`、`optional`、`not-needed`、`unavailable` 或 `decision-required`。它只通过结构化 MCP（必要时有限使用 CLI/daemon/UI fallback）委托最小充分资源集；原型、低/高保真组合、组件板、Figma handoff、变体数量和目录都不是全局必选项。Tiny Context 不复制 Open Design 的 prompt/template，也不内置 provider catalogue。
+Skill 把明确输出或开发内容当作硬 scope ceiling。局部功能只可带上定位它所需的周边上下文；再丰富的背景也不能把生成范围扩成页面其余部分或整个产品。面向实现 handoff 时，Skill 要覆盖范围内所有材料性的 UI/UX 含义：surface/flow 与 region 结构、视觉和内容呈现、控件结构/尺寸/变体、静态与动态状态、交互/反馈/恢复/动效、响应式/平台/输入方式、可访问性及必要资产；先扣除已有 selected Source 明确覆盖的条件，再发现 Open Design 当前 agent/model、functional skill、rendering template、design system、plugin 与 export route，并把每种候选资源说明为 `selected`、`optional`、`not-needed`、`unavailable` 或 `decision-required`。
 
-探索模式只做最小完整性检查并尽快展示指定候选；handoff 增加 project/run/capability provenance、明确 entry、声明覆盖与已知限制；selected-source preparation 要求真实人工选择依据和不可变 hash 或已批准 snapshot，但仍不产生 Design Authority。候选迭代保持任务内；Skill 可以在方向最终确定后返回一份合并的 accepted/rejected/unresolved 差异供独立方案步骤处理，但不会修改初版方案、`project_context/**`、`DESIGN.md`、生产代码或 Delivery Contract。
+Skill 只通过结构化 MCP（必要时有限使用 CLI/daemon/UI fallback）委托最小充分资源集。一个可定位、可检查的大页面稿、原型或组件族 workbench 可以覆盖多个事项；重复控件映射到共享变体，只有仍缺少材料性含义的独特/复杂控件才需要专门状态或交互稿。静态/default 页面不能自动代表没展示的动态状态、交互、动效、响应式或可访问性。原型、低/高保真组合、组件板、Figma handoff、逐控件一份稿、变体数量和目录都不是全局必选项。设计资源可以表达用户可感知的交互语义和产品规则的呈现方式，但业务、数据、权限和算法逻辑仍由产品/技术 Source 所有。Tiny Context 不复制 Open Design 的 prompt/template，也不内置 provider catalogue。
+
+探索模式只做最小完整性检查并尽快展示指定候选；面向实现的 handoff 还要增加 project/run/capability provenance、明确 entry、声明覆盖、已知限制，以及每个材料性 surface/flow/region/component/control 条件到已有/新资源或不适用/范围排除/未决项的简洁稳定 Key 映射。该映射不是必选 pack、registry 或验收结果；只有范围内不再有需要开发者自行发明的材料性用户可感知设计决策时，authoring handoff 才算充分。selected-source preparation 要求真实人工选择依据和不可变 hash 或已批准 snapshot，但仍不产生 Design Authority。候选迭代保持任务内；Skill 可以在方向最终确定后返回一份合并的 accepted/rejected/unresolved 差异供独立方案步骤处理，但不会修改初版方案、`project_context/**`、`DESIGN.md`、生产代码或 Delivery Contract。
 
 实际生成仍由已配置的 Open Design/Product Design、Figma、图片生成、原型工具或人工设计流程负责。这些输出以普通 external Source 进入默认 Workflow 或 Long-Task。candidate 与 inspiration 不授权 fidelity；selected exact target 只控制其声明的 surface/viewport/mode/state/content 条件，并且需要稳定不可变身份后才能成为影响验收的 `verification_input`。`context_uiux_design` 在下游执行 UI Authority Closure，只把耐久事实采纳到 Context/`DESIGN.md`；实现截图与 diff 仍是证据 artifact，不能自我授权为目标。
 

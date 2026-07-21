@@ -23,7 +23,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 
 ## External Design Resource Consumption / 外部设计资源消费
 
-- `design-resource-authoring` 可以按明确请求在上游动态委托 Open Design 产生 flow、低保真、候选方向、控件状态、交互原型或条件式 Figma handoff；它不复制 provider 的提示词/模板，也不把任何资源设为全局必选。
+- `design-resource-authoring` 可以按明确请求在上游动态委托 Open Design 产生 flow、低保真、候选方向、组件族/独特复杂控件状态、交互原型或条件式 Figma handoff；它以明确输出/开发内容为上限，在范围内补齐材料性 UI/UX 含义但不要求逐控件一份稿，不复制 provider 的提示词/模板，也不把任何资源设为全局必选。
 - 本 Skill 不承担独立资源生产。只有进入默认开发流程或 Long-Task、需要采纳稳定结论时，本 Skill 才消费这些或其他外部设计 Source。
 - 候选、灵感和未选定输出不是 Context readiness 或实现权威，不能写入 selected registry；选定目标仍必须完成 UI Authority Closure 和 `Context Delta`。
 - 消费时核对产品 Source、Screen/Control Context、`DESIGN.md`、token owner、资源稳定身份及 exact-target 覆盖条件；只把长期稳定且无冲突的事实写入其唯一 owner，不要求统一 pack、目录或工具格式。
@@ -106,7 +106,7 @@ Configured is system-level visual authority only, not surface implementation-rea
 - Read the owning surface/interaction Context, `DESIGN.md`, the authored exact-value token source and generation direction, existing production components/routes and every material design reference.
 - Classify each reference as `exact-target`, `constraint` or `inspiration`. Record the affected surface/route/component, project path or URI and relevant viewport/theme/mode/state. Exact targets authorize fidelity comparison only for those conditions; constraints authorize only their named rule; inspiration proves no reproduction claim.
 - Treat a missing `DESIGN.md`, its package starter with Design authority status: `unconfigured`, style-only prose, an inspiration-only set or conflicting references as insufficient authority for invented production layout.
-- If the user explicitly delegates standalone design-resource generation, use `design-resource-authoring` to commission the smallest sufficient set from available Product Design/Open Design capabilities. In this downstream Skill, adopt a selected target into durable Context/`DESIGN.md` only after UI Authority Closure. Ask only when an unknown material preference could change the result or the user reserves the choice.
+- If the user explicitly delegates standalone design-resource generation, use `design-resource-authoring` to keep the explicit output/development scope as the ceiling and commission the smallest sufficient set from available Product Design/Open Design capabilities. An implementation handoff covers material in-scope UI/UX meaning through relevant controls, may reuse component families or one inspectable artifact and does not require one file per control. In this downstream Skill, adopt a selected target into durable Context/`DESIGN.md` only after UI Authority Closure. Ask only when an unknown material preference could change the result or the user reserves the choice.
 - Never use the implementation's own generated screenshot or diff as the target it claims to match. A target is selected Source; an implementation render is evidence. Baseline replacement requires deliberate review and cannot merely erase a failure.
 - Do not require Figma, a fixed `docs/design/**` tree, an image for every local change or universal pixel-perfect thresholds. Use project-native design assets and the smallest authority sufficient for the claimed fidelity.
 

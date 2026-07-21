@@ -5,9 +5,10 @@
 
 - Plan key: `PLAN-DRA-001`
 - Status: implementation baseline for a separately authorized package delivery; provider experiments completed on 2026-07-22
-- Goal: define a high-quality, efficient `design-resource-authoring` Skill that reads product/technical/design Source, discovers Open Design's current capabilities, decides which design resources are justified for the requested scope, commissions only those resources, and hands them to Tiny Context as ordinary external Source.
+- Goal: define a high-quality, efficient `design-resource-authoring` Skill that reads product/technical/design Source; makes the explicit output or development content its hard scope ceiling; determines the material user-visible UI/UX meaning needed inside that scope through relevant controls and conditions; subtracts sufficient selected-source coverage; discovers Open Design's current capabilities; commissions only the smallest remaining resources; and hands them to Tiny Context as ordinary external Source.
 - Originating research Goal delivery: current-source research, bounded capability experiments and this implementation-ready plan only.
-- Subsequent delivery: the user separately authorized package implementation on 2026-07-22; that Goal owns the production Skill, owning Context/public guidance, package distribution and deterministic/opt-in verification changes. Application-product code, Delivery Contract authoring, package publication and automatic adoption of generated resources remain excluded.
+- Subsequent implementation delivery: the user separately authorized package implementation on 2026-07-22; that delivery owned the production Skill, owning Context/public guidance, package distribution and deterministic/opt-in verification changes. At that point application-product code, Delivery Contract authoring, package publication and automatic adoption of generated resources remained excluded.
+- Clarification delivery: the user subsequently clarified on 2026-07-22 that the Skill's design purpose is workflow-independent and development-corresponding: a local development slice must not expand into whole-product design, while an implementation handoff must cover every material in-scope UI/UX decision through relevant control detail without requiring one artifact per control. The current Goal owns this Source clarification, Skill/Context/index/public/test alignment, release preparation and package publication; it still does not authorize application-product implementation or automatic adoption of generated resources.
 - Authority: this document is optional upstream Source/navigation. It is not Context, a Contract Draft, runtime state, Design Authority, selection approval or completion evidence.
 - Research date: 2026-07-22.
 
@@ -40,7 +41,9 @@ The implemented Skill is a thin, provider-aware commissioning and handoff layer 
 
 ```text
 current request + raw draft/product/technical/design Source + optional Source Plan
-  -> requested-scope ceiling and design-gap analysis
+  -> explicit output/development-scope ceiling and necessary surrounding context
+  -> material in-scope UI/UX coverage through relevant controls
+  -> subtract sufficient selected-source coverage and expose unresolved meaning
   -> live Open Design capability discovery
   -> justified resource selection, with reasons and omissions
   -> Open Design project/run/artifact generation
@@ -51,6 +54,8 @@ current request + raw draft/product/technical/design Source + optional Source Pl
 ```
 
 No resource type is globally mandatory. A prototype is expected to be high-value for many new Web/App screens and interaction flows, but it is selected only when the current design gap and available Open Design capability justify it. The same rule applies to wireframes, visual candidates, component state studies, design systems, Figma handoffs and every other resource.
+
+For an implementation handoff, sufficiency is development-corresponding rather than product-global: every material user-visible design decision inside the explicit development scope is covered by selected existing or newly generated Source, is not applicable, is excluded by that scope, or is honestly unresolved/unavailable. One addressable page/prototype/board may cover many conditions; repeated controls may map to a shared component family; only unique or complex uncovered controls need dedicated studies. A static/default view proves no unshown state, interaction, motion, responsive or accessibility behavior. Design resources express user-visible interaction semantics and product-rule presentation, while business, data, permission and algorithmic rules remain owned by product/technical Source.
 
 The generation Skill never updates `project_context/**`, `DESIGN.md` or production code merely because generation succeeded. It never promotes a candidate to `exact-target`, creates Contract authority or claims product acceptance. Those decisions remain downstream.
 
@@ -75,6 +80,21 @@ The generation Skill never updates `project_context/**`, `DESIGN.md` or producti
   - after explicit selection, the Skill should report accepted design decisions and their likely draft impact, while a separate step owns any revision of the initial draft;
   - efficiency and quality both matter, and unnecessary post-generation packaging/validation work should not obscure a simple preview request;
   - this Goal must research source and live behavior, execute bounded experiments, produce a complete plan and index important details.
+
+### `IN-DRA-USER-002` — Development-corresponding design-purpose clarification
+
+- Role: controlling direct Source for the clarified Skill purpose and this package update.
+- Direct meaning:
+  - the Skill is independent of Long-Task and other consuming workflows; those workflows may consume its outputs but do not define its purpose;
+  - the explicit development content is the generation ceiling when the user asks for implementation-facing resources, so a partial feature never expands into detailed design for the whole page or product;
+  - necessary surrounding context may be included only to place, size or explain the in-scope slice and does not itself become detailed generation scope;
+  - within that ceiling, the resource set must carry every material user-visible UI/UX decision needed for implementation from overall flow/page/region composition and layout constraints down to relevant control anatomy, dimensions, variants, copy/content, static/dynamic states, interaction, focus/selection, feedback, recovery, motion, responsive/platform/input behavior, localization/content stress, accessibility and necessary assets;
+  - an existing page prototype or design system counts only for the conditions it explicitly specifies or demonstrates; a visible default control does not imply all states or interaction coverage;
+  - control-level completeness does not mean one separate design file per control: repeated controls may map to one selected component family, related states may share one board/workbench and one large addressable artifact may cover several items;
+  - unique or complex controls with uncovered material behavior may require dedicated state/interaction resources;
+  - design resources may describe user-visible interaction logic and the visual presentation of product rules, but business/data/permission/algorithmic rules remain owned by product/technical Source;
+  - the handoff stop condition is that no material in-scope user-visible design choice is silently left for the implementer to invent; honest unresolved/unavailable items remain visible limitations rather than fabricated completeness;
+  - the design purpose and its owners, indexes, public documentation and regression coverage must remain aligned, followed by a versioned npm release.
 
 ### `IN-DRA-EXT-001` — Original 1,077-line external UI/UX upgrade proposal
 
@@ -161,6 +181,8 @@ The missing half is not another authority model. It is a resource-planning and p
 
 ```text
 What design uncertainty blocks or materially improves this requested scope?
+When the request is implementation-facing, what exact development surfaces/flows/regions/components/controls and conditions are in scope, and what surrounding context is necessary but not itself detailed scope?
+Which material user-visible UI/UX decisions inside that scope are already covered by selected Source, and which would otherwise be invented during implementation?
 Which available Open Design resource is the cheapest sufficient way to resolve it?
 What should intentionally not be generated?
 What condition coverage and provenance must survive handoff?
@@ -266,18 +288,31 @@ The Skill should infer a bounded commission from ordinary prose; it must not req
 
 ### Step 1 — Establish the requested-scope ceiling
 
-Separate background coverage from requested output coverage. Explicit scoping such as “only this control,” “one screen,” “three screens,” “style exploration only,” “do not update Context/code,” or “prepare for Long-Task implementation” is binding. More input detail improves the selected artifact; it never silently expands the artifact count.
+Separate background coverage from requested output or development coverage. Explicit scoping such as “only this control,” “this panel,” “one screen,” “three screens,” “style exploration only,” “do not update Context/code,” or “prepare the design resources for this development slice” is binding. When development scope is partial, identify only the surrounding context needed to place, size or explain it; that context does not put the rest of the page/product into detailed generation scope. More input detail improves selected resources but never silently expands coverage or artifact count.
 
 ### Step 2 — Inventory existing authority and uncertainty
 
-For the requested surfaces/controls only, identify:
+For the requested surfaces/flows/regions/components/controls only, identify:
 
 - product/user decision and required behavior;
 - platform, viewport and interaction modality;
 - existing information architecture, screen/control semantics and states;
 - existing design system, exact targets, constraints, inspiration and implementation;
-- visual-direction uncertainty, interaction uncertainty, responsive/native uncertainty and verification needs;
+- material visual/content, component anatomy/variant, static/dynamic state, interaction/feedback/recovery/motion, responsive/platform/input, accessibility and asset needs;
+- which conditions selected Source explicitly specifies or demonstrates and which remain uncovered; seeing a control in one default frame is not dynamic-state coverage;
+- which repeated controls map to one existing component family and which unique/complex controls require independent design treatment;
+- product/business/data/permission/algorithmic rules that must remain referenced owning Source rather than invented or owned only by visuals;
 - genuine user choices that cannot be inferred from stated quality, efficiency, brand, cost, privacy or lock-in preferences.
+
+For an implementation handoff, use the task-local equation:
+
+```text
+resources to commission
+  = material UI/UX decisions inside the explicit development scope
+  - decisions sufficiently covered by selected existing Source
+```
+
+Give each material in-scope item one authoring disposition: `existing-covered`, `new-resource-needed`, `not-applicable`, `excluded-by-scope`, `decision-required` or `unavailable`. This is reasoning/handoff metadata rather than a required file, coverage registry, Design Authority or acceptance result.
 
 ### Step 3 — Discover live provider capability
 
@@ -299,6 +334,9 @@ Resource selection is benefit-driven rather than phase-driven. Examples to valid
 - a new information-dense screen with uncertain hierarchy may benefit first from an annotated or greybox wireframe;
 - a visually directed single page may need one high-fidelity interactive prototype and no low-fidelity duplicate;
 - a multi-screen flow with navigation/state inheritance may justify a low-fidelity flow and then a consistent high-fidelity prototype;
+- a page scheduled for development may use one page/flow target plus shared component-family mappings and only the dedicated unique/complex-control studies needed to close uncovered states, interaction, motion, responsive or accessibility meaning;
+- a local panel inside a large app may include a coarse surrounding page context while generating detailed resources only for the panel and affected conditions;
+- one large addressable interactive artifact may cover several resources' meaning when its states and sections are inspectable, while one static/default frame cannot claim unseen dynamic coverage;
 - an existing immutable Figma/HTML target may require no new design generation;
 - a local style bug under adequate authority requires none of these resources.
 
@@ -309,7 +347,7 @@ Use the following as selection heuristics, not a mandatory phase sequence:
 | Route, screen ownership or transition order | Lo-fi flow/wireframe | navigation, branching or cross-screen state is unresolved | the flow is already authoritative and only styling is open |
 | One screen's information hierarchy | Annotated/greybox screen | grouping, priority, disclosure or action placement is unresolved | a selected exact target already fixes layout |
 | Visual direction for a bounded surface | One or more high-fidelity candidates | the user is comparing styles or no selected visual target exists | only interaction semantics are uncertain |
-| One control's behavior and states | Interactive component specimen/state workbench | control logic, feedback, keyboard, error/loading or recovery is unclear | a component library/source already specifies and demonstrates it |
+| One control's behavior and states | Interactive component specimen/state workbench | a unique/complex control's user-visible anatomy, variants, feedback, motion, keyboard, error/loading or recovery is unclear | a selected component/page/prototype source explicitly specifies and demonstrates every applicable condition |
 | Cross-screen behavior and shared state | Interactive flow prototype | transitions, persistence or conditional UI must be experienced | a static board answers the current decision and implementation is not yet requested |
 | Reusable visual language | `DESIGN.md`/design-system resource | several surfaces need a coherent durable language and existing authority is insufficient | the request is a throwaway style probe or one isolated control |
 | Editable collaborative source | Figma frames/library | team review, editable layout/component collaboration or Figma is the declared system of record | HTML/source screenshots are sufficient or Figma capability/auth is absent |
@@ -317,10 +355,12 @@ Use the following as selection heuristics, not a mandatory phase sequence:
 
 Prototype selection heuristic: prefer a real prototype when the unresolved question depends on interaction, transition, shared state, responsive behavior or implementation-facing feedback. Prefer a static/lo-fi resource when the unresolved question is topology, hierarchy or visual direction and interaction would add no independent information. Select neither when existing authority already answers the requested scope.
 
+Control-level completeness is a coverage requirement, not an artifact-count rule. Map ordinary controls to selected shared component variants, group related controls/states into component-family boards or workbenches and reserve dedicated resources for unique or complex uncovered meaning.
+
 ### Step 5 — Match execution depth to user intent
 
 - `exploration`: generate only the requested candidate count/scope, perform a minimal render/open sanity check, show the result and stop for feedback; do not create a pack, validator run, Context change or implementation.
-- `handoff`: retrieve project-native source, preview and concise provenance/coverage notes needed by a development workflow; run bounded structural/interaction checks relevant to the promised resource.
+- `handoff`: retrieve the minimum sufficient project-native sources, preview and concise provenance/coverage notes needed by another designer or developer. For an implementation handoff, stop only when every material in-scope item has an explicit disposition and mapping, so no material user-visible UI/UX decision is silently left to implementation; honest `decision-required`/`unavailable` items remain visible limitations rather than a completeness claim. Run bounded structural/interaction checks relevant to the promised resources.
 - `selected-source-preparation`: only after an explicit user selection or delegated selection rule, freeze/export the selected resource with stable identity and declared coverage so the downstream workflow can consider adoption. This still does not itself update durable authority or production code.
 
 ### Ephemeral commission envelope
@@ -328,12 +368,14 @@ Prototype selection heuristic: prefer a real prototype when the unresolved quest
 For every selected resource, the Skill forms one task-local commission envelope. It is an internal execution structure, not a required file or second plan:
 
 - requested scope ceiling and maximum artifact/screen/control count;
+- explicit development surfaces/flows/regions/component families/unique controls, necessary surrounding context and exclusions when implementation-facing;
 - source facts, constraints, references and unresolved decisions relevant to that scope;
 - stable surface/control/state keys;
 - platform, viewport, mode and interaction modality;
 - the independent design gap this resource must resolve;
 - selected live provider capability ID and why it is the smallest sufficient choice;
 - required content/state/transition coverage and explicit exclusions;
+- existing-source mappings and required visual/content, component/state, interaction/motion, adaptation/input, accessibility and asset coverage;
 - expected entry/file form and intent-proportional review promise.
 
 The envelope supplies product-specific instructions around the provider capability. It must not embed or paraphrase Open Design's own template body, seed or hidden workflow prompt.
@@ -444,7 +486,7 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 - `REQ-DRA-001` — Trigger only for explicit standalone design-resource planning/generation or an explicit request to use Open Design; ordinary UI implementation and durable authority repair remain with existing workflows/Skills.
 - `REQ-DRA-002` — Accept product plans, technical plans, optional Source Plans, specialized visual briefs, screenshots/references and existing design resources without a mandatory input schema.
 - `REQ-DRA-003` — Inventory every supplied input and preserve its role as exact target, constraint, inspiration, current implementation evidence or background.
-- `REQ-DRA-004` — Treat explicit output scope as a hard ceiling independent of background breadth.
+- `REQ-DRA-004` — Treat explicit output or development scope as a hard ceiling independent of background breadth; when scope is partial, include only necessary surrounding context and never expand detailed generation to unaffected page/product areas.
 - `REQ-DRA-005` — Ask only for a genuine missing preference that materially changes the provider commission; otherwise use traceable, reversible judgment.
 - `REQ-DRA-006` — Accept a raw initial draft without invoking `source-plan-authoring`; after explicit selection, optionally return one consolidated accepted-design-decision delta when requested for a separately authorized later draft revision, and never edit or regenerate the draft or a Source Plan.
 
@@ -452,9 +494,14 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 
 - `REQ-DRA-010` — Derive resource needs from requested scope, existing authority/gaps, uncertainty, platform/interactions, desired downstream use and live Open Design capability.
 - `REQ-DRA-011` — Make no artifact globally mandatory and explain every selected, omitted, unavailable or decision-blocked resource.
-- `REQ-DRA-012` — Prefer the smallest sufficient resource set and stop once the requested exploration or handoff decision is supported.
+- `REQ-DRA-012` — Prefer the smallest sufficient resource set. Stop exploration once its requested decision is supported; stop an implementation handoff only after every material in-scope UI/UX item is mapped to existing/new Source, is non-applicable/excluded by explicit scope or remains honestly decision-blocked/unavailable, without claiming downstream authority or acceptance.
 - `REQ-DRA-013` — Preserve stable surface/control/state/target keys from input when available and propose task-local stable keys when needed for handoff.
 - `REQ-DRA-014` — Keep candidate generation, selection and authority adoption distinct.
+- `REQ-DRA-015` — For implementation-facing work, account from surface/flow/page/region composition, layout grid/constraints, stacking and scroll/overflow through relevant component/control anatomy, dimensions/hit area, variants, exact copy/content/formatting/localization, visual treatment, static/dynamic states, focus/selection, interaction/feedback/recovery/motion, responsive/platform/input behavior, accessibility and necessary visual/auditory/haptic assets; require no filler for non-applicable dimensions.
+- `REQ-DRA-016` — Subtract existing coverage only when selected Source explicitly specifies or demonstrates the relevant conditions; never infer unseen states, interaction, motion, responsiveness or accessibility from a default/static page frame or a design-system label.
+- `REQ-DRA-017` — Treat control-level completeness as coverage rather than artifact count: map repeated controls to selected shared component variants, group related states/families and commission dedicated resources only for unique or complex uncovered material meaning. Permit one addressable, inspectable artifact to cover many items.
+- `REQ-DRA-018` — Keep user-visible interaction semantics and product-rule presentation in design coverage while preserving business, data, permission and algorithmic rule ownership in product/technical Source; never invent those rules or make visuals their sole authority.
+- `REQ-DRA-019` — Keep any material scope/coverage mapping task-local and intent-sized; it may be prose or a structured block but never becomes a required pack, persistent coverage registry, readiness state, Design Authority or acceptance result.
 
 ### Provider execution
 
@@ -476,7 +523,7 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 - `REQ-DRA-032` — For selected-source preparation, preserve immutable identity or a content snapshot/hash and selection basis, while leaving actual Context/`DESIGN.md`/Contract adoption downstream.
 - `REQ-DRA-033` — Never claim that Open Design tool success proves product quality, production fidelity, accessibility, native behavior or acceptance beyond the inspected artifact.
 - `REQ-DRA-034` — Never update Context, `DESIGN.md`, production code or a Delivery Contract unless the user separately enters and authorizes the consuming workflow.
-- `REQ-DRA-035` — In a handoff, identify every resource by stable surface/control keys, candidate/constraint/selected classification, declared viewport/mode/state/content/interaction coverage, source locator/hash, selection basis if any, unresolved decisions and forbidden inferences.
+- `REQ-DRA-035` — In a handoff, identify the explicit output/development scope, necessary surrounding context and exclusions; identify every resource by stable surface/flow/region/component/control keys, candidate/constraint/selected classification, declared viewport/mode/state/content/interaction/motion/accessibility coverage, source locator/hash, selection basis if any, unresolved decisions and forbidden inferences. For an implementation handoff, map every material in-scope condition to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition.
 - `REQ-DRA-036` — If the user explicitly selects a candidate and asks to prepare it for team/development use, export or snapshot it to a user-approved durable location; do not rely on Open Design's mutable project preview URL.
 - `REQ-DRA-037` — When design exploration precedes Source Plan authoring, keep candidate iterations and interim observations task-local; do not require a delta after every iteration; after selection, identify accepted, rejected and unresolved decisions plus their product/control/state implications, return differences only when requested, optionally consolidate them once at the end, and let a separate plan owner decide whether and when to reconcile accepted changes.
 
@@ -495,6 +542,10 @@ The Skill returns ordinary Source, not a new package format. A simple exploratio
 ```yaml
 resource_key: target.tonight-home.night.candidate-a
 classification: candidate # candidate | inspiration | constraint | exact-target
+development_scope:
+  in_scope: [surface.tonight-home, region.tonight-decision]
+  necessary_context: []
+  excluded: [other application surfaces]
 surface_keys: [surface.tonight-home]
 control_keys: [control.recommended-spots-cta, control.conditions-disclosure]
 provider:
@@ -518,13 +569,17 @@ coverage:
   modes: [night]
   states: [default, cta-progress, cta-ready, conditions-expanded]
   content: [decision, score, best-window, reasons, conditions, visible-target-preview]
+  interaction_motion: [conditions disclosure, cta progress feedback]
+  responsive_accessibility: [390x844, visible focus, 44px targets]
+coverage_mapping:
+  - material item -> selected existing/generated resource or explicit disposition
 selection_basis: null # remains a candidate until a real selection exists
 unresolved: []
 forbidden_inference:
   - does not prove native rendering, production accessibility or downstream acceptance
 ```
 
-The example is descriptive, not a required schema. Unknown fields remain unknown; the Skill must not invent coverage.
+The example is descriptive, not a required schema. Unknown fields remain unknown; the Skill must not invent coverage. One resource may own several mapping entries and several repeated control keys may map to one component-family source. A static/default frame carries only the conditions it actually shows.
 
 ### Initial-draft exploration loop
 
@@ -567,13 +622,16 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 - `NCOMP-DRA-007` — Do not require the user to reduce a rich input set merely because the requested output is small.
 - `NCOMP-DRA-008` — This Source Plan alone does not authorize implementation or publication; either requires a separate explicit delivery request and the normal package-authoring workflow.
 - `NCOMP-DRA-009` — Do not invoke `source-plan-authoring`, rewrite an initial draft or treat candidate iteration as accepted product-plan change.
+- `NCOMP-DRA-010` — Do not expand a partial development request into detailed design for the rest of its page, flow or product merely because broader background is available.
+- `NCOMP-DRA-011` — Do not require one design file per control, but also do not treat a page prototype, design-system label or static/default view as coverage for conditions it does not specify or demonstrate.
+- `NCOMP-DRA-012` — Do not invent business/data/permission/algorithmic rules or make a visual resource their sole owner; designs may only carry the user-visible presentation and interaction consequences of owning Source.
 
 <a id="dra-outcomes"></a>
 ## Implementation Outcomes And Dependencies
 
 ### `OUT-DRA-01` — Capability-aware commissioning contract
 
-- Result: the Skill trigger, input inventory, scope ceiling, uncertainty analysis and resource disposition logic are documented and tested.
+- Result: the Skill trigger, input inventory, explicit output/development scope ceiling, necessary-context boundary, material control-level UI/UX coverage, selected-source subtraction, shared-versus-dedicated resource selection and disposition logic are documented and tested.
 - Depends on: none.
 
 ### `OUT-DRA-02` — Open Design adapter and recovery path
@@ -583,7 +641,7 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 
 ### `OUT-DRA-03` — Intent-proportional review and handoff
 
-- Result: exploration stops after a preview; handoff preserves source/provenance/coverage; selected-source preparation remains separate from adoption.
+- Result: exploration stops after a preview; implementation handoff preserves scope/source/provenance/coverage and leaves no silent material in-scope design invention while retaining honest unresolved limitations; selected-source preparation remains separate from adoption.
 - Depends on: `OUT-DRA-01`, `OUT-DRA-02`.
 
 ### `OUT-DRA-04` — Tiny Context routing and package integration
@@ -615,9 +673,9 @@ Proposed authored tree:
 ```
 
 - `SKILL.md`: narrow triggers, input inventory, scope ceiling, intent mode, core decision/execution loop and hard boundaries.
-- `resource-selection.md`: dynamic gap-to-resource heuristics, dispositions and commission envelope; no fixed artifact sequence.
+- `resource-selection.md`: explicit output/development ceiling, material surface/flow/region/component/control condition model, selected-source subtraction, shared-versus-dedicated dynamic gap-to-resource heuristics, dispositions, intent-specific stop rules and commission envelope; no fixed artifact sequence.
 - `open-design-provider.md`: capability discovery, MCP/daemon/UI recovery, polling, entry resolution, hashing and Figma capability checks; no copied provider templates.
-- `downstream-handoff.md`: candidate/selection/authority separation and default/Long-Task handoff fields.
+- `downstream-handoff.md`: candidate/selection/authority separation plus workflow-independent development scope, necessary-context, exclusion, stable-key coverage and provenance handoff fields; default/Long-Task are downstream consumers rather than design-purpose owners.
 
 Do not add a script merely to restate instructions. Add a small protocol helper only if implementation proves that platform-exposed MCP calls cannot safely perform the current template-discovery/explicit-entry compatibility path. Any helper must normalize metadata and transport only; it must not contain design prompts, a template catalogue or an authority registry.
 
@@ -625,8 +683,8 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 
 ### Phase `IMP-DRA-01` — Skill contract and routing
 
-- Author `SKILL.md` and three references from `REQ-DRA-001` through `REQ-DRA-014`.
-- Add precise English and Chinese explicit triggers such as “generate design resources,” “author design resources,” “use Open Design,” “生成设计资源” and “使用 Open Design”; exclude generic `design`, `UI`, `prototype` and ordinary implementation mentions.
+- Author `SKILL.md` and three references from `REQ-DRA-001` through `REQ-DRA-019`.
+- Add precise English and Chinese explicit triggers such as “generate design resources,” “author design resources,” “prepare design resources for this development scope,” “use Open Design,” “生成设计资源”, “为开发准备设计资源” and “使用 Open Design”; exclude generic `design`, `UI`, `prototype` and ordinary implementation without an explicit resource request.
 - Cross-link, without duplicating logic, from `source-plan-authoring`, `context_uiux_design` and `long-task-workflow` only where routing ambiguity exists.
 - Update stable product rationale in `PROJECT_SPEC.md` and durable package-capability ownership in the appropriate `project_context/**` owner when implementation begins.
 
@@ -642,6 +700,7 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 
 - Exploration: render/open, verify scope count and obvious corruption, show result, stop.
 - Handoff: add relevant DOM/interaction/console checks and compact provenance/coverage.
+- Implementation handoff: preserve the explicit development ceiling and necessary context/exclusions, map every material in-scope item to existing/generated Source or an honest disposition, reuse component families, add dedicated unique/complex-control resources only when needed and stop only when no silent material design invention remains.
 - Selected-source preparation: require real selection basis, then export/snapshot to an approved durable location and return the locator/hash; make no Context/code/Contract edits.
 - Keep outer visual checking outside the nested Open Design run unless the live provider advertises a reliable equivalent.
 
@@ -677,6 +736,11 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - `AC-DRA-014` — Given an explicit Figma deliverable request with only catalogue pointers or missing connector/auth, the Skill reports exact setup/unavailability and offers a non-Figma resource only if it preserves intent; it never labels HTML or a manifest record as an editable Figma design. Accepts `REQ-DRA-025`, `REQ-DRA-026`, `REQ-DRA-033`.
 - `AC-DRA-015` — Given a provider run that emitted a final message and complete retrievable artifact but remains nonterminal, the Skill may show it with its hash and `artifact-ready/run-unreconciled` qualifier. If the provider later terminates with a post-artifact timeout, the result becomes `artifact-ready/provider-failed`, retains the exact failure and run locator, claims neither provider success nor product acceptance and is not automatically retried or discarded. Accepts `REQ-DRA-024`, `REQ-DRA-028`, `REQ-DRA-033`, `FIND-DRA-008`.
 - `AC-DRA-016` — Given only an initial product draft, the Skill iterates bounded candidates without creating a Source Plan or rewriting the draft. After explicit user selection it returns no per-iteration delta; when requested after the direction is final, it may return one consolidated accepted-design-decision delta. A later `source-plan-authoring` call can independently consume the separately revised draft and selected immutable resources. Accepts `REQ-DRA-002`, `REQ-DRA-006`, `REQ-DRA-014`, `REQ-DRA-037`, `NCOMP-DRA-009`.
+- `AC-DRA-017` — Given a large application plan but development scope limited to one local panel, the Skill may include the minimum surrounding page context needed to place the panel, but commissions detailed layout/control/state/interaction resources only for that panel and its affected conditions. Accepts `REQ-DRA-004`, `REQ-DRA-010`, `REQ-DRA-015`, `NCOMP-DRA-010`.
+- `AC-DRA-018` — Given a selected page prototype and design system that show ordinary controls only in default state while a development handoff includes unique multi-state controls, the Skill maps ordinary controls to shared component variants, does not commission one file per instance, and selects grouped component-state or dedicated unique/complex-control studies for uncovered variants, feedback, motion, responsive or accessibility conditions. Accepts `REQ-DRA-012`, `REQ-DRA-015` through `REQ-DRA-017`, `NCOMP-DRA-011`.
+- `AC-DRA-019` — Given one large addressable interactive artifact whose sections and reachable states explicitly cover every material item inside the development scope, the Skill accepts that one artifact as the smallest sufficient set and generates no duplicate control boards. Given only a static/default frame, it does not infer unseen dynamic coverage. Accepts `REQ-DRA-011`, `REQ-DRA-012`, `REQ-DRA-016`, `REQ-DRA-017`.
+- `AC-DRA-020` — Given product/technical Source that defines a permission, data or algorithmic rule, the design commission references that rule and shows its user-visible states/feedback without inventing or making the visual artifact the rule's sole authority. Accepts `REQ-DRA-018`, `NCOMP-DRA-012`.
+- `AC-DRA-021` — Given an implementation handoff, every material in-scope surface/flow/region/component/control condition has an existing/generated/non-applicable/excluded/decision-required/unavailable mapping; unresolved/unavailable items remain explicit limitations and the Skill claims neither Design Authority nor product acceptance. Accepts `REQ-DRA-012`, `REQ-DRA-019`, `REQ-DRA-031`, `REQ-DRA-035`.
 
 <a id="dra-risks"></a>
 ## Risks And Mitigations
@@ -692,6 +756,8 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - `RISK-DRA-009` — Fact `nested_tool_mismatch`: Open Design's inner agent may see Skill instructions without the browser/MCP runtime they expect. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: keep provider commission focused on generation, inspect advertised tool bundle, and perform outer review with available project/browser tools.
 - `RISK-DRA-010` — Fact `profile_surface_growth`: a base-installed Skill increases default capability/trigger surface. Affects `OUT-DRA-04`. Mitigation: explicit narrow triggers, no automatic provider dependency, static trigger tests and no change to ordinary Workflow routing.
 - `RISK-DRA-011` — Fact `post_artifact_terminal_failure`: a nested provider process may leave a run nonterminal and eventually time out after its final message and complete artifact. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: model execution state and artifact readiness separately, preserve last-update/failure diagnostics, use bounded observation, never invent success, retain independently verified output and retry only when artifact completeness or user intent justifies it.
+- `RISK-DRA-012` — Fact `critical_user_path`: a handoff may stop after a page/default-state prototype while implementation still has to invent material control states, interaction, motion, responsive or accessibility behavior. Affects `OUT-DRA-01`, `OUT-DRA-03`. Mitigation: task-local material coverage through controls, selected-source subtraction only for explicit conditions and an implementation-handoff stop rule with honest unresolved dispositions.
+- `RISK-DRA-013` — Fact `architecture_change`: control-level completeness may be misread as one artifact per control, creating unnecessary output and a de facto pack. Affects `OUT-DRA-01`, `OUT-DRA-03`, `OUT-DRA-04`. Mitigation: component-family reuse, one-addressable-artifact coverage, dedicated studies only for unique/complex gaps and explicit no-registry/no-pack boundaries.
 
 <a id="dra-decisions"></a>
 ## Delegated Decisions And Open Research Items
@@ -702,16 +768,18 @@ The user delegated detailed plan design under the explicit preference for high q
 - `DLG-DRA-002` — Use dynamic resource dispositions and a hard scope ceiling rather than a fixed artifact sequence. Basis: the user's correction that no artifact is universally mandatory and the need to support one-control/one-screen exploration.
 - `DLG-DRA-003` — Prefer MCP, then structured CLI/daemon fallback, with UI automation last. Basis: current Open Design MCP source and reliability/efficiency constraints.
 - `DLG-DRA-004` — Separate exploration, handoff and selected-source preparation behavior without creating persisted workflow state. Basis: prior one-page trial and existing Tiny Context downstream authority boundary.
-- `DLG-DRA-005` — Install the new Skill in the base managed-skill set, not only the Long-Task profile. Basis: the user explicitly needs one-control/one-screen generation for default-workflow inputs as well as Long-Task handoff; narrow explicit triggers prevent ordinary UI work from invoking it.
+- `DLG-DRA-005` — Install the new Skill in the base managed-skill set, not only the Long-Task profile. Basis: one-control/one-screen exploration and development-corresponding handoff are workflow-independent upstream needs; narrow explicit triggers prevent ordinary UI work from invoking it.
 - `DLG-DRA-006` — Treat current rendering-template enumeration as a provider compatibility gap and prefer an upstream MCP addition over a Tiny Context-owned catalogue. Basis: live MCP/source evidence and the user's “do not reinvent Open Design” constraint.
 - `DLG-DRA-007` — Make outer artifact review the default and nested provider browser verification optional/capability-driven. Basis: the high-fidelity flow experiment's tool-bundle mismatch and the requirement for efficient, evidence-backed generation.
+- `DLG-DRA-008` — Define implementation-handoff sufficiency by the explicit development scope and material user-visible UI/UX coverage through relevant controls, not by Long-Task or another consuming workflow. Basis: `IN-DRA-USER-002` and the existing ordinary-Source boundary.
+- `DLG-DRA-009` — Treat control granularity as addressable coverage rather than artifact count: reuse component families and comprehensive inspectable resources while requiring dedicated unique/complex-control studies only for uncovered meaning. Basis: `IN-DRA-USER-002`, output efficiency and the no-mandatory-pack boundary.
 
 `RQ-DRA-001` through `RQ-DRA-008` are resolved by `FIND-DRA-001` through `FIND-DRA-008` and the experiment record. No user decision is required before implementation. A later user may still choose a provider/model, approve persistent MCP/Figma setup, select among candidates or reserve a visual decision; those are runtime choices, not plan gaps.
 
 <a id="dra-implementation-impact"></a>
 ## Proposed Repository Impact And Verification
 
-If the user later authorizes implementation, the change should be reviewed under the Harness package authoring rules. Expected impact includes:
+The separately authorized implementation and current clarification/release delivery are reviewed under the Harness package authoring rules. Current impact includes:
 
 - authored `.codex/ty-context-managed/skills/design-resource-authoring/**`, generated `.codex/skills/**`, and `packages/ty-context/assets/skills/**` through existing source sync;
 - `packages/ty-context/src/lib/profiles.ts` base managed-skill set plus sync/init/upgrade/release fixture inventories;
@@ -726,6 +794,12 @@ Focused deterministic test cases should cover:
 
 - explicit bilingual trigger inclusion and generic-design/ordinary-implementation exclusions;
 - rich background plus one-control/one-page scope ceilings;
+- large background plus a partial development slice, necessary surrounding context and no detailed whole-page/product expansion;
+- implementation-handoff material coverage from surface/flow/region through component/control visual/content, state, interaction/feedback/recovery/motion, adaptation/input, accessibility and asset conditions;
+- selected page/design-system coverage that does not imply unshown dynamic conditions;
+- shared component-family mappings and one comprehensive inspectable artifact versus dedicated unique/complex-control gaps, with no one-file-per-control rule;
+- user-visible interaction semantics versus product/business/data/permission/algorithmic Source ownership;
+- implementation-handoff stop behavior with explicit existing/new/non-applicable/excluded/decision-required/unavailable coverage and no Design Authority/acceptance claim;
 - no globally mandatory prototype/wireframe/Figma/design-system sequence;
 - selected/optional/not-needed/unavailable/decision-required dispositions;
 - functional-skill versus rendering-template discovery and missing-template fallback;
@@ -748,7 +822,8 @@ The implementation verification sequence should include build, focused static/mo
 <a id="dra-traceability"></a>
 ## Traceability Summary
 
-- `IN-DRA-USER-001` controls the no-mandatory-resource rule, scope ceiling, Open Design reuse, no-mutation boundary, experiments and complete-plan requirement.
+- `IN-DRA-USER-001` controls the no-mandatory-resource rule, scope ceiling, Open Design reuse, no-mutation boundary, experiments and original complete-plan requirement.
+- `IN-DRA-USER-002` controls workflow-independent purpose, explicit development-scope correspondence, necessary-context boundary, material control-level UI/UX coverage, selected-source subtraction, shared-versus-dedicated resource selection, business-logic ownership, handoff stop rule, indexing and package release.
 - `IN-DRA-EXT-001` and `IN-DRA-PLAN-001` control the design-authority, target-classification, condition-coverage and evidence boundaries.
 - `IN-DRA-HARNESS-001` controls Tiny Context ownership, Source/Contract separation, package impact and downstream adoption.
 - `IN-DRA-OD-001`, `IN-DRA-OD-LOCAL-001` and `FIND-DRA-001` through `FIND-DRA-008` control the adapter, capability split, setup/recovery, Figma boundary, entry/provenance rules and live test design.
@@ -757,11 +832,11 @@ The implementation verification sequence should include build, focused static/mo
 <a id="dra-completeness"></a>
 ## Completeness Status
 
-- Input inventory: complete for currently supplied conversation, attachment, repository authority and screenshots.
+- Input inventory: complete for the original conversation/attachment/repository/screenshots and the subsequent development-corresponding design-purpose clarification.
 - Open Design source pin and capability audit: complete against upstream revision `447b18b98e0db98a586ef913b76b0269e487db70` and local package `0.15.1`.
 - Component/page/flow experiments: complete; three terminal-success artifacts and one fully generated/outer-reviewed `artifact-ready/provider-failed` artifact are recorded with project/run IDs, explicit entries, hashes and failure diagnostics.
 - Provider failure/recovery, registry asymmetry, mutable-preview, nested-tool and Figma availability findings: complete for the researched provider/runtime.
-- Requirements, downstream boundaries, implementation outcomes, repository impact and deterministic/live test split: complete and traceable.
-- Final cross-input audit: complete; every current user correction and material external/repository/provider constraint is covered, delegated or explicitly excluded.
+- Requirements, development-scope/material-coverage semantics, downstream boundaries, implementation outcomes, repository impact and deterministic/live test split: complete and traceable.
+- Final cross-input audit: complete; every current user correction—including partial-development scope, control-level completeness without one-file-per-control output, static/dynamic coverage honesty, user-visible versus business-logic ownership and workflow independence—and every material external/repository/provider constraint is covered, delegated or explicitly excluded.
 
-This Source Plan remains optional upstream Source and authorizes no package change by itself. The separately authorized 2026-07-22 implementation request entered the normal Harness package-authoring workflow and owns its Context Delta, code, tests and release-facing verification; publication remains a separate user action.
+This Source Plan remains optional upstream Source and authorizes no package change by itself. The separately authorized 2026-07-22 implementation request entered the normal Harness package-authoring workflow and owns its Context Delta, Skill/tests and release-facing verification; the current clarification Goal separately and explicitly authorizes the requested commit, remote/main integration and npm publication.
