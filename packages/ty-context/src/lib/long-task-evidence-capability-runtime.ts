@@ -1,0 +1,143 @@
+import type {
+  CompiledCheckV2,
+  EvidenceCapabilityRecordV2,
+} from "./long-task-delivery-types.js";
+
+export function validateRuntimeEvidenceRecord(
+  check: CompiledCheckV2,
+  record: EvidenceCapabilityRecordV2,
+  artifactHashes: Record<string, string>,
+): string | null {
+  switch (record.capability) {
+    case "interaction_trace":
+      return validateInteractionTrace(check, record);
+    case "state_delta":
+      if (record.before_sha256 === record.after_sha256)
+        return "state_unchanged";
+      if (!record.changed_fields.length) return "changed_fields_empty";
+      return null;
+    case "cross_surface_consistency":
+      return validateCrossSurfaceConsistency(check, record);
+    case "durable_readback":
+      if (record.write_session_id === record.read_session_id)
+        return "independent_session_required";
+      if (record.written_sha256 !== record.read_sha256)
+        return "readback_mismatch";
+      return null;
+    case "boundary_invocation":
+    case "external_side_effect":
+      return validateObserverEvidence(check, record.observer_target_ref);
+    case "failure_injection":
+      return record.failure_observed ? null : "failure_not_observed";
+    case "visual_render":
+      return artifactHashes[record.artifact_path] === record.artifact_sha256
+        ? null
+        : "artifact_hash_mismatch";
+    case "target_runtime":
+      return validateTargetRuntime(check, record);
+    case "input_variation":
+      return validateInputVariation(record);
+  }
+}
+
+function validateInteractionTrace(
+  check: CompiledCheckV2,
+  record: Extract<
+    EvidenceCapabilityRecordV2,
+    { capability: "interaction_trace" }
+  >,
+): string | null {
+  if (record.target_ref !== check.execution_target.target_ref)
+    return "target_mismatch";
+  if (
+    !same(
+      record.given_keys,
+      check.scenario.given.map((step) => step.key),
+    )
+  )
+    return "given_trace_mismatch";
+  if (
+    !same(
+      record.action_keys,
+      check.scenario.when.map((step) => step.key),
+    )
+  )
+    return "action_trace_mismatch";
+  return null;
+}
+
+function validateCrossSurfaceConsistency(
+  check: CompiledCheckV2,
+  record: Extract<
+    EvidenceCapabilityRecordV2,
+    { capability: "cross_surface_consistency" }
+  >,
+): string | null {
+  const surfaces = new Set(
+    record.surfaces.map((surface) => surface.surface_ref),
+  );
+  const targets = new Set(record.surfaces.map((surface) => surface.target_ref));
+  const states = new Set(
+    record.surfaces.map((surface) => surface.state_sha256),
+  );
+  if (surfaces.size < 2) return "two_surfaces_required";
+  if (states.size !== 1) return "state_hash_mismatch";
+  if (
+    [...targets].some(
+      (target) =>
+        !check.known_execution_targets.some((item) => item.key === target),
+    )
+  )
+    return "target_unknown";
+  return null;
+}
+
+function validateObserverEvidence(
+  check: CompiledCheckV2,
+  observerTargetRef: string,
+): string | null {
+  const observer = check.known_execution_targets.find(
+    (target) => target.key === observerTargetRef,
+  );
+  if (!observer || observer.role !== "observer")
+    return "observer_target_invalid";
+  if (observer.key !== check.execution_target.target_ref)
+    return "check_must_execute_on_observer";
+  return null;
+}
+
+function validateTargetRuntime(
+  check: CompiledCheckV2,
+  record: Extract<EvidenceCapabilityRecordV2, { capability: "target_runtime" }>,
+): string | null {
+  if (record.target_ref !== check.execution_target.target_ref)
+    return "target_mismatch";
+  if (
+    record.root_entrypoint !== check.execution_target_definition.root_entrypoint
+  )
+    return "root_entrypoint_mismatch";
+  if (check.execution_target.entrypoint === "root" && !record.cold_start)
+    return "cold_start_required";
+  return null;
+}
+
+function validateInputVariation(
+  record: Extract<
+    EvidenceCapabilityRecordV2,
+    { capability: "input_variation" }
+  >,
+): string | null {
+  const inputs = new Set(record.cases.map((item) => item.input_sha256));
+  const outputs = new Set(record.cases.map((item) => item.output_sha256));
+  if (inputs.size < 2) return "distinct_inputs_required";
+  if (outputs.size < 2) return "input_must_reach_output";
+  if (!record.failure_case_observed) return "failure_case_required";
+  return null;
+}
+
+function same(left: string[], right: string[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}

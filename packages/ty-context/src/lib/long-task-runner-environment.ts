@@ -28,7 +28,7 @@ export function runnerEnvironment(
   requirements: EnvironmentRequirementV2[],
 ): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = {
-    TY_CONTEXT_CHECK_PROTOCOL: "long-task-check-result-v2",
+    TY_CONTEXT_CHECK_PROTOCOL: "long-task-check-result-v3",
   };
   for (const key of BASE_ENVIRONMENT_KEYS)
     copyEnvironmentValue(environment, key);

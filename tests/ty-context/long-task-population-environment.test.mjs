@@ -149,7 +149,7 @@ test("Runner receives only the base whitelist plus declared env vars and never r
           ...base.runner,
           executable_argv_prefix: [
             "-e",
-            `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{declared:process.env.${declaredKey}===${JSON.stringify(declaredValue)},undeclared_present:Boolean(process.env.${undeclaredKey}),path_present:Boolean(process.env.PATH)}}));`,
+            `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{declared:process.env.${declaredKey}===${JSON.stringify(declaredValue)},undeclared_present:Boolean(process.env.${undeclaredKey}),path_present:Boolean(process.env.PATH),protocol:process.env.TY_CONTEXT_CHECK_PROTOCOL}}));`,
           ],
         },
         environment_requirements,
@@ -161,6 +161,7 @@ test("Runner receives only the base whitelist plus declared env vars and never r
       declared: true,
       undeclared_present: false,
       path_present: true,
+      protocol: "long-task-check-result-v3",
     });
     assert.equal(JSON.stringify(safe).includes(declaredValue), false);
     assert.equal(JSON.stringify(safe).includes(undeclaredValue), false);

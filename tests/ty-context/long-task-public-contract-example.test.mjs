@@ -30,7 +30,7 @@ test("README public Contract example runs through Preflight, Compile and Final G
     );
     await writeFile(
       path.join(fixture.root, "tests", "runtime.mjs"),
-      `import { readFile } from "node:fs/promises";\nlet result = false;\ntry { result = (await readFile(new URL("../src/observable.ts", import.meta.url), "utf8")).includes("observable"); } catch {}\nconsole.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result}}));\n`,
+      `import { readFile } from "node:fs/promises";\nlet result = false;\ntry { result = (await readFile(new URL("../src/observable.ts", import.meta.url), "utf8")).includes("observable"); } catch {}\nconsole.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result},evidence_records:[{assertion_key:"observable-ac",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["result"]},{assertion_key:"observable-ac",capability:"target_runtime",target_ref:"example-runtime",root_entrypoint:"tests/runtime.mjs",session_id:"example-session",cold_start:true}]}));\n`,
     );
     await writeContract(fixture.workdir, contract);
     await git(fixture.root, ["add", "plans/example.md", "tests/runtime.mjs"]);

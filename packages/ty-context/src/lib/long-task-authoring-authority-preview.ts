@@ -59,6 +59,7 @@ export function authoringRevisionPreview(
     schema_version: "long-task-delivery-v2",
     task: active.authority_snapshot.task,
     source_claims: active.authority_snapshot.source_claims,
+    stages: active.authority_snapshot.stages,
     risk: active.authority_snapshot.risk,
     global: active.authority_snapshot.global,
     outcomes: active.authority_snapshot.outcomes,

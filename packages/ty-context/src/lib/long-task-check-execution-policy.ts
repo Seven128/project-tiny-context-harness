@@ -14,6 +14,9 @@ export type CheckExecutionInputPolicy =
 
 export const CHECK_EXECUTION_INPUT_POLICY = {
   key: "authority_metadata",
+  journey_roles: "authority_metadata",
+  execution_target: "raw_execution",
+  scenario: "per_check_evidence",
   proof_surface: "authority_metadata",
   runner: "raw_execution",
   verification_inputs: "raw_execution_via_runner_freeze",
@@ -35,6 +38,8 @@ export function rawExecutionInputProjection(
 ): Record<string, unknown> {
   const projection: Record<string, unknown> = {};
   projection.evidence_adapter = check.evidence_adapter;
+  projection.execution_target_definition = check.execution_target_definition;
+  projection.known_execution_targets = check.known_execution_targets;
   for (const field of Object.keys(CHECK_EXECUTION_INPUT_POLICY) as Array<
     keyof DeliveryCheckV2
   >) {

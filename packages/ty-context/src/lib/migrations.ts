@@ -23,6 +23,7 @@ import {
 import { harnessConfigPath, harnessRoot } from "./harness-root.js";
 import { legacySdlcHarnessMigration } from "./legacy-sdlc-migration.js";
 import { parseYaml, stringifyYaml } from "./yaml.js";
+import { semanticDriftMigrationFields } from "./long-task-semantic-drift-migration.js";
 
 export type UpgradePlanItemStatus =
   "safe_pending" | "manual_required" | "blocked";
@@ -79,6 +80,18 @@ async function verifyNoop(): Promise<void> {
 
 export const migrations: Migration[] = [
   legacySdlcHarnessMigration,
+  {
+    id: "long-task-v2-semantic-drift-authority",
+    introducedIn: "0.7.2",
+    description:
+      "Require explicit Stage, target profile/root runtime, journey scenario and evidence-capability authority in V2 Long-Task Contracts.",
+    scope: ".long-task/delivery-contract.yaml",
+    risk: "manual",
+    manualMessage:
+      "These product and proof semantics cannot be inferred safely. Preserve Source, then explicitly author stages, vertical Outcome membership, target profile and execution targets, success/degradation requirements, Given/When scenarios, evidence capabilities and typed external-confirmation impact before recompiling. Historical Progress and Receipts remain audit-only and must not be imported as acceptance.",
+    detect: detectLongTaskSemanticDriftAuthority,
+    verify: verifyNoop,
+  },
   {
     id: "long-task-v1-retirement",
     introducedIn: "0.6.0",
@@ -184,6 +197,35 @@ export const migrations: Migration[] = [
     verify: verifyNoop,
   },
 ];
+
+async function detectLongTaskSemanticDriftAuthority(
+  projectRoot: string,
+  _root: string,
+  migration: string,
+): Promise<UpgradePlanItem[]> {
+  const contract = path.join(
+    projectRoot,
+    ".long-task",
+    "delivery-contract.yaml",
+  );
+  if (!(await pathExists(contract))) return [];
+  let decoded: unknown;
+  try {
+    decoded = parseYaml(await readText(contract));
+  } catch {
+    return [];
+  }
+  const fields = semanticDriftMigrationFields(decoded);
+  if (!fields.length) return [];
+  return [
+    item(
+      migration,
+      "manual_required",
+      ".long-task/delivery-contract.yaml",
+      `The active/draft V2 Contract predates semantic-drift authority and is missing: ${fields.slice(0, 12).join(", ")}${fields.length > 12 ? `, +${fields.length - 12} more` : ""}. Re-author these meanings from Source; do not synthesize them from old passing evidence.`,
+    ),
+  ];
+}
 
 async function detectLongTaskV1Retirement(
   projectRoot: string,

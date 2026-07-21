@@ -3,6 +3,7 @@ import path from "node:path";
 import type {
   CompiledCheckV2,
   DeliveryCheckV2,
+  ExecutionTargetV2,
   FrozenRunnerV2,
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
@@ -30,6 +31,8 @@ export async function freezeDeliveryCheck(
   outcomeKey: string | null,
   repository: string,
   baseline: WorkspaceManifestV2,
+  executionTarget: ExecutionTargetV2,
+  knownExecutionTargets: ExecutionTargetV2[],
 ): Promise<CompiledCheckV2> {
   const prefix = outcomeKey ? `CHECK.${outcomeKey}` : "CHECK.GLOBAL";
   const expectedOutputs = check.expected_output_paths.map((pattern, index) =>
@@ -92,6 +95,8 @@ export async function freezeDeliveryCheck(
       verificationInputHashes,
     ),
     verification_input_hashes: verificationInputHashes,
+    execution_target_definition: executionTarget,
+    known_execution_targets: knownExecutionTargets,
   };
   return {
     ...compiled,

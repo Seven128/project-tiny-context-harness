@@ -45,6 +45,8 @@ const TASK_AUTHORITY_POLICY = {
   source_paths: "scope",
   context_refs: "scope",
   context_snapshot_mode: "scope",
+  target_profile: "semantic_user_review",
+  execution_targets: "semantic_user_review",
 } satisfies Record<keyof TaskV2, AuthorityFieldPolicy>;
 
 const SOURCE_CLAIM_AUTHORITY_POLICY = {
@@ -78,6 +80,7 @@ const GLOBAL_ACCEPTANCE_AUTHORITY_POLICY = {
 const OUTCOME_AUTHORITY_POLICY = {
   key: "identity",
   title: "descriptive_non_authoritative",
+  stage: "semantic_user_review",
   depends_on: "readiness_only",
   product: "semantic_user_review",
   technical: "semantic_user_review",
@@ -86,6 +89,8 @@ const OUTCOME_AUTHORITY_POLICY = {
 
 const OUTCOME_PRODUCT_AUTHORITY_POLICY = {
   observable_result: "semantic_user_review",
+  success_path_required: "semantic_user_review",
+  degradation_path_required: "semantic_user_review",
   owner: "semantic_user_review",
   requirements: "semantic_user_review",
   owner_surfaces: "semantic_user_review",
@@ -156,6 +161,9 @@ const OUTCOME_ACCEPTANCE_AUTHORITY_POLICY = {
 
 export const CHECK_AUTHORITY_POLICY = {
   key: "identity",
+  journey_roles: "proof_additive",
+  execution_target: "semantic_user_review",
+  scenario: "proof_additive",
   proof_surface: "semantic_user_review",
   runner: "runner_authority",
   verification_inputs: "proof_additive",
@@ -172,6 +180,7 @@ const ASSERTION_AUTHORITY_POLICY = {
   criterion: "semantic_user_review",
   claims: "proof_additive",
   observation: "proof_additive",
+  evidence_capabilities: "proof_additive",
   operator: "proof_additive",
   expected: "proof_additive",
 } satisfies Record<keyof DeliveryAssertionV2, AuthorityFieldPolicy>;

@@ -79,6 +79,7 @@ test("strict security proof is required on the affected Outcome, not elsewhere",
     criterion: "The strict negative proof remains explicit.",
     claims: ["result"],
     observation: "result",
+    evidence_capabilities: ["state_delta"],
     operator: "not_equals",
     expected: false,
   });

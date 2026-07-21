@@ -118,6 +118,7 @@ test("Authority Revision rejects a risk downgrade instead of approving it", asyn
       criterion: "The strict negative floor remains satisfied.",
       claims: [],
       observation: "result_copy",
+      evidence_capabilities: ["state_delta"],
       operator: "not_equals",
       expected: false,
     });
@@ -148,9 +149,10 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
       path.join(fixture.root, "artifacts", "proof.json"),
       '{"proved":true}\n',
     );
+    await writeFile(path.join(fixture.root, "src", "extra.json"), "true\n");
     const outcomeCheck = fixture.contract.outcomes[0].acceptance.checks[0];
     outcomeCheck.input_paths = ["src/state.json"];
-    outcomeCheck.expected_output_paths = ["artifacts/**"];
+    outcomeCheck.expected_output_paths = ["artifacts/proof.json"];
     fixture.contract.global.technical.constraints.push({
       key: "stable-runtime",
       statement: "Runtime behavior remains stable.",
@@ -160,6 +162,7 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
     globalCheck.positive_assertions[0].key = "global-proof";
     globalCheck.positive_assertions[0].claims = ["constraint.stable-runtime"];
     globalCheck.positive_assertions[0].observation = "result_copy";
+    globalCheck.runner.argv = ["first", "global-proof"];
     fixture.contract.global.acceptance.checks.push(globalCheck);
     fixture.contract.global.acceptance.counterfactual_controls.push({
       key: "remove-global-runtime",
@@ -179,7 +182,7 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
       strengthened.global.acceptance.checks[0],
       strengthened.outcomes[0].acceptance.checks[0],
     ]) {
-      check.input_paths = ["src/**"];
+      check.input_paths = ["src/state.json", "src/extra.json"];
       check.expected_output_paths = [
         "artifacts/proof.json",
         "artifacts/extra.json",
@@ -200,7 +203,7 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
       weakened.outcomes[0].acceptance.checks[0],
     ]) {
       check.input_paths = ["src/state.json"];
-      check.expected_output_paths = ["artifacts/**"];
+      check.expected_output_paths = ["artifacts/proof.json"];
     }
     await writeContract(fixture.workdir, weakened);
     await assert.rejects(
@@ -223,7 +226,10 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
     );
     assert.deepEqual(
       pending.revision_diff.input_paths_removed_or_narrowed.sort(),
-      ["GLOBAL.global-check:src/**", "first.first-check:src/**"],
+      [
+        "GLOBAL.global-check:src/extra.json",
+        "first.first-check:src/extra.json",
+      ],
     );
     assert.ok(
       pending.revision_diff.reduction_reasons.includes(
@@ -291,7 +297,8 @@ test("per-Check progress accumulates and stales only on scoped inputs", async ()
 const key = process.argv[2];
 let value = false;
 try { value = JSON.parse(await readFile(new URL(\`../src/\${key}.json\`, import.meta.url), "utf8")); } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:value}}));
+const assertionKey = key + "-result";
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:value},evidence_records:[{assertion_key:assertionKey,capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"scoped-" + key + "-session",cold_start:true},{assertion_key:assertionKey,capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:[key]}]}));
 `,
     );
     for (const outcome of fixture.contract.outcomes) {
@@ -349,7 +356,7 @@ test("Counterfactual failure is persisted as failing Check Progress", async () =
   try {
     await writeFile(
       path.join(fixture.root, "tests", "constant-oracle.mjs"),
-      `console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:true,result_copy:true,negative:false}}));
+      `console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:true,result_copy:true,negative:false},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"constant-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]}]}));
 `,
     );
     const check = fixture.contract.outcomes[0].acceptance.checks[0];

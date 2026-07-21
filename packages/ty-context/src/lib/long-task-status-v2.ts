@@ -7,6 +7,8 @@ import type {
   FinalReceiptV2,
   LongTaskFindingV2,
   OutcomeStatusV2,
+  StageStatusV2,
+  TargetProfileV2,
 } from "./long-task-delivery-types.js";
 import { runDeliveryFinalGate } from "./long-task-final-v2.js";
 import { deliveryCompileFreshness } from "./long-task-freshness.js";
@@ -43,7 +45,11 @@ export interface DeliveryStatusV2 {
   final_result: AuditGateStatusV2;
   final_workflow_status: FinalReceiptV2["workflow_status"] | null;
   external_confirmations: ExternalConfirmationV2[];
+  target_profile: TargetProfileV2;
+  target_state: FinalReceiptV2["target_state"];
   outcomes: Record<string, OutcomeStatusV2>;
+  stages: Record<string, StageStatusV2>;
+  ready_stages: string[];
   ready_outcomes: string[];
   ready_for_implementation: string[];
   needs_reverify: string[];
@@ -109,7 +115,11 @@ async function readDeliveryStatusForAuthority(
     final_result: projection.finalResult,
     final_workflow_status: projection.finalWorkflowStatus,
     external_confirmations: compiled.global.acceptance.external_confirmations,
+    target_profile: compiled.task.target_profile,
+    target_state: projection.targetState,
     outcomes: projection.outcomes,
+    stages: projection.stages,
+    ready_stages: projection.readyStages,
     ready_outcomes: projection.readyOutcomes,
     ready_for_implementation: projection.readyOutcomes,
     needs_reverify: projection.needsReverify,
@@ -147,6 +157,8 @@ export async function resumeDeliveryTask(
       id: compiled.task.id,
       title: compiled.task.title,
       goal: compiled.task.goal,
+      target_profile: compiled.task.target_profile,
+      execution_targets: compiled.task.execution_targets,
     },
     contract_identity: compiled.compiled_identity,
     authority_revision: compiled.authority_revision,
@@ -159,7 +171,11 @@ export async function resumeDeliveryTask(
     last_gate: status.final_result,
     final_workflow_status: status.final_workflow_status,
     external_confirmations: status.external_confirmations,
+    target_profile: status.target_profile,
+    target_state: status.target_state,
     outcomes: status.outcomes,
+    stages: status.stages,
+    ready_stages: status.ready_stages,
     ready_outcomes: status.ready_outcomes,
     ready_for_implementation: status.ready_for_implementation,
     needs_reverify: status.needs_reverify,
@@ -288,6 +304,9 @@ export async function stopCheckDeliveryTask(
             reason: "active_authority_changed_after_final_gate",
             workflow_status: result.workflow_status,
             external_confirmations: result.external_confirmations,
+            target_profile: result.target_profile,
+            target_state: result.target_state,
+            stage_results: result.stage_results,
             message:
               "Active Authority changed after the Live Final Gate; the accepted identity was not cleared.",
           };
@@ -298,11 +317,15 @@ export async function stopCheckDeliveryTask(
         reason: result.workflow_status,
         workflow_status: result.workflow_status,
         external_confirmations: result.external_confirmations,
+        target_profile: result.target_profile,
+        target_state: result.target_state,
+        stage_results: result.stage_results,
         acceptance_scope: "declared_machine_authority",
         native_goal_effect: "none",
         message: acceptedScopeMessage(
           result.workflow_status,
           result.external_confirmations,
+          result.target_profile,
         ),
       };
     }
@@ -311,6 +334,9 @@ export async function stopCheckDeliveryTask(
       reason: `live_final_gate_${result.workflow_status}`,
       workflow_status: result.workflow_status,
       external_confirmations: result.external_confirmations,
+      target_profile: result.target_profile,
+      target_state: result.target_state,
+      stage_results: result.stage_results,
       message:
         messageText ||
         result.findings.at(-1)?.next_action ||
@@ -335,6 +361,9 @@ export interface StopCheckDeliveryResultV2 {
   reason: string;
   workflow_status?: FinalReceiptV2["workflow_status"];
   external_confirmations?: ExternalConfirmationV2[];
+  target_profile?: TargetProfileV2;
+  target_state?: FinalReceiptV2["target_state"];
+  stage_results?: FinalReceiptV2["stage_results"];
   acceptance_scope?: "declared_machine_authority";
   native_goal_effect?: "none";
   message?: string;
@@ -347,6 +376,9 @@ export interface CloseDeliveryResultV2 {
     "machine_accepted" | "machine_accepted_external_pending"
   >;
   external_confirmations: ExternalConfirmationV2[];
+  target_profile: TargetProfileV2;
+  target_state: FinalReceiptV2["target_state"];
+  stage_results: FinalReceiptV2["stage_results"];
   acceptance_scope: "declared_machine_authority";
   closed_scope: "machine_authority";
   native_goal_effect: "none";
@@ -377,6 +409,9 @@ export async function closeDeliveryTask(
     status: "closed",
     workflow_status: result.workflow_status,
     external_confirmations: result.external_confirmations,
+    target_profile: result.target_profile,
+    target_state: result.target_state,
+    stage_results: result.stage_results,
     acceptance_scope: "declared_machine_authority",
     closed_scope: "machine_authority",
     native_goal_effect: "none",
@@ -389,9 +424,9 @@ function acceptedScopeMessage(
     "machine_accepted" | "machine_accepted_external_pending"
   >,
   confirmations: ExternalConfirmationV2[],
+  targetProfile: TargetProfileV2,
 ): string {
-  const scope =
-    "Declared machine Authority accepted and cleared. This result has no direct effect on the platform-native Goal; before completing it, confirm current Goal/user meaning is fully represented by accepted Source and no revision, blocker, or omitted requirement remains.";
+  const scope = `Declared machine Authority accepted for target ${targetProfile.key}:${targetProfile.required_state} and cleared. This result has no direct effect on the platform-native Goal; before completing it, confirm current Goal/user meaning is fully represented by accepted Source and no revision, blocker, or omitted requirement remains.`;
   if (workflowStatus === "machine_accepted") return scope;
   const pending = confirmations
     .map((confirmation) => `${confirmation.key} (${confirmation.owner})`)

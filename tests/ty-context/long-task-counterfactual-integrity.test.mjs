@@ -23,6 +23,7 @@ test("Counterfactual accepts only the exact designated Assertion failure", async
       criterion: "The unrelated observation remains true.",
       claims: [],
       observation: "other",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });
@@ -165,6 +166,7 @@ test("Counterfactual Claims must belong to the designated sensitive Assertion", 
       criterion: "The unrelated obligation remains observable.",
       claims: ["obligation.unrelated"],
       observation: "other",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });
@@ -240,7 +242,7 @@ async function writeOracle(root, mode) {
 let result = false;
 try { result = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")).first; }
 catch { ${missing} }
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{${resultObservation}other:${other},population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{${resultObservation}other:${other},population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"counterfactual-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"other-stays-true",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["other"]}]}));
 `,
   );
 }

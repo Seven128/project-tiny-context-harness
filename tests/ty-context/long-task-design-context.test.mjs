@@ -224,7 +224,10 @@ test("target-runtime feedback stays live, rolling, and state-free", async () => 
     combined,
     /no `platform_impact`|adds no `platform_impact`|Do not add `platform_impact`/iu,
   );
-  assert.match(combined, /no .*completion state|adds no .*completion state/iu);
+  assert.match(
+    combined,
+    /no .*per-platform (?:Progress|progress|completion status)|invent per-platform progress\/status/iu,
+  );
   assert.match(combined, /per[- ]Outcome[\/ ](?:or|and).*per[- ]edit/iu);
   assert.match(
     combined,
@@ -233,8 +236,9 @@ test("target-runtime feedback stays live, rolling, and state-free", async () => 
 
   assert.doesNotMatch(
     sourceCode,
-    /\bplatform_impact\b|\bimplementation_complete\b|\bplatform_smoke_verified\b/u,
+    /\bplatform_impact\b|\bplatform_smoke_verified\b/u,
   );
+  assert.match(sourceCode, /\bimplementation_complete\b/u);
 });
 
 test("Source Plan and Contract Draft authoring responsibilities stay separate", async () => {
@@ -467,7 +471,10 @@ test("blocker revisions use causal evidence without adding completion state", as
     /veto-only[\s\S]*never (?:lets Agent judgment replace|substitutes Agent judgment for) Final Gate/iu,
   );
   assert.match(combined, /no persistent `authority_revision_in_progress`/iu);
-  assert.match(combined, /no product taxonomy|not a product taxonomy/iu);
+  assert.match(
+    combined,
+    /bounded target profile|bounded required-target|no open-ended .*taxonomy/iu,
+  );
 });
 
 test("Mechanism Admission Rule is explicit and creates no registry", async () => {

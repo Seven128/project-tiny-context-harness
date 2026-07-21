@@ -39,12 +39,31 @@ export async function addGlobalClaim(
       criterion: statement,
       claims: ["constraint.global-state"],
       observation: constant ? "negative" : "result",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: constant ? false : true,
     },
   ];
   check.negative_assertions = [];
   fixture.contract.global.acceptance.checks.push(check);
+  await writeFile(
+    path.join(fixture.root, "tests", "oracle.mjs"),
+    `import { readFile } from "node:fs/promises";
+let state = { first: false };
+try { state = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
+const key = process.argv[2] || "first";
+const globalCheck = process.argv[3] === "global";
+const assertionKey = globalCheck ? "global-state-assertion" : \`${"${key}"}-result\`;
+const records = [{assertion_key:assertionKey,capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:[key]}];
+if (!globalCheck) records.unshift({assertion_key:assertionKey,capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:\`fixture-${"${key}"}-session\`,cold_start:true});
+console.log(JSON.stringify({
+  schema_version:"long-task-check-result-v3",
+  execution_status:"completed",
+  observations:{result:state[key] === true,negative:false},
+  evidence_records:records
+}));
+`,
+  );
   if (counterfactual) await addGlobalCounterfactual(fixture.contract);
   await writeContract(fixture.workdir, fixture.contract);
 }

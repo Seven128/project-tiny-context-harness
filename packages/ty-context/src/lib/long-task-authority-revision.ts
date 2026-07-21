@@ -16,33 +16,25 @@ import {
   changedProductClaimSemantics,
   sourceClaimAdditions,
 } from "./long-task-authority-material-diff.js";
-import { compileProductClaimCoverage } from "./long-task-claims.js";
 import {
-  addedInputPaths,
-  addedVerificationInputs,
+  analyzeCheckRevisions,
+  analyzeOutcomeRevisions,
+  keyedAuthorityChanges,
+  selectedRevisionReasons,
+} from "./long-task-authority-revision-analysis.js";
+import {
   addedValues,
-  bindingReductions,
-  changedRunnerFields,
   checkIndex,
-  counterfactualReductions,
-  expandedPatterns,
-  globalCounterfactualReductions,
-  obligationReductions,
   removedExactValues,
-  removedGlobalForbiddenPaths,
-  removedOrNarrowedInputPaths,
-  removedOrReplacedVerificationInputs,
-  removedOrWeakenedExpectedOutputPaths,
-  removedStructuredValues,
   removedValues,
-  rollbackReductions,
-  same,
   sourceClaimReductions,
 } from "./long-task-authority-revision-details.js";
 import type { AuthorityRevisionDiffV2 } from "./long-task-authority-revision-types.js";
+import { compileProductClaimCoverage } from "./long-task-claims.js";
 import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
 
 export type { AuthorityRevisionDiffV2 } from "./long-task-authority-revision-types.js";
+
 export function authorityRevisionDiff(
   previous: CompiledDeliveryContractV2,
   next: DeliveryContractV2,
@@ -76,57 +68,7 @@ export function authorityRevisionDiff(
     new Set(beforeChecks.keys()),
     new Set(afterChecks.keys()),
   );
-  const negativeAssertionsRemoved: string[] = [];
-  const proofSurfacesChanged: string[] = [];
-  const runnerDefinitionsChanged: string[] = [];
-  const verificationInputsAdded: string[] = [];
-  const verificationInputsRemovedOrReplaced: string[] = [];
-  const inputPathsAdded: string[] = [];
-  const inputPathsRemovedOrNarrowed: string[] = [];
-  const expectedOutputPathsRemovedOrWeakened: string[] = [];
-  const artifactsRemoved: string[] = [];
-  const environmentRequirementsRemoved: string[] = [];
-  for (const [identity, before] of beforeChecks) {
-    const after = afterChecks.get(identity);
-    if (!after) continue;
-    for (const assertion of before.negative_assertions)
-      if (!after.negative_assertions.some((item) => same(item, assertion)))
-        negativeAssertionsRemoved.push(`${identity}:${assertion.key}`);
-    if (before.proof_surface !== after.proof_surface)
-      proofSurfacesChanged.push(
-        `${identity}:${before.proof_surface}->${after.proof_surface}`,
-      );
-    runnerDefinitionsChanged.push(
-      ...changedRunnerFields(identity, before, after),
-    );
-    verificationInputsAdded.push(
-      ...addedVerificationInputs(identity, before, after),
-    );
-    verificationInputsRemovedOrReplaced.push(
-      ...removedOrReplacedVerificationInputs(identity, before, after),
-    );
-    inputPathsAdded.push(...addedInputPaths(identity, before, after));
-    inputPathsRemovedOrNarrowed.push(
-      ...removedOrNarrowedInputPaths(identity, before, after),
-    );
-    expectedOutputPathsRemovedOrWeakened.push(
-      ...removedOrWeakenedExpectedOutputPaths(identity, before, after),
-    );
-    artifactsRemoved.push(
-      ...removedExactValues(
-        identity,
-        before.artifact_globs,
-        after.artifact_globs,
-      ),
-    );
-    environmentRequirementsRemoved.push(
-      ...removedStructuredValues(
-        identity,
-        before.environment_requirements,
-        after.environment_requirements,
-      ),
-    );
-  }
+  const checkChanges = analyzeCheckRevisions(beforeChecks, afterChecks);
 
   const sourceClaimsRemovedOrChanged = sourceClaimReductions(
     previous.source_claims,
@@ -141,73 +83,11 @@ export function authorityRevisionDiff(
     previous.task.source_paths,
     next.task.source_paths,
   );
-  const ownerPathsExpanded: string[] = [];
-  const ownerContextRefsRemoved: string[] = [];
-  const expectedChangePathsExpanded: string[] = [];
-  const allowedPathsExpanded: string[] = [];
-  const forbiddenPathsRemoved = removedGlobalForbiddenPaths(previous, next);
-  const bindingsRemovedOrExpanded: string[] = [];
-  const obligationsRemovedOrWeakened: string[] = [];
-  const rollbackOrRecoveryWeakened: string[] = [];
-  const counterfactualsRemoved = globalCounterfactualReductions(previous, next);
-  const populationWeakened: string[] = [];
+  const outcomeChanges = analyzeOutcomeRevisions(previous, next);
   const verifierDiff = verifierAuthorityDiff(
     previous.verifier_identity,
     nextVerifier,
   );
-  const previousOutcomes = new Map(
-    previous.outcomes.map((outcome) => [outcome.key, outcome]),
-  );
-  for (const after of next.outcomes) {
-    const before = previousOutcomes.get(after.key);
-    if (!before) continue;
-    ownerPathsExpanded.push(
-      ...expandedPatterns(
-        after.key,
-        before.product.owner.path_globs,
-        after.product.owner.path_globs,
-      ),
-    );
-    ownerContextRefsRemoved.push(
-      ...removedExactValues(
-        after.key,
-        before.product.owner.context_refs,
-        after.product.owner.context_refs,
-      ),
-    );
-    expectedChangePathsExpanded.push(
-      ...expandedPatterns(
-        after.key,
-        before.technical.expected_change_paths,
-        after.technical.expected_change_paths,
-      ),
-    );
-    allowedPathsExpanded.push(
-      ...expandedPatterns(
-        after.key,
-        before.technical.allowed_support_paths,
-        after.technical.allowed_support_paths,
-      ),
-    );
-    forbiddenPathsRemoved.push(
-      ...removedExactValues(
-        after.key,
-        before.technical.forbidden_paths,
-        after.technical.forbidden_paths,
-      ),
-    );
-    bindingsRemovedOrExpanded.push(...bindingReductions(before, after));
-    obligationsRemovedOrWeakened.push(...obligationReductions(before, after));
-    rollbackOrRecoveryWeakened.push(...rollbackReductions(before, after));
-    counterfactualsRemoved.push(...counterfactualReductions(before, after));
-    if (
-      before.acceptance.population &&
-      (!after.acceptance.population ||
-        !same(before.acceptance.population, after.acceptance.population))
-    )
-      populationWeakened.push(after.key);
-  }
-
   const riskChanged =
     previous.authority_hashes.risk_authority_hash !==
     nextHashes.risk_authority_hash;
@@ -219,57 +99,64 @@ export function authorityRevisionDiff(
   const externalConfirmationsChanged = externalConfirmationChanges.length > 0;
   const monotonic = isMonotonicAcceptanceStrengthening(previous, next);
   const reductionReasons = [
-    ...(productClaimsAdded.length ? ["product_claim_added"] : []),
-    ...(productClaimsRemoved.length ? ["product_claim_removed"] : []),
-    ...(productClaimsChanged.length ? ["product_claim_changed"] : []),
+    ...selectedRevisionReasons([
+      ["product_claim_added", productClaimsAdded],
+      ["product_claim_removed", productClaimsRemoved],
+      ["product_claim_changed", productClaimsChanged],
+    ]),
     ...materialDiff.reduction_reasons,
-    ...(checksRemoved.length ? ["check_removed"] : []),
-    ...(negativeAssertionsRemoved.length ? ["negative_assertion_removed"] : []),
-    ...(proofSurfacesChanged.length ? ["proof_surface_changed"] : []),
-    ...(sourceClaimsRemovedOrChanged.length
-      ? ["source_claim_removed_or_changed"]
-      : []),
-    ...(sourceClaimsAdded.length ? ["source_claim_added"] : []),
-    ...(sourcePathsRemovedOrReplaced.length
-      ? ["source_path_removed_or_replaced"]
-      : []),
-    ...(ownerPathsExpanded.length ? ["owner_path_expanded"] : []),
-    ...(ownerContextRefsRemoved.length ? ["owner_context_ref_removed"] : []),
-    ...(expectedChangePathsExpanded.length
-      ? ["expected_change_path_expanded"]
-      : []),
-    ...(allowedPathsExpanded.length ? ["allowed_path_expanded"] : []),
-    ...(forbiddenPathsRemoved.length ? ["forbidden_path_removed"] : []),
-    ...(runnerDefinitionsChanged.length ? ["runner_definition_changed"] : []),
-    ...(verificationInputsRemovedOrReplaced.length
-      ? ["verification_input_removed_or_replaced"]
-      : []),
-    ...(inputPathsRemovedOrNarrowed.length
-      ? ["input_path_coverage_reduced"]
-      : []),
-    ...(expectedOutputPathsRemovedOrWeakened.length
-      ? ["expected_output_requirement_weakened"]
-      : []),
-    ...(artifactsRemoved.length ? ["artifact_removed"] : []),
-    ...(environmentRequirementsRemoved.length
-      ? ["environment_requirement_removed"]
-      : []),
-    ...(bindingsRemovedOrExpanded.length
-      ? ["binding_removed_or_expanded"]
-      : []),
-    ...(obligationsRemovedOrWeakened.length
-      ? ["obligation_removed_or_weakened"]
-      : []),
-    ...(rollbackOrRecoveryWeakened.length
-      ? ["rollback_or_recovery_weakened"]
-      : []),
-    ...(counterfactualsRemoved.length ? ["counterfactual_removed"] : []),
-    ...(populationWeakened.length ? ["population_weakened"] : []),
-    ...(verifierDiff.verifier_content_changed
-      ? ["verifier_content_changed"]
-      : []),
-    ...(riskChanged ? ["risk_changed_requires_review"] : []),
-    ...(acceptanceChanged && !monotonic ? ["acceptance_not_monotonic"] : []),
+    ...selectedRevisionReasons([
+      ["check_removed", checksRemoved],
+      ["negative_assertion_removed", checkChanges.negative_assertions_removed],
+      ["proof_surface_changed", checkChanges.proof_surfaces_changed],
+      ["source_claim_removed_or_changed", sourceClaimsRemovedOrChanged],
+      ["source_claim_added", sourceClaimsAdded],
+      ["source_path_removed_or_replaced", sourcePathsRemovedOrReplaced],
+      ["owner_path_expanded", outcomeChanges.owner_paths_expanded],
+      ["owner_context_ref_removed", outcomeChanges.owner_context_refs_removed],
+      [
+        "expected_change_path_expanded",
+        outcomeChanges.expected_change_paths_expanded,
+      ],
+      ["allowed_path_expanded", outcomeChanges.allowed_paths_expanded],
+      ["forbidden_path_removed", outcomeChanges.forbidden_paths_removed],
+      ["runner_definition_changed", checkChanges.runner_definitions_changed],
+      [
+        "verification_input_removed_or_replaced",
+        checkChanges.verification_inputs_removed_or_replaced,
+      ],
+      [
+        "input_path_coverage_reduced",
+        checkChanges.input_paths_removed_or_narrowed,
+      ],
+      [
+        "expected_output_requirement_weakened",
+        checkChanges.expected_output_paths_removed_or_weakened,
+      ],
+      ["artifact_removed", checkChanges.artifacts_removed],
+      [
+        "environment_requirement_removed",
+        checkChanges.environment_requirements_removed,
+      ],
+      [
+        "binding_removed_or_expanded",
+        outcomeChanges.bindings_removed_or_expanded,
+      ],
+      [
+        "obligation_removed_or_weakened",
+        outcomeChanges.obligations_removed_or_weakened,
+      ],
+      [
+        "rollback_or_recovery_weakened",
+        outcomeChanges.rollback_or_recovery_weakened,
+      ],
+      ["counterfactual_removed", outcomeChanges.counterfactuals_removed],
+      ["population_weakened", outcomeChanges.population_weakened],
+      ["verifier_content_changed", verifierDiff.verifier_content_changed],
+      ["risk_changed_requires_review", riskChanged],
+      ["external_confirmation_changed", externalConfirmationsChanged],
+      ["acceptance_not_monotonic", acceptanceChanged && !monotonic],
+    ]),
   ];
   return {
     product_claims_added: productClaimsAdded,
@@ -282,8 +169,8 @@ export function authorityRevisionDiff(
       new Set(afterChecks.keys()),
     ),
     checks_removed: checksRemoved,
-    negative_assertions_removed: negativeAssertionsRemoved,
-    proof_surfaces_changed: proofSurfacesChanged,
+    negative_assertions_removed: checkChanges.negative_assertions_removed,
+    proof_surfaces_changed: checkChanges.proof_surfaces_changed,
     source_claims_added: sourceClaimsAdded,
     source_claims_removed_or_changed: sourceClaimsRemovedOrChanged,
     source_paths_removed_or_replaced: sourcePathsRemovedOrReplaced,
@@ -295,26 +182,30 @@ export function authorityRevisionDiff(
     context_files_added: materialDiff.context_files_added,
     context_files_removed: materialDiff.context_files_removed,
     context_files_changed: materialDiff.context_files_changed,
-    owner_paths_expanded: ownerPathsExpanded,
-    owner_context_refs_removed: ownerContextRefsRemoved,
-    expected_change_paths_expanded: expectedChangePathsExpanded,
-    allowed_paths_expanded: allowedPathsExpanded,
-    forbidden_paths_removed: forbiddenPathsRemoved,
-    runner_definitions_changed: runnerDefinitionsChanged,
-    verification_inputs_added: verificationInputsAdded,
+    owner_paths_expanded: outcomeChanges.owner_paths_expanded,
+    owner_context_refs_removed: outcomeChanges.owner_context_refs_removed,
+    expected_change_paths_expanded:
+      outcomeChanges.expected_change_paths_expanded,
+    allowed_paths_expanded: outcomeChanges.allowed_paths_expanded,
+    forbidden_paths_removed: outcomeChanges.forbidden_paths_removed,
+    runner_definitions_changed: checkChanges.runner_definitions_changed,
+    verification_inputs_added: checkChanges.verification_inputs_added,
     verification_inputs_removed_or_replaced:
-      verificationInputsRemovedOrReplaced,
-    input_paths_added: inputPathsAdded,
-    input_paths_removed_or_narrowed: inputPathsRemovedOrNarrowed,
+      checkChanges.verification_inputs_removed_or_replaced,
+    input_paths_added: checkChanges.input_paths_added,
+    input_paths_removed_or_narrowed:
+      checkChanges.input_paths_removed_or_narrowed,
     expected_output_paths_removed_or_weakened:
-      expectedOutputPathsRemovedOrWeakened,
-    artifacts_removed: artifactsRemoved,
-    environment_requirements_removed: environmentRequirementsRemoved,
-    bindings_removed_or_expanded: bindingsRemovedOrExpanded,
-    obligations_removed_or_weakened: obligationsRemovedOrWeakened,
-    rollback_or_recovery_weakened: rollbackOrRecoveryWeakened,
-    counterfactuals_removed: counterfactualsRemoved,
-    population_weakened: populationWeakened,
+      checkChanges.expected_output_paths_removed_or_weakened,
+    artifacts_removed: checkChanges.artifacts_removed,
+    environment_requirements_removed:
+      checkChanges.environment_requirements_removed,
+    bindings_removed_or_expanded: outcomeChanges.bindings_removed_or_expanded,
+    obligations_removed_or_weakened:
+      outcomeChanges.obligations_removed_or_weakened,
+    rollback_or_recovery_weakened: outcomeChanges.rollback_or_recovery_weakened,
+    counterfactuals_removed: outcomeChanges.counterfactuals_removed,
+    population_weakened: outcomeChanges.population_weakened,
     external_confirmations_changed: externalConfirmationsChanged,
     external_confirmation_changes: externalConfirmationChanges,
     ...verifierDiff,
@@ -323,42 +214,20 @@ export function authorityRevisionDiff(
       nextHashes.source_authority_hash,
     risk_changed: riskChanged,
     owner_or_path_boundary_changed:
-      ownerPathsExpanded.length > 0 ||
-      ownerContextRefsRemoved.length > 0 ||
-      expectedChangePathsExpanded.length > 0 ||
-      allowedPathsExpanded.length > 0 ||
-      forbiddenPathsRemoved.length > 0 ||
-      bindingsRemovedOrExpanded.length > 0,
+      outcomeChanges.owner_paths_expanded.length > 0 ||
+      outcomeChanges.owner_context_refs_removed.length > 0 ||
+      outcomeChanges.expected_change_paths_expanded.length > 0 ||
+      outcomeChanges.allowed_paths_expanded.length > 0 ||
+      outcomeChanges.forbidden_paths_removed.length > 0 ||
+      outcomeChanges.bindings_removed_or_expanded.length > 0,
     runner_or_verification_inputs_changed:
-      runnerDefinitionsChanged.length > 0 ||
-      verificationInputsRemovedOrReplaced.length > 0 ||
-      inputPathsRemovedOrNarrowed.length > 0 ||
-      expectedOutputPathsRemovedOrWeakened.length > 0,
+      checkChanges.runner_definitions_changed.length > 0 ||
+      checkChanges.verification_inputs_removed_or_replaced.length > 0 ||
+      checkChanges.input_paths_removed_or_narrowed.length > 0 ||
+      checkChanges.expected_output_paths_removed_or_weakened.length > 0,
     technical_obligations_changed:
-      obligationsRemovedOrWeakened.length > 0 ||
-      rollbackOrRecoveryWeakened.length > 0,
+      outcomeChanges.obligations_removed_or_weakened.length > 0 ||
+      outcomeChanges.rollback_or_recovery_weakened.length > 0,
     reduction_reasons: [...new Set(reductionReasons)],
   };
-}
-
-function keyedAuthorityChanges(
-  before: Array<{ key: string }>,
-  after: Array<{ key: string }>,
-): string[] {
-  const beforeByKey = new Map(before.map((item) => [item.key, item]));
-  const afterByKey = new Map(after.map((item) => [item.key, item]));
-  return [
-    ...before
-      .filter((item) => !afterByKey.has(item.key))
-      .map((item) => `${item.key}:removed`),
-    ...after
-      .filter((item) => !beforeByKey.has(item.key))
-      .map((item) => `${item.key}:added`),
-    ...before
-      .filter((item) => {
-        const candidate = afterByKey.get(item.key);
-        return candidate !== undefined && !same(item, candidate);
-      })
-      .map((item) => `${item.key}:changed`),
-  ].sort();
 }

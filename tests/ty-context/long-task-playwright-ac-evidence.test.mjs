@@ -206,6 +206,28 @@ function compiledPlaywrightCheck() {
     internal_id: "CHECK.first.ui",
     outcome_key: "first",
     key: "ui",
+    journey_roles: ["success"],
+    execution_target: { target_ref: "browser-app", entrypoint: "root" },
+    execution_target_definition: {
+      key: "browser-app",
+      description: "The browser fixture.",
+      role: "product",
+      runtime_family: "browser",
+      root_entrypoint: "/",
+    },
+    known_execution_targets: [
+      {
+        key: "browser-app",
+        description: "The browser fixture.",
+        role: "product",
+        runtime_family: "browser",
+        root_entrypoint: "/",
+      },
+    ],
+    scenario: {
+      given: [{ key: "fixture-loaded", statement: "Load the fixture." }],
+      when: [{ key: "read-outcome", statement: "Read the outcome." }],
+    },
     proof_surface: "ui_browser",
     runner: {
       type: "playwright_test",
@@ -225,6 +247,7 @@ function compiledPlaywrightCheck() {
       package_script: null,
       execution_identity: "playwright",
     },
+    evidence_adapter: "playwright_json_v1",
     verification_inputs: ["tests/ui.spec.ts"],
     verification_input_hashes: {},
     raw_execution_identity: "playwright",
@@ -237,6 +260,7 @@ function compiledPlaywrightCheck() {
         criterion: "The first acceptance case passes.",
         claims: ["requirement.one"],
         observation: "playwright.case.ac-one.passed",
+        evidence_capabilities: ["interaction_trace"],
         operator: "equals",
         expected: true,
       },
@@ -245,6 +269,7 @@ function compiledPlaywrightCheck() {
         criterion: "The second acceptance case passes.",
         claims: ["requirement.two"],
         observation: "playwright.case.ac-two.passed",
+        evidence_capabilities: ["interaction_trace"],
         operator: "equals",
         expected: true,
       },
@@ -279,7 +304,19 @@ function ac(id, status, resultStatus, projectId = "default") {
   return {
     id,
     title: `[ac:${id}] ${id}`,
-    test: { projectId, status, results: [{ status: resultStatus }] },
+    test: {
+      projectId,
+      status,
+      results: [
+        {
+          status: resultStatus,
+          steps: [
+            { title: "[given:fixture-loaded]" },
+            { title: "[action:read-outcome]" },
+          ],
+        },
+      ],
+    },
   };
 }
 
@@ -287,7 +324,19 @@ function tagged(title, status, resultStatus, projectId = "default") {
   return {
     id: title,
     title,
-    test: { projectId, status, results: [{ status: resultStatus }] },
+    test: {
+      projectId,
+      status,
+      results: [
+        {
+          status: resultStatus,
+          steps: [
+            { title: "[given:fixture-loaded]" },
+            { title: "[action:read-outcome]" },
+          ],
+        },
+      ],
+    },
   };
 }
 

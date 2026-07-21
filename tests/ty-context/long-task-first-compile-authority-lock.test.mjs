@@ -89,6 +89,7 @@ test("proof additions and proven scope tightening revise automatically", async (
       criterion: "The additional proof remains true.",
       claims: [],
       observation: "negative",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: false,
     });

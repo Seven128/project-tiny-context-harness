@@ -30,6 +30,7 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
       criterion: "The security proof artifact is produced.",
       claims: [],
       observation: "artifacts-ready",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });
@@ -42,6 +43,7 @@ test("strict security proof combines per-Check artifacts, negative Assertions an
       criterion: "Self-reported success remains rejected.",
       claims: ["forbidden_shortcut.self-report"],
       observation: "negative_ok",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });
@@ -102,6 +104,7 @@ test("Population V2 proves entity coverage and fails on an omitted eligible id",
       criterion: "The negative population path remains valid.",
       claims: [],
       observation: "negative_ok",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });
@@ -208,7 +211,7 @@ let result = false;
 try { result = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")).first; } catch {}
 await mkdir(new URL("../artifacts", import.meta.url), {recursive:true});
 await writeFile(new URL("../artifacts/proof.json", import.meta.url), JSON.stringify({verified:result}));
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,"artifacts-ready":true,negative_ok:result}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result,"artifacts-ready":true,negative_ok:result},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"artifact-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"artifact-present",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["artifact"]},{assertion_key:"shortcut-rejected",capability:"state_delta",before_sha256:"4".repeat(64),after_sha256:"5".repeat(64),changed_fields:["negative"]}]}));
 `,
   );
 }
@@ -219,7 +222,7 @@ async function writePopulationOracle(root) {
     `import { readFile } from "node:fs/promises";
 let result = false;
 try { result = JSON.parse(await readFile(new URL("../src/state.json", import.meta.url), "utf8")).first; } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result,negative_ok:true,population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result,negative_ok:true,population:{eligible_ids:["first"],observed_ids:result?["first"]:[],excluded_items:[]}},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"population-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"negative-path",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["negative"]}]}));
 `,
   );
 }

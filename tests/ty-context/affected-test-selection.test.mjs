@@ -20,6 +20,8 @@ test("hotspot source changes select focused regression tests", () => {
   assert.deepEqual(selection.tests, [
     "tests/ty-context/long-task-authority-progress-retry.test.mjs",
     "tests/ty-context/long-task-context-evolution.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-lifecycle.test.mjs",
     "tests/ty-context/long-task-state-resume.test.mjs",
   ]);
 });
@@ -57,6 +59,8 @@ test("Long-Task command changes include the one-time model-choice regression", (
     "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
     "tests/ty-context/long-task-context-evolution.test.mjs",
     "tests/ty-context/long-task-model-choice-checkpoint.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-lifecycle.test.mjs",
     "tests/ty-context/long-task-workflow-black-box.test.mjs",
   ]);
 });
@@ -71,6 +75,8 @@ test("Authority Revision classifier changes select diagnosis and semantic covera
     "tests/ty-context/long-task-authority-revision-classification.test.mjs",
     "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
     "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-lifecycle.test.mjs",
   ]);
 });
 
@@ -133,6 +139,8 @@ test("shared long-task runtime types use focused authority and recovery coverage
     "tests/ty-context/long-task-context-evolution.test.mjs",
     "tests/ty-context/long-task-delivery-compiler.test.mjs",
     "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-lifecycle.test.mjs",
     "tests/ty-context/long-task-state-resume.test.mjs",
   ]);
 });

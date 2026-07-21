@@ -49,6 +49,7 @@ test("negative-only Global Check and zero positive Assertions have Schema/Parser
       criterion: "The retired legacy behavior remains absent.",
       claims: ["non_goal.no-legacy"],
       observation: "negative",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: false,
     },
@@ -99,6 +100,7 @@ test("Assertion operator and expected rules stay aligned across Schema and Parse
     key: "exists",
     claims: ["result", "obligation.implement-first"],
     observation: "result",
+    evidence_capabilities: ["presence"],
     operator: "exists",
     expected: true,
   };
@@ -116,6 +118,7 @@ test("Assertion operator and expected rules stay aligned across Schema and Parse
     key: "regex",
     claims: ["result", "obligation.implement-first"],
     observation: "result",
+    evidence_capabilities: ["state_delta"],
     operator: "matches",
     expected: "[",
   };

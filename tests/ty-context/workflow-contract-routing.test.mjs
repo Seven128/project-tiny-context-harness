@@ -207,7 +207,10 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
     /Draft Outcome[\s\S]*not a new schema field or runtime entity/iu,
   );
   assert.match(active, /`depends_on` means acceptance readiness/iu);
-  assert.match(active, /not persist a scheduler, Worker queue/iu);
+  assert.match(
+    active,
+    /must not persist[\s\S]{0,100}scheduler[\s\S]{0,100}Worker queue/iu,
+  );
   assert.match(
     active,
     /Outcome decomposes execution and diagnosis, not completion authority/iu,

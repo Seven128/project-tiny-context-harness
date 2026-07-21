@@ -63,6 +63,7 @@ test("Runner-derived Evidence Adapter rejects Browser Proof spoofing", () => {
 
 test("Claim-bearing Playwright Assertions use only AC passed equals true", () => {
   const contract = deliveryContract();
+  contract.task.execution_targets[0].runtime_family = "browser";
   const check = contract.outcomes[0].acceptance.checks[0];
   check.runner.type = "playwright_test";
   check.runner.target = "tests/ui.spec.ts";
@@ -70,6 +71,7 @@ test("Claim-bearing Playwright Assertions use only AC passed equals true", () =>
   check.positive_assertions[0] = {
     ...check.positive_assertions[0],
     observation: "playwright.case.first-result.skipped",
+    evidence_capabilities: ["interaction_trace", "target_runtime"],
     operator: "equals",
     expected: false,
   };
@@ -101,6 +103,18 @@ test("required_proof_surfaces passes only when every layer has a compatible proo
   ];
   outcome.technical.obligations = [];
   const browserCheck = outcome.acceptance.checks[0];
+  contract.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The browser support surface.",
+    role: "support",
+    runtime_family: "browser",
+    root_entrypoint: "/",
+  });
+  browserCheck.journey_roles = ["success"];
+  browserCheck.execution_target = {
+    target_ref: "fixture-browser",
+    entrypoint: "root",
+  };
   browserCheck.proof_surface = "ui_browser";
   browserCheck.runner.type = "playwright_test";
   browserCheck.runner.target = "tests/ui.spec.ts";
@@ -110,12 +124,18 @@ test("required_proof_surfaces passes only when every layer has a compatible proo
       criterion: "The browser layer proves the atomic requirement.",
       claims: ["requirement.observe-first"],
       observation: "playwright.case.browser-layer.passed",
+      evidence_capabilities: ["interaction_trace"],
       operator: "equals",
       expected: true,
     },
   ];
   const dataCheck = structuredClone(browserCheck);
   dataCheck.key = "data-layer";
+  dataCheck.journey_roles = ["success", "stage_gate"];
+  dataCheck.execution_target = {
+    target_ref: "fixture-app",
+    entrypoint: "root",
+  };
   dataCheck.proof_surface = "data_state";
   dataCheck.runner.type = "node_oracle";
   dataCheck.runner.target = "tests/oracle.mjs";
@@ -125,6 +145,7 @@ test("required_proof_surfaces passes only when every layer has a compatible proo
       criterion: "The data layer proves the atomic requirement.",
       claims: ["result", "requirement.observe-first"],
       observation: "result",
+      evidence_capabilities: ["target_runtime", "state_delta"],
       operator: "equals",
       expected: true,
     },
@@ -172,6 +193,7 @@ test("truthy and falsy cannot prove an implementation_structure Obligation", () 
       criterion: "The implementation carrier exists structurally.",
       claims: ["obligation.implement-first"],
       observation: "result",
+      evidence_capabilities: ["state_delta"],
       operator,
     };
     assert.throws(
@@ -202,6 +224,7 @@ test("exists may prove only an implementation_structure Obligation", () => {
       criterion: "The declared implementation carrier exists.",
       claims: ["obligation.implement-first"],
       observation: "result",
+      evidence_capabilities: ["presence"],
       operator: "exists",
     },
   ];

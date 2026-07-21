@@ -17,9 +17,18 @@ Evidence adapter is derived from runner kind. Only Playwright may prove `ui_brow
 
 Across all Checks sharing a Raw Execution, one Claim-bearing Observation belongs to one Assertion. Shared setup may execute once only when independent per-Check observations and artifacts remain unambiguous.
 
+## Scenario And Evidence Capabilities
+
+- Every Check declares non-empty keyed `scenario.given` and `scenario.when` steps. One Check covers one materially coherent journey; a different success path belongs in another Check or vertical Outcome.
+- Every Assertion declares a non-empty all-of `evidence_capabilities` set. `presence` proves static existence only and cannot alone prove a behavioral Claim. Each other capability requires exactly one typed current-execution record bound to the declared Assertion key; missing, duplicate, unknown or undeclared records fail closed.
+- `interaction_trace` names the exact target plus the declared Given keys and ordered action keys. Playwright derives it only from an executed declared AC carrying matching `[given:<key>]` and `[action:<key>]` steps; `[ac:<assertion-key>]` remains the AC binding.
+- `state_delta` requires different before/after hashes and named changed fields. `durable_readback` requires independent write/read sessions with equal state hashes. `cross_surface_consistency` requires at least two distinct surface refs, known target refs and one state hash.
+- `boundary_invocation` and `external_side_effect` require the Check itself to execute on the named observer target. `failure_injection` requires an observed fault and recovery state; `visual_render` binds a declared artifact hash; `target_runtime` binds exact target/root/current session and requires a cold start for a root journey; `input_variation` requires at least two distinct inputs, differing propagated outputs and an observed failure case.
+- Structured runners emit `long-task-check-result-v3` for capability records. V2 payloads remain decodable only for presence-only compatibility; they cannot satisfy a declared non-presence capability. Evidence records contain bounded hashes/ids/refs, not unrestricted raw payloads.
+
 ## Live Target Runtime Evidence
 
-- For a target-runtime Claim, the accepting Check must exercise that target during the current runner invocation and derive structured Observations from the same runtime session. Rerunning a parser for a tracked or generated status report reruns the parser, not the target.
+- For a target-runtime Claim, the accepting Check must exercise the exact declared required target during the current runner invocation and derive structured Observations from the same runtime session. Browser target runtime is proved only by Playwright; Native/Desktop target runtime is proved only by the project binary. Rerunning a parser for a tracked or generated status report reruns the parser, not the target.
 - A proxy surface may prove its own Claim but cannot substitute when proxy and target can fail independently. Static source/config shape proves structure only. The existence of a build, installation, started process or clean fatal-error scan proves only those exact assertions.
 - If the declared result includes a runnable product surface or interaction, observe a stable product-owned sentinel or the declared interaction in the target session. A generic process/activity/window, development shell or absence of errors is insufficient for that broader Claim.
 - Historical reports, screenshots, binaries and logs are review material. Current-run screenshots/logs may accompany a Check as Artifacts, but the accepting Observation must come from the live runner execution and cannot be imported from historical state.
@@ -31,6 +40,8 @@ Across all Checks sharing a Raw Execution, one Claim-bearing Observation belongs
 - Evidence must reach the furthest independently failing boundary named by the Claim. A proxy may prove its own result, but it cannot prove a downstream state or effect merely by reporting success.
 - For a behavioral Claim, prefer a Counterfactual that disrupts the claimed causal capability when removing a carrier would prove only file dependence. `replace_file` may supply a declared inert/failing implementation fixture; `remove_paths` remains valid when carrier existence is itself the claimed boundary.
 - Keep this risk-proportional and internal. Do not create an evidence matrix, product-effect taxonomy, universal restart/end-to-end suite, new mutation type or persistent review state.
+
+For semantic Product Conformance, require one separate read-only Global `conformance` Check only when `weak_observability` combines with multiple Stages or multiple required product runtime families. It starts from a required root product target, includes `target_runtime`, uses a Raw Execution identity independent of Outcome Checks and runs inside the existing Final Gate. Single-Stage/single-family weak work keeps the existing same-Check sensitivity path and does not pay this extra runtime cost.
 
 ## Playwright
 

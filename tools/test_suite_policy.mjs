@@ -11,6 +11,8 @@ export const LONG_TASK_TRUST_TEST_FILES = Object.freeze([
   "long-task-final-closure-mutation-smoke.test.mjs",
   "long-task-profile-hook.test.mjs",
   "long-task-qualified-completion.test.mjs",
+  "long-task-semantic-drift-closure.test.mjs",
+  "long-task-semantic-drift-lifecycle.test.mjs",
   "long-task-workflow-black-box.test.mjs",
 ]);
 
@@ -32,6 +34,8 @@ export const LONG_TASK_FOCUSED_TESTS = Object.freeze(
     "long-task-efficiency-design.test.mjs",
     "long-task-model-choice-checkpoint.test.mjs",
     "long-task-semantic-authority-revision.test.mjs",
+    "long-task-semantic-drift-closure.test.mjs",
+    "long-task-semantic-drift-lifecycle.test.mjs",
     "visual-delivery-guidance.test.mjs",
     "workflow-test-entrypoints.test.mjs",
   ].map(testPath),
@@ -45,6 +49,8 @@ export const DELIVERY_CONTRACT_FOCUSED_TESTS = Object.freeze(
     "long-task-delivery-compiler.test.mjs",
     "long-task-delivery-parser.test.mjs",
     "long-task-delivery-risk.test.mjs",
+    "long-task-semantic-drift-closure.test.mjs",
+    "long-task-semantic-drift-lifecycle.test.mjs",
     "long-task-source-authority-closure.test.mjs",
   ].map(testPath),
 );

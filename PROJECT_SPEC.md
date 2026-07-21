@@ -16,7 +16,7 @@ Material production UI adds one conditional readiness question rather than a des
 
 The Long-Task Workflow V2 product equation is:
 
-> one complete delivery = one authoritative Contract + one continuing platform-native Goal + one selected workspace + one user model-choice checkpoint + rolling technical implementation + one trustworthy Evidence Kernel + one Final Gate
+> one complete delivery = one authoritative target-qualified Contract + one continuing platform-native Goal + one selected workspace + one user model-choice checkpoint + stage-constrained rolling technical implementation + one trustworthy capability-aware Evidence Kernel + one Final Gate
 
 The controlling objective, trusted-result boundary, Draft lifecycle, upstream Source boundary and mechanism-admission rule below govern every later Long-Task section. Existing implementation convenience, historical progress or local wording cannot weaken them.
 
@@ -28,14 +28,14 @@ The workflow does not promise that implementation stays on course at every inter
 
 1. compare Source Authority, the Contract, relevant Context and the current final artifact continuously enough to identify delivery drift;
 2. block false completion whenever a declared requirement or AC remains unsatisfied;
-3. localize the problem to its Source Item, Outcome, Claim, Assertion, Check, Proof Surface, Binding or ownership boundary;
+3. localize the problem to its Source Item, Stage, Outcome, Claim, Assertion, Check, Evidence Capability, execution target, Binding or ownership boundary;
 4. give the current Goal an actionable repair direction;
 5. revalidate the complete Contract against the current final snapshot before delivery; and
 6. reject summaries, progress, historical tests, Receipts, a single command exit code and Agent judgment as completion substitutes.
 
 Current-snapshot evidence outranks implementation narrative and historical results. If any declared item is unsatisfied, unverifiable or no longer backed by fresh evidence, the workflow must keep the task unfinished rather than soften the completion wording. This guarantee covers only declared and verifiable authority; it cannot prove that the user never omitted a real requirement.
 
-The efficiency objective is the lowest practical total workflow cost that preserves this false-completion interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, model, maintenance and test cost, or equal cost with stronger independent protection. Stop adding mechanisms when their marginal value no longer exceeds their total cost. Efficiency never authorizes uncertain acceptance: when the evidence boundary is unclear, the workflow still fails closed.
+The efficiency objective is the lowest practical total workflow cost that preserves this false-completion interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, model, maintenance and test cost, or equal cost with stronger independent protection. Admit a mechanism when its expected independent benefit is greater than its total cost; unusually high ROI is not required. Prefer one cohesive implementation when partial changes would leave semantic seams or cost more through repeated migration and maintenance. Efficiency never authorizes uncertain acceptance: when the evidence boundary is unclear, the workflow still fails closed.
 
 ## Authority Scope And Trusted Results
 
@@ -47,7 +47,7 @@ The complete authority and evidence chain is:
 4. **Compiled Contract / Authority Lock** is the formal declared authority created by the first successful formal Compile.
 5. **Execution-model choice** lets the user retain the current model or switch models before implementation; it is not authority or proof.
 6. **Current Code** is implementation reality.
-7. **Check Evidence** is current behavior evidence for declared Claims and Assertions.
+7. **Check Evidence** is typed, current-execution behavior evidence for declared Claims and Assertions, bound to the declared scenario, journey role, execution target and Evidence Capabilities.
 8. **Final Gate** computes machine acceptance on one current final snapshot.
 9. **External Confirmation** owns CI, deployment, Git-hosting, human product acceptance and other non-machine authorities.
 
@@ -85,7 +85,7 @@ Draft Outcomes decompose requirement coupling. Create an Outcome only when its r
 5. mark formerly passing local results stale when their authority or evidence changes; and
 6. use Outcome dependencies to order rolling implementation and verification.
 
-`depends_on` means acceptance readiness, not a mandatory implementation schedule. The current Goal's Rolling Frontier is temporary working state, never a persisted scheduler, Worker queue, model-routing plane, process tree or execution DAG. Outcomes do not promise parallelism or fewer model calls, and Final Gate still revalidates the complete Contract on one current snapshot.
+`depends_on` means acceptance readiness. Source-declared delivery stages add only a product-delivery order: each vertical Outcome belongs to one stage, each stage names a gate Outcome, the gate transitively depends on the rest of that stage, and later stages transitively depend on prerequisite gates. Every Stage Gate executes from the root entrypoint of every required product target and proves `target_runtime`; a Stage containing multiple Outcomes additionally proves `cross_surface_consistency` over at least two distinct surfaces in one current runtime state. The current Goal derives its Rolling Frontier from those existing edges and current Outcome Progress. No Stage Receipt, persisted scheduler, Worker queue, model-routing plane, process tree, second Gate or separate execution DAG exists, and Final Gate still revalidates the complete Contract on one current snapshot.
 
 Outcome boundaries must not be based on model-output length, YAML/file length, frontend/backend layers, file/module count, Agent capacity, Worker assignment or desired parallelism.
 
@@ -219,7 +219,9 @@ Harness never proactively spawns, assigns, coordinates, retries or recovers para
 
 Target-runtime feedback is also rolling, but remains non-authoritative. If a declared result can pass on a proxy surface while failing in its target runtime, the earliest Outcome that owns the first runnable boundary declares a project-owned Check that exercises the target during the current Raw Execution and derives its asserted Observation from that session. A tracked status report, screenshot, binary, log or historical run cannot be the sole proof of that Claim. The Check declares its runtime-affecting `input_paths`, Binding carriers, verification inputs and environment requirements through existing Contract fields.
 
-The current Goal targeted-verifies that Check after the first runnable slice and again before dependent work grows when accumulated relevant changes have made its Progress stale. Related edits are coalesced and the cheapest reliable target Check is used; there is no mandatory full environment rebuild per Outcome or per edit. This adds no `platform_impact` taxonomy, per-platform completion state, scheduler or acceptance path. Final Gate still reruns every declared target-runtime Check on the final snapshot.
+The Contract declares one bounded target profile, its exact non-empty required product target refs and each target's runtime family and root entrypoint. A Web/process proxy cannot satisfy an independently required Native/desktop target. Browser target execution uses `playwright_test`; Native and desktop target execution uses `project_binary`. Every `critical_user_path` Outcome and every Stage Gate proves every required target from its root entrypoint.
+
+The current Goal targeted-verifies those Checks after the first runnable slice and again before dependent work grows when accumulated relevant changes have made their Progress stale. Related edits are coalesced and the cheapest reliable target Check is used; there is no mandatory full environment rebuild per Outcome or per edit. This adds no open-ended `platform_impact` taxonomy, per-platform progress state, scheduler or alternate acceptance path. Final Gate still reruns every declared target-runtime Check on the final snapshot.
 
 ## 5. Canonical Delivery Contract V2
 
@@ -243,9 +245,25 @@ task:
   id: stable-task-key
   title: Human title
   goal: Complete delivery goal
+  target_profile:
+    key: selected-delivery
+    description: Exact target scope
+    required_state: target_profile_usable
+    required_target_refs: [product-runtime]
+  execution_targets:
+    - key: product-runtime
+      description: Required product runtime
+      role: product
+      runtime_family: process
+      root_entrypoint: package-script
   source_paths: [plans/source.md]
   context_refs: []
   context_snapshot_mode: referenced
+stages:
+  - key: delivery
+    title: Complete delivery
+    depends_on: []
+    gate_outcome: delivery-result
 risk:
   requested_level: auto
   facts:
@@ -271,9 +289,11 @@ global:
 outcomes: []
 ```
 
-Each Outcome has a stable `key`, title, dependencies, Product, Technical and Acceptance sections. Product contains a complete set of atomic `requirements`; each Requirement declares its required proof surfaces. UI controls declare location, trigger, input/precondition, loading, empty, success, failure and feedback states. Every Outcome has at least one executable Check.
+Each Outcome has a stable `key`, title, exactly one `stage`, dependencies, Product, Technical and Acceptance sections. Product explicitly declares whether success and degradation paths are required and contains a complete set of atomic `requirements`; each Requirement declares its required proof surfaces. UI controls declare location, trigger, input/precondition, loading, empty, success, failure and feedback states. Every Outcome has at least one executable Check.
 
-Checks support `package_script`, `project_binary`, `node_oracle` and `playwright_test` runners and `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure` proof surfaces.
+Checks support `package_script`, `project_binary`, `node_oracle` and `playwright_test` runners and `ui_browser`, `runtime_behavior`, `api_contract`, `data_state`, `security_boundary`, `population_coverage` and `implementation_structure` proof surfaces. Every Check declares a bounded journey role, a product/support/observer execution target and root/internal entrypoint, plus keyed Given and When scenario steps. Each Assertion declares an all-of Evidence Capability set. `presence` proves static existence only; behavioral capabilities require exactly one typed V3 current-execution record. Required success and degradation journeys use distinct Checks, and an Outcome Result may be proved only by a success Check.
+
+Boundary invocation or external-side-effect evidence executes from an observer target instead of trusting the producing component's self-report. `input_variation` includes at least two distinct inputs, two distinct output hashes and a failing case. `cross_surface_consistency` names at least two distinct `surface_ref` values and one matching state hash; multiple surfaces may share one runtime target. Unknown, undeclared, duplicate or missing capability records fail closed.
 
 Model-authored identifiers stop at task, Outcome and Check keys. The compiler generates internal `OUT.<outcome-key>`, `CHECK.<outcome-key>.<check-key>` and `CHECK.GLOBAL.<check-key>` identities plus canonical Outcome-qualified Requirement, control-field, non-completing, obligation and forbidden-shortcut Claim ids and Global Claim ids. Non-empty control location requires `ui_browser` proof. Global non-goals and forbidden shortcuts require negative proof; Global constraints accept either polarity. Global forbidden paths remain static changed-path authority.
 
@@ -281,7 +301,7 @@ The Source marker key set and `source_claim` key set must be exactly equal acros
 
 Typed dispositions preserve meaning. Every non-decision Source item owns exactly one canonical target of the same semantic kind and normalized text; a target has one Source owner. Outcome `acceptance` points to one stable `<outcome>.<check>.<assertion>` whose criterion is Source-text-identical and which proves at least one independently Source-backed non-Result Claim. Global `acceptance` uses `GLOBAL.<check>.<assertion>`, proves no Outcome Claim and must prove at least one independently Source-backed Global non-goal, constraint or forbidden-shortcut Claim. A `risk_fact` marker's Fact/Outcome metadata, disposition and declared risk pair match exactly and each pair has one Source owner. Source Plan authoring uses exactly the ten Runtime risk names, including `data_migration`, separate `critical_user_path` and `weak_observability`, and retained `multi_repository_change`. `out_of_scope` is retired: an explicit Source non-goal maps to a negatively proven Global non-goal, while removing an in-scope item is a compile-blocking `decision_required`.
 
-Compile derives canonical Product, Acceptance and Global semantic projections and combines them with Source hashes/mappings plus the complete selected Context authority projection and file hashes. Retrieval metadata such as `triggers`, `read_when`, `read_policy`, default selection and unselected nodes is excluded from the selected delivery-authority projection; selected area ownership, role/dependency structure and selected Context contents remain protected. A separate Controlling Context projection determines whether a Context revision needs approval and whether scoped Progress remains fresh. Supporting Context never becomes acceptance proof.
+Compile derives canonical Product, target-profile, Stage, Acceptance and Global semantic projections and combines them with Source hashes/mappings plus the complete selected Context authority projection and file hashes. Retrieval metadata such as `triggers`, `read_when`, `read_policy`, default selection and unselected nodes is excluded from the selected delivery-authority projection; selected area ownership, role/dependency structure and selected Context contents remain protected. A separate Controlling Context projection determines whether a Context revision needs approval and whether scoped Progress remains fresh. Supporting Context never becomes acceptance proof.
 
 The first successful Compile is Authority Lock. It also emits the additive one-time execution-model checkpoint. From Authority Lock onward, revisions have three fail-closed classes. Machine-proven monotonic evidence strengthening, pure verifier relocation, machine-proven tightening and supporting-only Context content revisions revise automatically. A candidate whose only protected reasons are owner, expected-change or allowed-support expansion is scope-only: safe monotonic strengthening may coexist, it still requires exact approval, and existing active Check identities whose runner and verifier are unchanged may exercise it before approval. Source/Controlling-Context/Product/Global semantic changes, Product Claim additions/removals/rewrites, verifier content changes, removing forbidden paths, changing runners or existing verification inputs, reducing `input_paths`, weakening `expected_output_paths`, or weakening artifacts, environment requirements, bindings, obligations, counterfactuals, population or rollback/recovery are protected and are never candidate-executed. Risk downgrade is rejected.
 
@@ -309,9 +329,9 @@ Live Final Gate requires a clean candidate commit after all required Context upd
 
 Preflight diagnostics are repair-oriented without becoming repair authority. Exact duplicate diagnostics are emitted once with `occurrences`; known codes may expose stable `refs` and safe `repair_hint`. When a structural duplicate makes the same Claim ambiguous, only the deterministic pair receives `diagnostic_id`, `repair_group`, `repair_priority` and `blocked_by`. No finding is hidden, reclassified or treated as resolved; no repair state, YAML location registry or second authoring schema is added.
 
-New authoring uses Compact V2 YAML. The parser fills only deterministic defaults. Goal, Source/Source Claims, Context, Outcomes, owners/paths, Requirements, applicable control states, obligations, proof surfaces, runner targets, verification inputs, Assertions, risk facts, forbidden shortcuts and external confirmations remain explicit. Compact and expanded forms normalize to the same Contract object, hashes, risk, Claim Coverage and compiled identity.
+New authoring uses Compact V2 YAML. The parser fills only deterministic defaults. Goal, target profile and required target refs, execution targets/root entrypoints, Stages, Source/Source Claims, Context, vertical Outcomes, required success/degradation paths, owners/paths, Requirements, applicable control states, obligations, proof surfaces, journey roles, keyed Given/When scenarios, Evidence Capabilities, runner targets, verification inputs, Assertions, risk facts, forbidden shortcuts and typed external confirmations remain explicit. Compact and expanded forms normalize to the same Contract object, hashes, risk, Claim Coverage and compiled identity.
 
-Compile is deterministic, static and model-free. It calls the shared activation-safety kernel in fail-fast mode, so skipping Preflight bypasses no safety rule. The kernel strictly parses YAML, validates schema and dependencies, inventories Source Items, validates canonical targets, Context refs, safe paths, owners, Bindings, runners and verification inputs, rejects unsafe authority/proof files, compiles and requires all-of Claim Coverage, validates Source-to-Claim/Acceptance/Result/Global/Risk/external/decision mappings, enforces explicit Assertions and compatible adapters, computes risk, enforces Counterfactual/Population/security/environment/recovery proof and freezes Source, Contract, selected Context, verifier, runner, workdir and repository identity.
+Compile is deterministic, static and model-free. It calls the shared activation-safety kernel in fail-fast mode, so skipping Preflight bypasses no safety rule. The kernel strictly parses YAML, validates schema, Stage closure/dependencies and vertical Outcome placement, inventories Source Items, validates canonical targets, required-target/root/runner bindings, scenario and success/degradation separation, Evidence Capability adequacy, typed external impact, bounded Product Conformance, Context refs, safe paths, owners, Bindings, runners and verification inputs, rejects unsafe authority/proof files, compiles and requires all-of Claim Coverage, validates Source-to-Claim/Acceptance/Result/Global/Risk/external/decision mappings, enforces explicit Assertions and compatible adapters, computes risk, enforces Counterfactual/Population/security/environment/recovery proof and freezes Source, Contract, selected Context, verifier, runner, workdir and repository identity.
 
 Every path-bearing Contract field uses one canonical segment grammar. Windows separators and one leading `./` normalize to `/`; internal `.`/`..`, control characters, empty segments, absolute/drive/UNC paths and unsupported wildcard syntax fail closed. Pattern matching, subset and overlap/disjoint use the same AST.
 
@@ -332,6 +352,8 @@ The Evidence Kernel retains only low-level capabilities that directly close fals
 - counterfactual controls where required;
 - complete selected Context/source/runner/oracle/verifier hashes plus Controlling Context freshness;
 - current-execution target-runtime observation when a declared Claim can fail independently from its proxy surface;
+- typed, Assertion-bound Evidence Capability records for interaction, state change, cross-surface consistency, durable readback, boundary invocation, external effect, failure injection, rendered UI, target runtime and input variation;
+- exact Stage closure, required-target qualification and bounded Product Conformance rules;
 - Git common-dir Active Authority V3 snapshot plus matching worktree marker;
 - outcome/check projection and derived status;
 - source-recompiled Live Final Gate and audit-only Receipt;
@@ -343,15 +365,19 @@ The compiled internal graph is deliberately small:
 Task -> Outcome -> Check -> Observation/Assertion
 ```
 
-Agent/worker prose, hand-written state and command exit code alone cannot create accepted authority. Every Assertion needs an explicit Observation. Missing or type-incomparable values fail closed; negative proof uses explicit values such as `equals: false`.
+Agent/worker prose, hand-written state and command exit code alone cannot create accepted authority. Every Assertion needs an explicit Observation and its declared all-of Evidence Capabilities. Except for static `presence`, each capability has exactly one typed current-execution record keyed to that Assertion. Missing, duplicate, unknown, undeclared or type-incomparable evidence fails closed; negative proof uses explicit values such as `equals: false`.
 
-Evidence adapters are compiler-derived: `playwright_test` produces `playwright_json_v1` and is the only adapter compatible with `ui_browser`; package scripts, project binaries and Node oracles produce `structured_json_v2` for non-browser surfaces. Adapter identity participates in Acceptance Authority, Raw Execution, compiled authority, Progress freshness and Final Receipt.
+Evidence adapters are compiler-derived: `playwright_test` produces `playwright_json_v1` and is the only adapter compatible with `ui_browser`; package scripts, project binaries and Node oracles use the `structured_json_v2` adapter for non-browser surfaces and emit the additive `long-task-check-result-v3` payload when capability records are required. V2 payloads remain decodable for compatibility but cannot satisfy non-presence capabilities and therefore cannot create false behavioral proof. Adapter identity participates in Acceptance Authority, Raw Execution, compiled authority, Progress freshness and Final Receipt.
 
 Across all Checks sharing one Raw Execution identity, one claim-bearing Observation belongs to exactly one Assertion. Claim-bearing Playwright proof uses `playwright.case.<ac-key>.passed equals true`; one Test Instance binds at most one declared AC through `[ac:<assertion-key>]`. Missing, skipped, flaky, unexpected, timed-out, interrupted, failed, multi-AC, duplicate-within-project or structurally invalid cases fail closed. The same AC across distinct projects aggregates only when every instance executes and passes.
 
 Claim-bearing Product/Global assertions use explicit expected-value comparisons; `truthy`/`falsy` are prohibited and `exists` is limited to an `implementation_structure` obligation. Outcome Counterfactuals name an Outcome Binding; Global Counterfactuals use an Outcome-owned `binding_ref`. Both mutate only a proven subset of carriers. Structured evidence requires completed exit-zero execution with exactly designated `assertion_value_mismatch` failures. Weak-observability Playwright Counterfactuals accept exit one only under complete exact accounting of every unexpected instance; ordinary Baselines still require exit zero. Same-Check sensitivity is required for structured Claim proof, and Population exempts only its own Claims under normal observability. Claim and Population proofs are empty unless the complete Check passes.
 
 For target-runtime Claims, “current snapshot” and “current execution” are both required. Rerunning an oracle that merely reads a committed or generated status file proves only the file's contents, not the target runtime. Build, installation, process start and absence of fatal logs likewise prove only those named assertions. A broader runnable-result Claim needs a stable product-owned sentinel or declared interaction observed from the same target session. Artifacts remain review material; they may accompany but never replace the structured Observation produced by the live Check.
+
+The Evidence Kernel separates required success, degradation and recovery journeys. The same Check cannot be both success and degradation, and honest degradation is not successful Result proof. A boundary or external effect is observed at a declared observer target, never solely by its producer. Input-sensitive behavior requires varied inputs and distinguishable outputs, including failure. A multi-Outcome Stage Gate proves distinct declared surfaces against the same runtime state; merely repeating one surface or one status value is insufficient.
+
+Semantic Product Conformance is deliberately risk-proportional. A separate read-only Global `conformance` Check is required only when `weak_observability` is combined with either multiple Stages or multiple required product runtime families. It starts at a required root product target, declares `target_runtime`, has a Raw Execution identity independent from Outcome Checks and runs inside the existing Final Gate. Single-Stage, single-family work keeps the ordinary same-Check sensitivity path and pays no extra conformance execution.
 
 ## 9. Verification And Recovery Semantics
 
@@ -365,17 +391,19 @@ When a target-runtime Check exists, the Goal runs it at the first runnable bound
 
 `status` reports each Outcome as `unverified`, `progress_passing`, `progress_failing`, `progress_stale` or `blocked_external`. It is not completion authority. `final_workflow_status` reports a fresh Final Receipt's exact workflow status or `null`; `external_confirmations` reports current declarations from active authority.
 
-User-facing reporting must preserve those meanings. `progress_passing` is described as current targeted repair evidence, never “Outcome complete”; `progress_stale` cannot be reported as a current pass; and `final_workflow_status: null` means the Goal remains unfinished. `machine_accepted_external_pending` is reported exactly with its pending confirmations. No `implementation_complete`, `platform_smoke_verified` or other persistent state vocabulary is added.
+User-facing reporting must preserve those meanings. `progress_passing` is described as current targeted repair evidence, never “Outcome complete”; `progress_stale` cannot be reported as a current pass; and `final_workflow_status: null` means the Goal remains unfinished. Status derives `ready_stages`, Stage blockage and the stage-constrained ready Outcome frontier from current Outcome Progress; it persists no Stage pass. `machine_accepted_external_pending` is reported exactly with its pending confirmations.
+
+Terminal reporting uses only the Contract's bounded target vocabulary. Before a fresh accepted Final Gate, `target_state` is `not_accepted`; a target-blocking external confirmation produces `blocked_external`; machine acceptance produces the declared `implementation_complete`, `target_profile_usable` or `production_release_ready`. A Final Receipt derives each Stage as `passed`, `failed`, `blocked_external` or `blocked_dependency`. These are terminal qualification projections, not per-platform or per-Outcome progress state.
 
 ### Resume
 
-`resume` is read-only and reports Contract/compiled identity, effective risk, relevant Context, current Git state, freshness, `final_workflow_status`, external confirmations, ready Outcomes, findings and the next safe action. It starts no process and does not reconnect a physical Turn.
+`resume` is read-only and reports Contract/compiled identity, effective risk, relevant Context, current Git state, freshness, `final_workflow_status`, target profile/state, the Progress-derived Stage frontier, external confirmations, ready Outcomes, findings and the next safe action. Final Gate output/Receipt—not resumed Progress—owns terminal `stage_results`. Resume starts no process and does not reconnect a physical Turn.
 
 ### Final Gate
 
 `final-gate` creates one current workspace snapshot and reruns all Global and Outcome Checks. Identical Raw Execution identities may execute once inside the Gate while each Check still evaluates its own Assertions and artifacts. Bottom-up acceptance succeeds only when all executable Checks, Outcomes, global constraints and risk obligations pass. External confirmations never contribute machine proof; a machine pass with pending confirmations reports `machine_accepted_external_pending`.
 
-For behavioral Claims changed by a blocker-driven revision, Contract authoring reviews only the affected weak-observability or high-risk Outcomes. Their evidence must reach the furthest independently failing boundary named by the Claim; proxy/self-reported success cannot prove a downstream result, and a Counterfactual should disrupt the claimed causal capability rather than only carrier existence when those can diverge. This uses existing proof surfaces, Checks, Bindings and mutation forms and creates no product taxonomy, Schema field or universal runtime mandate.
+For behavioral Claims changed by a blocker-driven revision, Contract authoring reviews only the affected weak-observability or high-risk Outcomes. Their evidence must reach the furthest independently failing boundary named by the Claim; proxy/self-reported success cannot prove a downstream result, and a Counterfactual should disrupt the claimed causal capability rather than only carrier existence when those can diverge. This uses the bounded target profile, Stages, scenarios, Evidence Capabilities, proof surfaces, Checks, Bindings and mutation forms; it creates no open-ended platform taxonomy or universal runtime mandate.
 
 ### Freshness And Stop
 
@@ -449,7 +477,7 @@ Profiles are `core-portable`, `workflow-default` and explicit `long-task`. `ty-c
 - README, Chinese README, package README, Context, AGENTS managed block, Skills, tests, release scripts and package assets must describe the same current workflow.
 - Public surfaces are English-complete; Chinese is an aligned translation.
 
-The package version for this architecture is `0.6.0`, the first public V2 semantic contract. The schema name remains `long-task-delivery-v2` and existing `outcome_files` remain a physical parser form. Development-period V2 Active Authority, Progress and Receipts report `manual_required` and are not migrated.
+The package version for this architecture is `0.7.2`. The schema name remains `long-task-delivery-v2` and existing `outcome_files` remain a physical parser form. Older V2 Contracts that lack required Stage, target-profile/required-target, scenario, journey, success/degradation, capability or typed external-impact fields report indexed manual migration `long-task-v2-semantic-drift-authority`; those meanings must be re-authored from Source. Old Progress and Receipts are never promoted into the strengthened Authority or acceptance evidence.
 
 ## 14. Performance And Cost Boundaries
 
@@ -465,6 +493,8 @@ Trusted publication uses one prepare/test/pack/smoke execution per source commit
 - Focused loops target at most five minutes. Dirty local affected discovery uses only current worktree paths, clean local discovery uses the current commit parent, and explicit/CI bases are exact; no local working set is unioned with an inferred historical branch diff.
 - Affected/focused loops are non-authoritative developer feedback. Unmapped Long-Task runtime changes widen to the canonical Trust Boundary Gate; shared fixtures, package/dependency boundaries and unknown broad changes still widen to complete suites.
 - Project target-runtime checks use the same cost shape: run once at the first runnable boundary, coalesce relevant input changes, and rerun before dependent work expands plus in Final Gate. Do not impose a full target rebuild on every Outcome/edit; reuse caches, installed test targets and identical Raw Execution only when the declared Claim remains reliably falsifiable.
+- Required-target and Stage checks reuse ordinary Checks, Outcome dependencies, Progress and the one Final Gate; they add no scheduler, Stage Receipt or alternate Gate. Multi-surface consistency is paid only at multi-Outcome Stage gates.
+- The separate Product Conformance run is paid only for weak-observability work that is also multi-Stage or spans multiple required product runtime families. Simpler work retains existing sensitivity proof and no extra audit invocation.
 - The canonical Long-Task Trust Boundary Gate targets p95 at most eight minutes and proves high-impact authority continuity/CAS, forged evidence, revision, Context freshness, Final Gate/Stop/close, Hook/profile, qualification and platform-boundary regressions. It is package regression evidence, never Contract acceptance.
 - Pull-request Package CI builds once and runs the complete default suite plus the Trust Boundary Gate. `main`, publish and release build once and execute the complete built package suites; the complete Long-Task Workflow suite remains at most fifteen minutes.
 - Package-suite timing is ephemeral diagnostic output only. It creates no result cache, workflow state, Receipt or reusable authority.
@@ -487,7 +517,7 @@ Stable honest limits:
 - Harness does not observe platform token/model-call accounting.
 - Git/PR/CI/deployment/human product confirmation remain external.
 - Local mode trusts the installed package-owned verifier and Git metadata.
-- Harness cannot semantically attest that a trusted project oracle really exercised its claimed target runtime; Contract authoring, verifier review and protected verifier identity own that boundary.
+- Harness cannot semantically attest that a trusted project oracle really exercised its claimed target runtime or that a typed evidence record is truthful; bounded runner-family/root binding, Contract authoring, verifier review and protected verifier identity own that boundary.
 - Network isolation remains the responsibility of the external platform.
 
 ## 16. Historical Design Boundary

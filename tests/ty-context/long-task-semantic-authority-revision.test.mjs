@@ -246,6 +246,7 @@ ${statement}
       criterion: "The newly declared product scope is implemented.",
       claims: ["obligation.new-product-scope"],
       observation: "new_product_scope",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });
@@ -284,6 +285,7 @@ test("mechanical proof additions and path tightening remain automatic revisions"
       criterion: "The additional proof remains true.",
       claims: [],
       observation: "negative",
+      evidence_capabilities: ["presence"],
       operator: "equals",
       expected: false,
     });

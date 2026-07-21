@@ -170,7 +170,7 @@ function configureChecks(fixture, requirements) {
       key: `raw-${index}`,
       positive_assertions: [
         {
-          key: `raw-result-${index}`,
+          key: "raw-result",
           criterion: `Raw execution result ${index} is observable.`,
           claims: [
             "result",
@@ -178,6 +178,7 @@ function configureChecks(fixture, requirements) {
             "obligation.implement-first",
           ],
           observation: index === 0 ? "result" : "result_copy",
+          evidence_capabilities: ["target_runtime", "state_delta"],
           operator: "equals",
           expected: true,
         },
@@ -196,7 +197,7 @@ function configureChecks(fixture, requirements) {
       ],
       check_key: `raw-${index}`,
       mutation: { type: "remove_paths", paths: ["src/state.json"] },
-      expected_assertion_failures: [`raw-result-${index}`],
+      expected_assertion_failures: ["raw-result"],
     }),
   );
 }
@@ -208,7 +209,7 @@ async function installCountingOracle(fixture, marker) {
 appendFileSync(${JSON.stringify(marker)}, "run\\n");
 let state = {first:false};
 try { state = JSON.parse(readFileSync(new URL("../src/state.json", import.meta.url), "utf8")); } catch {}
-console.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result:state.first,result_copy:state.first}}));
+console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:state.first,result_copy:state.first},evidence_records:[{assertion_key:"raw-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"raw-session",cold_start:true},{assertion_key:"raw-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]}]}));
 `,
   );
   await commitCandidate(fixture.root);

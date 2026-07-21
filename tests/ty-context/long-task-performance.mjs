@@ -183,13 +183,15 @@ async function measureGlobalCounterfactualFixture() {
       target.contract.outcomes[0].acceptance.checks[0],
     );
     check.key = "performance-global-check";
-    check.runner.argv = ["first", "global"];
+    check.journey_roles = ["success"];
+    check.runner.argv = ["first", "performance-global-assertion"];
     check.positive_assertions = [
       {
         key: "performance-global-assertion",
         criterion: statement,
         claims: ["constraint.performance-global"],
         observation: "result",
+        evidence_capabilities: ["target_runtime", "state_delta"],
         operator: "equals",
         expected: true,
       },

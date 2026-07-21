@@ -3,6 +3,7 @@ import type {
   RawCommandExecutionV2,
 } from "./long-task-delivery-types.js";
 import { extractPlaywrightEvidence } from "./long-task-playwright-evidence.js";
+import { decodeEvidenceCapabilityRecords } from "./long-task-evidence-capability-policy.js";
 
 export function decodeCheckEvidence(
   check: CompiledCheckV2,
@@ -11,7 +12,11 @@ export function decodeCheckEvidence(
   stderr: Buffer,
 ): Pick<
   RawCommandExecutionV2,
-  "execution_status" | "exit_code" | "observations" | "error"
+  | "execution_status"
+  | "exit_code"
+  | "observations"
+  | "evidence_records"
+  | "error"
 > {
   if (check.runner.type === "playwright_test")
     return decodePlaywright(check, exitCode, stdout, stderr);
@@ -22,13 +27,17 @@ export function decodeCheckEvidence(
     .filter(Boolean);
   try {
     const payload = JSON.parse(lines.at(-1) ?? "") as Record<string, unknown>;
-    if (payload.schema_version !== "long-task-check-result-v2")
+    if (
+      payload.schema_version !== "long-task-check-result-v2" &&
+      payload.schema_version !== "long-task-check-result-v3"
+    )
       return invalidEvidence(exitCode, "check_evidence_schema_invalid");
     if (payload.execution_status === "blocked_external")
       return {
         execution_status: "blocked_external",
         exit_code: exitCode,
         observations: {},
+        evidence_records: [],
         error: `blocked_external:${String(payload.reason ?? "unspecified")}`,
       };
     if (payload.execution_status !== "completed")
@@ -42,10 +51,15 @@ export function decodeCheckEvidence(
       Array.isArray(payload.observations)
     )
       return invalidEvidence(exitCode, "check_evidence_observations_invalid");
+    const evidenceRecords =
+      payload.schema_version === "long-task-check-result-v3"
+        ? decodeEvidenceCapabilityRecords(payload.evidence_records)
+        : [];
     return {
       execution_status: "completed",
       exit_code: exitCode,
       observations: payload.observations as Record<string, unknown>,
+      evidence_records: evidenceRecords,
       error: null,
     };
   } catch (error) {
@@ -61,12 +75,17 @@ export function invalidEvidence(
   error: string,
 ): Pick<
   RawCommandExecutionV2,
-  "execution_status" | "exit_code" | "observations" | "error"
+  | "execution_status"
+  | "exit_code"
+  | "observations"
+  | "evidence_records"
+  | "error"
 > {
   return {
     execution_status: "invalid_evidence",
     exit_code: exitCode,
     observations: {},
+    evidence_records: [],
     error,
   };
 }
@@ -78,7 +97,11 @@ function decodePlaywright(
   stderr: Buffer,
 ): Pick<
   RawCommandExecutionV2,
-  "execution_status" | "exit_code" | "observations" | "error"
+  | "execution_status"
+  | "exit_code"
+  | "observations"
+  | "evidence_records"
+  | "error"
 > {
   try {
     const report = JSON.parse(stdout.toString("utf8")) as Record<
@@ -91,6 +114,7 @@ function decodePlaywright(
       execution_status: "completed",
       exit_code: exitCode,
       observations: extracted.observations,
+      evidence_records: extracted.evidence_records,
       error: null,
     };
   } catch (error) {
@@ -105,6 +129,7 @@ function decodePlaywright(
         execution_status: "infrastructure_error",
         exit_code: exitCode,
         observations: {},
+        evidence_records: [],
         error: `playwright_startup_failed:${message(error)}`,
       };
     return invalidEvidence(

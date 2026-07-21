@@ -1,4 +1,9 @@
 import type { ProofSurface } from "./long-task-contract-types.js";
+import type {
+  DeliveryStageV2,
+  ExecutionTargetV2,
+  TargetProfileV2,
+} from "./long-task-semantic-contract-types.js";
 import type { CompiledSourceItemV2 } from "./long-task-source-authority-types.js";
 import type { WorkspaceManifestV2 } from "./long-task-workspace-runtime-types.js";
 
@@ -12,11 +17,17 @@ export interface AuthorityHashesV2 {
 
 export interface ProductSemanticProjectionV2 {
   task_goal: string;
+  target_profile: TargetProfileV2;
+  execution_targets: ExecutionTargetV2[];
+  stages: DeliveryStageV2[];
   global_non_goals: Array<{ key: string; statement: string }>;
   outcomes: Array<{
     key: string;
     title: string;
+    stage: string;
     observable_result: string;
+    success_path_required: boolean;
+    degradation_path_required: boolean;
     owner: {
       label: string;
       owner_surfaces: string[];

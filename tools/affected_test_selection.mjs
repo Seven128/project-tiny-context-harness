@@ -40,6 +40,8 @@ const HOTSPOT_TESTS = new Map([
       "long-task-context-evolution.test.mjs",
       "long-task-delivery-compiler.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
       "long-task-state-resume.test.mjs",
     ],
   ],
@@ -51,6 +53,8 @@ const HOTSPOT_TESTS = new Map([
       "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-context-evolution.test.mjs",
       "long-task-model-choice-checkpoint.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
       "long-task-workflow-black-box.test.mjs",
     ],
   ],
@@ -82,6 +86,8 @@ const HOTSPOT_TESTS = new Map([
       "long-task-authority-revision-classification.test.mjs",
       "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
     ],
   ],
   [
@@ -91,6 +97,8 @@ const HOTSPOT_TESTS = new Map([
       "long-task-authority-revision-classification.test.mjs",
       "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
     ],
   ],
   [
@@ -100,6 +108,18 @@ const HOTSPOT_TESTS = new Map([
       "long-task-authority-revision-classification.test.mjs",
       "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-analysis.ts",
+    [
+      "long-task-authority-progress-retry.test.mjs",
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
     ],
   ],
   [
@@ -184,6 +204,47 @@ const HOTSPOT_TESTS = new Map([
       "long-task-authority-revision-classification.test.mjs",
       "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-semantic-contract-types.ts",
+    [
+      "long-task-delivery-compiler.test.mjs",
+      "long-task-delivery-parser.test.mjs",
+      "long-task-schema-parser-parity.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-evidence-capability-codec.ts",
+    [
+      "long-task-evidence-kernel.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-evidence-capability-runtime.ts",
+    [
+      "long-task-evidence-kernel.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-evidence-capability-policy.ts",
+    [
+      "long-task-assertion-safety.test.mjs",
+      "long-task-evidence-kernel.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-target-policy.ts",
+    [
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
     ],
   ],
   [
@@ -200,6 +261,8 @@ const HOTSPOT_TESTS = new Map([
     [
       "long-task-authority-revision-diagnosis.test.mjs",
       "long-task-qualified-completion.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
       "long-task-state-resume.test.mjs",
     ],
   ],
@@ -216,6 +279,8 @@ const HOTSPOT_TESTS = new Map([
     [
       "long-task-authority-progress-retry.test.mjs",
       "long-task-context-evolution.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+      "long-task-semantic-drift-lifecycle.test.mjs",
       "long-task-state-resume.test.mjs",
     ],
   ],

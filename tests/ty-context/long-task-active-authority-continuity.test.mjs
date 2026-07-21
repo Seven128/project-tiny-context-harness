@@ -106,6 +106,7 @@ test("strict risk downgrade remains rejected after cache deletion", async () => 
       criterion: "The strict negative floor remains satisfied.",
       claims: ["result", "requirement.observe-first"],
       observation: "result_copy",
+      evidence_capabilities: ["state_delta"],
       operator: "not_equals",
       expected: false,
     });
@@ -256,6 +257,7 @@ test("CAS and authority commit failure preserve old authority and progress", asy
       criterion: "The additional proof remains true.",
       claims: [],
       observation: "result_copy",
+      evidence_capabilities: ["state_delta"],
       operator: "equals",
       expected: true,
     });

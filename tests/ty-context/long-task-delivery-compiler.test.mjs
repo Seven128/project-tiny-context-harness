@@ -167,6 +167,7 @@ test("counterfactual mutation must stay on carriers and cannot delete verificati
       criterion: "The result remains comparable in the negative scenario.",
       claims: ["result"],
       observation: "result_not_false",
+      evidence_capabilities: ["state_delta"],
       operator: "not_equals",
       expected: false,
     });

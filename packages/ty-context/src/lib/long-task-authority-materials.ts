@@ -12,7 +12,7 @@ import { normalizeContextAuthoritySnapshot } from "./long-task-context-authority
 import { canonicalValueJson, sha256Hex } from "./strict-codec.js";
 
 export function computeAuthorityMaterials(
-  contract: Pick<DeliveryContractV2, "task" | "global" | "outcomes">,
+  contract: Pick<DeliveryContractV2, "task" | "global" | "outcomes" | "stages">,
   sourceHashes: Record<string, string>,
   sourceItems: CompiledSourceItemV2[],
   contextSnapshot: ContextAuthoritySnapshotV2,
@@ -66,15 +66,21 @@ export function authorityMaterialsChanged(
 }
 
 export function projectProductSemantics(
-  contract: Pick<DeliveryContractV2, "task" | "global" | "outcomes">,
+  contract: Pick<DeliveryContractV2, "task" | "global" | "outcomes" | "stages">,
 ): ProductSemanticProjectionV2 {
   return {
     task_goal: contract.task.goal,
+    target_profile: contract.task.target_profile,
+    execution_targets: [...contract.task.execution_targets].sort(keyOrder),
+    stages: [...contract.stages].sort(keyOrder),
     global_non_goals: keyedStatements(contract.global.product.non_goals),
     outcomes: [...contract.outcomes].sort(keyOrder).map((outcome) => ({
       key: outcome.key,
       title: outcome.title,
+      stage: outcome.stage,
       observable_result: outcome.product.observable_result,
+      success_path_required: outcome.product.success_path_required,
+      degradation_path_required: outcome.product.degradation_path_required,
       owner: {
         label: outcome.product.owner.label,
         owner_surfaces: [...outcome.product.owner_surfaces].sort(),

@@ -5,6 +5,7 @@ import type { DeliveryOutcomeV2 } from "./long-task-delivery-types.js";
 import { parseRequirements } from "./long-task-requirement-shape.js";
 import {
   array,
+  boolean,
   key,
   literal,
   nullable,
@@ -22,18 +23,30 @@ import {
   strings,
 } from "./long-task-delivery-shape.js";
 import { parseStrictYaml } from "./strict-codec.js";
+import {
+  assertNoSemanticDriftMigration,
+  semanticDriftOutcomeMigrationFields,
+} from "./long-task-semantic-drift-migration.js";
 
 export function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
+  assertNoSemanticDriftMigration(
+    semanticDriftOutcomeMigrationFields(value, label),
+  );
   const row = object(
     value,
     label,
-    ["key", "title", "product", "technical", "acceptance"],
+    ["key", "title", "stage", "product", "technical", "acceptance"],
     ["depends_on"],
   );
   const product = object(
     row.product,
     `${label}.product`,
-    ["observable_result", "owner"],
+    [
+      "observable_result",
+      "success_path_required",
+      "degradation_path_required",
+      "owner",
+    ],
     ["requirements", "owner_surfaces", "controls", "non_completing_outcomes"],
   );
   const technical = object(
@@ -58,6 +71,7 @@ export function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
   return {
     key: key(row.key, `${label}.key`),
     title: string(row.title, `${label}.title`),
+    stage: key(row.stage, `${label}.stage`),
     depends_on: Object.hasOwn(row, "depends_on")
       ? strings(row.depends_on, `${label}.depends_on`).map((item, index) =>
           key(item, `${label}.depends_on[${index}]`),
@@ -67,6 +81,14 @@ export function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
       observable_result: string(
         product.observable_result,
         `${label}.product.observable_result`,
+      ),
+      success_path_required: boolean(
+        product.success_path_required,
+        `${label}.product.success_path_required`,
+      ),
+      degradation_path_required: boolean(
+        product.degradation_path_required,
+        `${label}.product.degradation_path_required`,
       ),
       owner: parseOwner(product.owner, `${label}.product.owner`),
       requirements: Object.hasOwn(product, "requirements")
@@ -167,6 +189,7 @@ export function parseOutcomeFragment(
       "outcomes",
       "key",
       "title",
+      "stage",
       "depends_on",
       "product",
       "technical",

@@ -15,6 +15,9 @@ const externalConfirmations = [
     key: "fixture-external",
     description: "Confirm the fixture in external delivery.",
     owner: "release-owner",
+    kind: "field_validation",
+    impact_claims: ["first.result"],
+    blocks_target: false,
   },
 ];
 
@@ -29,6 +32,8 @@ test("fresh external pending qualification reaches status and resume", async () 
       fixture.workdir,
     ]);
     assert.equal(final.workflow_status, "machine_accepted_external_pending");
+    assert.equal(final.target_state, "target_profile_usable");
+    assert.deepEqual(final.stage_results, { first: "passed" });
     assert.deepEqual(final.external_confirmations, externalConfirmations);
     assert.equal(final.acceptance_scope, "declared_machine_authority");
     assert.equal(final.native_goal_effect, "none");
@@ -46,6 +51,8 @@ test("fresh external pending qualification reaches status and resume", async () 
     assert.deepEqual(status.external_confirmations, externalConfirmations);
     assert.equal(status.acceptance_scope, "declared_machine_authority");
     assert.equal(status.native_goal_effect, "none");
+    assert.equal(status.target_state, "target_profile_usable");
+    assert.deepEqual(status.stages, { first: "ready" });
 
     const resume = await runCli(fixture.root, [
       "long-task",
@@ -60,6 +67,8 @@ test("fresh external pending qualification reaches status and resume", async () 
     assert.deepEqual(resume.external_confirmations, externalConfirmations);
     assert.equal(resume.acceptance_scope, "declared_machine_authority");
     assert.equal(resume.native_goal_effect, "none");
+    assert.equal(resume.target_state, "target_profile_usable");
+    assert.deepEqual(resume.stages, { first: "ready" });
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
@@ -87,6 +96,7 @@ test("stale Final Receipt loses accepted projection but retains declarations", a
         "last_gate_inputs_stale",
       );
       assert.equal(result.final_workflow_status, null);
+      assert.equal(result.target_state, "not_accepted");
       assert.deepEqual(result.external_confirmations, externalConfirmations);
     }
   } finally {
@@ -112,6 +122,8 @@ test("stop-check returns structured external pending qualification and clears CA
     assert.deepEqual(result.external_confirmations, externalConfirmations);
     assert.equal(result.acceptance_scope, "declared_machine_authority");
     assert.equal(result.native_goal_effect, "none");
+    assert.equal(result.target_state, "target_profile_usable");
+    assert.deepEqual(result.stage_results, { first: "passed" });
     assert.match(result.message, /complete external delivery remains pending/iu);
     assert.match(result.message, /platform-native Goal/iu);
     assert.match(result.message, /fixture-external \(release-owner\)/u);
@@ -139,6 +151,8 @@ test("close preserves external pending qualification after clearing machine Auth
     assert.equal(result.acceptance_scope, "declared_machine_authority");
     assert.equal(result.closed_scope, "machine_authority");
     assert.equal(result.native_goal_effect, "none");
+    assert.equal(result.target_state, "target_profile_usable");
+    assert.deepEqual(result.stage_results, { first: "passed" });
     assert.equal(result.workdir, fixture.workdir);
     assert.equal(await pathExists(record), false);
   } finally {
@@ -160,6 +174,8 @@ test("ordinary machine acceptance emits no external warning and close stays qual
     assert.deepEqual(final.external_confirmations, []);
     assert.equal(final.acceptance_scope, "declared_machine_authority");
     assert.equal(final.native_goal_effect, "none");
+    assert.equal(final.target_state, "target_profile_usable");
+    assert.deepEqual(final.stage_results, { first: "passed" });
     const stop = await runCli(fixture.root, [
       "long-task",
       "stop-check",

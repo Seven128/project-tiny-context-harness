@@ -164,13 +164,45 @@ function flattenProductSemantics(
 ): Map<string, unknown> {
   const fields = new Map<string, unknown>([
     ["task.goal", projection.task_goal],
+    ["task.target_profile.key", projection.target_profile.key],
+    ["task.target_profile.description", projection.target_profile.description],
+    [
+      "task.target_profile.required_state",
+      projection.target_profile.required_state,
+    ],
+    [
+      "task.target_profile.required_target_refs",
+      [...projection.target_profile.required_target_refs].sort(),
+    ],
   ]);
+  for (const target of projection.execution_targets) {
+    const prefix = `task.execution_targets.${target.key}`;
+    fields.set(`${prefix}.description`, target.description);
+    fields.set(`${prefix}.role`, target.role);
+    fields.set(`${prefix}.runtime_family`, target.runtime_family);
+    fields.set(`${prefix}.root_entrypoint`, target.root_entrypoint);
+  }
+  for (const stage of projection.stages) {
+    const prefix = `stages.${stage.key}`;
+    fields.set(`${prefix}.title`, stage.title);
+    fields.set(`${prefix}.depends_on`, [...stage.depends_on].sort());
+    fields.set(`${prefix}.gate_outcome`, stage.gate_outcome);
+  }
   for (const item of projection.global_non_goals)
     fields.set(`global.product.non_goals.${item.key}`, item.statement);
   for (const outcome of projection.outcomes) {
     const prefix = `outcomes.${outcome.key}`;
     fields.set(`${prefix}.title`, outcome.title);
+    fields.set(`${prefix}.stage`, outcome.stage);
     fields.set(`${prefix}.observable_result`, outcome.observable_result);
+    fields.set(
+      `${prefix}.success_path_required`,
+      outcome.success_path_required,
+    );
+    fields.set(
+      `${prefix}.degradation_path_required`,
+      outcome.degradation_path_required,
+    );
     fields.set(`${prefix}.owner.label`, outcome.owner.label);
     fields.set(`${prefix}.owner.owner_surfaces`, outcome.owner.owner_surfaces);
     for (const requirement of outcome.requirements) {

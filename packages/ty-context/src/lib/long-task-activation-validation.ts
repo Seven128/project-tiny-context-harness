@@ -20,6 +20,7 @@ import type {
   WorkspaceManifestV2,
 } from "./long-task-delivery-types.js";
 import { validateClaimEvidenceSensitivity } from "./long-task-evidence-sensitivity-policy.js";
+import { validateSemanticConformance } from "./long-task-conformance-policy.js";
 import {
   deliveryContractStructureDiagnostics,
   validateDeliveryContractStructure,
@@ -133,10 +134,22 @@ export async function validateContractForActivation(options: {
 
   const globalChecks: CompiledCheckV2[] = [];
   for (const check of contract.global.acceptance.checks) {
+    const executionTarget = contract.task.execution_targets.find(
+      (target) => target.key === check.execution_target.target_ref,
+    );
+    if (!executionTarget) continue;
     const frozen = await attempt(
       mode,
       diagnostics,
-      () => freezeDeliveryCheck(check, null, repository, workspace),
+      () =>
+        freezeDeliveryCheck(
+          check,
+          null,
+          repository,
+          workspace,
+          executionTarget,
+          contract.task.execution_targets,
+        ),
       null,
       check.key,
     );
@@ -146,10 +159,22 @@ export async function validateContractForActivation(options: {
   for (const outcome of contract.outcomes) {
     const checks: CompiledCheckV2[] = [];
     for (const check of outcome.acceptance.checks) {
+      const executionTarget = contract.task.execution_targets.find(
+        (target) => target.key === check.execution_target.target_ref,
+      );
+      if (!executionTarget) continue;
       const frozen = await attempt(
         mode,
         diagnostics,
-        () => freezeDeliveryCheck(check, outcome.key, repository, workspace),
+        () =>
+          freezeDeliveryCheck(
+            check,
+            outcome.key,
+            repository,
+            workspace,
+            executionTarget,
+            contract.task.execution_targets,
+          ),
         outcome.key,
         check.key,
       );
@@ -200,6 +225,17 @@ export async function validateContractForActivation(options: {
           : undefined,
       ),
     );
+    if (risk)
+      await attempt(mode, diagnostics, () =>
+        validateSemanticConformance(
+          contract,
+          risk.effective_level,
+          allChecks,
+          mode === "collect"
+            ? (error) => addDiagnosticError(diagnostics, new Error(error))
+            : undefined,
+        ),
+      );
   }
   return {
     claims,

@@ -278,7 +278,7 @@ test("init template runs through Preflight, Compile and planned-carrier Final Ga
     );
     await writeFile(
       path.join(fixture.root, "tests", "replace-oracle.mjs"),
-      `import { readFile } from "node:fs/promises";\nlet result = false;\ntry { result = (await readFile(new URL("../src/replace-me.ts", import.meta.url), "utf8")).includes("replace"); } catch {}\nconsole.log(JSON.stringify({schema_version:"long-task-check-result-v2",execution_status:"completed",observations:{result}}));\n`,
+      `import { readFile } from "node:fs/promises";\nlet result = false;\ntry { result = (await readFile(new URL("../src/replace-me.ts", import.meta.url), "utf8")).includes("replace"); } catch {}\nconsole.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result},evidence_records:[{assertion_key:"replace-success",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["result"]},{assertion_key:"replace-success",capability:"target_runtime",target_ref:"replace-runtime",root_entrypoint:"tests/replace-oracle.mjs",session_id:"replace-session",cold_start:true}]}));\n`,
     );
     await writeContract(fixture.workdir, contract);
     await git(fixture.root, [
