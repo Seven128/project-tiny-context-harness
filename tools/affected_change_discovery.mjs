@@ -17,7 +17,19 @@ export async function resolveAffectedChanges(options = {}) {
   const repository = options.repository ?? process.cwd();
   const environment = options.environment ?? process.env;
   const git = options.git ?? createGitDiscoveryClient(repository);
-  const workingPaths = unique(await git.workingTreePaths());
+  const worktree = await workingTreeChanges(git);
+  const ignoredUntrackedLocalArtifacts = isCi(environment)
+    ? []
+    : unique(worktree.untracked.filter(isIgnoredUntrackedLocalArtifact));
+  const includedUntracked = isCi(environment)
+    ? worktree.untracked
+    : worktree.untracked.filter(
+        (path) => !isIgnoredUntrackedLocalArtifact(path),
+      );
+  const workingPaths = unique([...worktree.tracked, ...includedUntracked]);
+  const localArtifactDiscovery = ignoredUntrackedLocalArtifacts.length
+    ? { ignored_untracked_local_artifacts: ignoredUntrackedLocalArtifacts }
+    : {};
   const requestedBase = requestedComparisonBase(
     options.explicitBase ?? null,
     environment,
@@ -30,6 +42,7 @@ export async function resolveAffectedChanges(options = {}) {
       source: requestedBase.source,
       base: requestedBase.base,
       includes_worktree: workingPaths.length > 0,
+      ...localArtifactDiscovery,
     });
   }
 
@@ -38,6 +51,7 @@ export async function resolveAffectedChanges(options = {}) {
       source: "local-worktree",
       base: null,
       includes_worktree: true,
+      ...localArtifactDiscovery,
     });
   }
 
@@ -48,6 +62,7 @@ export async function resolveAffectedChanges(options = {}) {
       source: isCi(environment) ? "ci-head-parent" : "local-head-parent",
       base: fallbackBase,
       includes_worktree: workingPaths.length > 0,
+      ...localArtifactDiscovery,
     });
   }
 
@@ -55,6 +70,7 @@ export async function resolveAffectedChanges(options = {}) {
     source: workingPaths.length > 0 ? "worktree-no-parent" : "empty-history",
     base: null,
     includes_worktree: workingPaths.length > 0,
+    ...localArtifactDiscovery,
   });
 }
 
@@ -86,7 +102,7 @@ async function requireBase(git, base) {
 
 function createGitDiscoveryClient(repository) {
   return {
-    async workingTreePaths() {
+    async workingTreeChanges() {
       const tracked = await gitLines(repository, [
         "diff",
         "--name-only",
@@ -98,7 +114,7 @@ function createGitDiscoveryClient(repository) {
         "--others",
         "--exclude-standard",
       ]);
-      return [...tracked, ...untracked];
+      return { tracked, untracked };
     },
     async comparisonPaths(base) {
       return gitLines(repository, [
@@ -120,6 +136,20 @@ function createGitDiscoveryClient(repository) {
       }
     },
   };
+}
+
+async function workingTreeChanges(git) {
+  if (typeof git.workingTreeChanges === "function")
+    return git.workingTreeChanges();
+  return { tracked: await git.workingTreePaths(), untracked: [] };
+}
+
+export function isIgnoredUntrackedLocalArtifact(value) {
+  const normalized = normalizeRepositoryPath(value);
+  return (
+    normalized === ".work_products" ||
+    normalized.startsWith(".work_products/")
+  );
 }
 
 async function gitLines(repository, args) {

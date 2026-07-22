@@ -48,7 +48,7 @@
     "source-mappings.yaml"
   ],
   "scripts": {
-    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "build": "node ../../tools/package_build_fingerprint.mjs build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:default:built": "node ../../tests/ty-context/run-package-suite.mjs default",
     "test:default": "npm run build && npm run test:default:built",

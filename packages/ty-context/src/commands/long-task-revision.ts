@@ -1,5 +1,6 @@
 import path from "node:path";
 import { diagnoseAuthorityRevision } from "../lib/long-task-authority-revision-diagnosis.js";
+import { authorityRevisionDecisionNextAction } from "../lib/long-task-authority-revision-brief.js";
 import { projectAuthorityRevisionDecision } from "../lib/long-task-authority-revision-summary.js";
 import type { AuthorityRevisionProposalV2 } from "../lib/long-task-authority-revision-types.js";
 import { canRetainProgressForSupportingContextRevision } from "../lib/long-task-context-authority.js";
@@ -23,6 +24,16 @@ type ExecutionModelCheckpoint =
       required: true;
       phase: "post_authority_lock_pre_implementation";
       options: ["continue_current_model", "switch_model_then_resume"];
+      turn_boundary: "end_current_turn";
+      blocked_until_explicit_choice: [
+        "product_implementation",
+        "file_edits",
+        "build",
+        "test_execution",
+      ];
+      explicit_task_specific_choice_required: true;
+      prior_explicit_task_specific_choice_satisfies: true;
+      generic_continue_satisfies: false;
       message: string;
     }
   | { required: false };
@@ -131,7 +142,7 @@ function printCompileResult(
         ? projectAuthorityRevisionDecision(revisionProposal)
         : null,
       next_action: firstAuthorityLock
-        ? "Complete the one-time model choice, then begin rolling implementation."
+        ? "End this turn now and ask the user to choose continue_current_model or switch_model_then_resume. Do not implement, edit files, build, or test until an explicit task-specific model strategy is received; generic continue or resume language does not satisfy this checkpoint."
         : authorityChanged
           ? "Run status or resume, then continue rolling implementation or repair under the adopted Authority Revision."
           : "Continue rolling implementation or repair under the active Authority.",
@@ -167,6 +178,7 @@ async function printPendingDecision(
 ): Promise<void> {
   const pending = await readPendingAuthorityRevision(workdir);
   if (!pending) throw new Error("authority_revision_pending_state_missing");
+  const decision = projectAuthorityRevisionDecision(pending);
   console.log(
     JSON.stringify({
       status: "authority_revision_pending",
@@ -174,9 +186,8 @@ async function printPendingDecision(
       delivery_completed_by_this_event: false,
       native_goal_effect: "none",
       active_compiled_identity: previous?.compiled_identity ?? null,
-      pending_authority_revision: projectAuthorityRevisionDecision(pending),
-      next_action:
-        "Ask the user to approve or reject this exact material revision; keep the previous Authority active.",
+      pending_authority_revision: decision,
+      next_action: authorityRevisionDecisionNextAction(decision),
     }),
   );
 }
@@ -218,8 +229,18 @@ function executionModelCheckpoint(
     required: true,
     phase: "post_authority_lock_pre_implementation",
     options: ["continue_current_model", "switch_model_then_resume"],
+    turn_boundary: "end_current_turn",
+    blocked_until_explicit_choice: [
+      "product_implementation",
+      "file_edits",
+      "build",
+      "test_execution",
+    ],
+    explicit_task_specific_choice_required: true,
+    prior_explicit_task_specific_choice_satisfies: true,
+    generic_continue_satisfies: false,
     message:
-      "Authority Lock created. Pause before implementation and ask the user whether to continue with the current model or switch models, then resume this active Long-Task.",
+      "Authority Lock created. End the current turn before product implementation, file edits, builds, or tests. Ask the user to explicitly choose continue_current_model or switch_model_then_resume. Generic continue, resume, finish, or continue-goal language does not satisfy this checkpoint.",
   };
 }
 

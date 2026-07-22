@@ -60,6 +60,8 @@ jobs:
         run: node packages/ty-context/dist/cli.js check-modularity --config-only --fail-on-warning
 
       - name: Complete package tests
+        env:
+          TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: '{"default":120000,"long-task-trust":240000,"long-task":600000}'
         run: npm test --workspace project-tiny-context-harness
 
       - name: Check release version surfaces

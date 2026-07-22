@@ -16,6 +16,8 @@
 - Open Design remains the provider. Explicit-only `design-system-authoring` generates/selects/adopts project Design Authority and records provider synchronization without a second authority. `design-resource-authoring` gates only style-bearing work on configured authority, binds the adopted provider system, commissions the smallest scoped set and after final selection reconciles accepted decisions into the initial proposal once. It never edits a Source Plan, Context/`DESIGN.md`, code or Contract; resources remain ordinary Source.
 - `long-task-workflow` integrates Source-quality inventory/synthesis/refinement before Contract mapping. `/source-plan-authoring` is a compatibility pointer, not an intermediate workflow.
 - The platform Goal owns mutable implementation sequencing. Harness never launches models/agents/AppServer, creates branches/worktrees, merges, pushes, opens PRs or deploys.
+- First Authority Lock creates a strict user-choice turn boundary: absent a prior explicit task-specific model strategy, generic continuation is insufficient and implementation/edit/build/test work waits for an explicit current-model or switch-and-resume choice. Harness stores no acknowledgement or route.
+- A protected revision exposes one deterministic human decision brief derived from its canonical material summary before exact approval is requested; the brief is a projection, not another authority or state.
 - `/long-task-workflow` is the only active long-task Skill. `/normal-long-task`, `delivery-set` and historical composite commands are retirement pointers/tombstones only.
 - Runtime floor is Node.js `>=24`; public package behavior is documented in English with aligned Chinese translation.
 
@@ -52,6 +54,7 @@
 - No fixed file-level execution plan in Contract Technical authority; stable owners, obligations, boundaries, paths, Bindings and proof remain explicit while implementation order stays internal.
 - No targeted-verify acceptance, historical proof splicing, prose/exit-code acceptance, silent risk/scope downgrade or executing-Agent approval of protected authority reduction.
 - No package operation deletes user-authored historical Source/Contract/Campaign data.
+- Local affected-test inference may omit and report untracked `.work_products/**` scratch only; tracked or explicitly supplied paths remain verification inputs, and complete-suite discovery is never capped or pruned by feedback-tier budgets.
 - Managed-asset changes require build, source sync, idempotence, `package check-source` and applicable package/consumer verification.
 
 ## Role Context Map

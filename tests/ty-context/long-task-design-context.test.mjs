@@ -261,25 +261,58 @@ test("Source authoring and Contract Draft authoring stay in one long-task loop",
   assert.match(sourcePlan, /Retired: Source Plan Authoring/iu);
   assert.match(sourcePlan, /no longer defines a separate handoff/iu);
   assert.match(sourcePlan, /invoke `\/long-task-workflow`/iu);
-  assert.match(sourcePlan, /pre-existing Source Plan remains valid ordinary Source/iu);
+  assert.match(
+    sourcePlan,
+    /pre-existing Source Plan remains valid ordinary Source/iu,
+  );
   assert.match(sourcePlan, /Do not rewrite it merely for compatibility/iu);
   assert.match(sourceAuthoring, /not a standalone Source Plan stage/iu);
-  assert.match(sourceAuthoring, /Assign every proposal, selected design resource[\s\S]*a stable input ID/iu);
-  assert.match(sourceAuthoring, /`direct`[\s\S]*`derived`[\s\S]*`delegated`[\s\S]*`evidence-backed`[\s\S]*`decision_required`/iu);
-  assert.match(sourceAuthoring, /materialize exactly one project-native Markdown Source/iu);
-  assert.match(sourceAuthoring, /fidelity versus cost[\s\S]*ask one concise targeted clarification/iu);
-  assert.match(spec, /Integrated Source Authoring And Contract Draft Boundary/iu);
+  assert.match(
+    sourceAuthoring,
+    /Assign every proposal, selected design resource[\s\S]*a stable input ID/iu,
+  );
+  assert.match(
+    sourceAuthoring,
+    /`direct`[\s\S]*`derived`[\s\S]*`delegated`[\s\S]*`evidence-backed`[\s\S]*`decision_required`/iu,
+  );
+  assert.match(
+    sourceAuthoring,
+    /materialize exactly one project-native Markdown Source/iu,
+  );
+  assert.match(
+    sourceAuthoring,
+    /fidelity versus cost[\s\S]*ask one concise targeted clarification/iu,
+  );
+  assert.match(
+    spec,
+    /Integrated Source Authoring And Contract Draft Boundary/iu,
+  );
   assert.match(spec, /meaning-preserving structural decomposition/iu);
-  assert.match(spec, /repository bindings[\s\S]*real repository or Context evidence/iu);
+  assert.match(
+    spec,
+    /repository bindings[\s\S]*real repository or Context evidence/iu,
+  );
   assert.match(spec, /defensible recommended plan choice[\s\S]*real Source/iu);
-  assert.match(spec, /writable initial proposal[\s\S]*revised as the real Source/iu);
+  assert.match(
+    spec,
+    /writable initial proposal[\s\S]*revised as the real Source/iu,
+  );
   assert.match(longTask, /use the Source-authoring reference now/iu);
   assert.match(longTask, /internal authoring step in the same Goal/iu);
-  assert.match(agents, /Source-quality authoring and Contract Draft authoring belong inside `long-task-workflow`/iu);
+  assert.match(
+    agents,
+    /Source-quality authoring and Contract Draft authoring belong inside `long-task-workflow`/iu,
+  );
   assert.match(publicReadmes, /compatibility pointer/iu);
   assert.match(publicReadmes, /initial proposal[\s\S]*Web GPT/iu);
-  assert.match(publicReadmes, /revised proposal plus selected immutable resources/iu);
-  assert.doesNotMatch(sourcePlan, /ty-context long-task (?:init|preflight|compile)/u);
+  assert.match(
+    publicReadmes,
+    /revised proposal plus selected immutable resources/iu,
+  );
+  assert.doesNotMatch(
+    sourcePlan,
+    /ty-context long-task (?:init|preflight|compile)/u,
+  );
 
   for (const root of [
     ".codex/ty-context-managed/skills",
@@ -348,7 +381,7 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "First-Compile Authority Lock and Authority Revision",
     "Executing Agent cannot approve",
     "Three-way revision classification",
-    "Exact material revision summary and rolling return",
+    "Exact material revision summary, derived decision brief and rolling return",
     "Stateless same-Contract candidate diagnosis",
     "Targeted verify is repair evidence only",
     "Same-snapshot Final Gate",
@@ -360,6 +393,7 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
   ]) {
     assert.match(rationale, new RegExp(mechanism, "iu"));
   }
+  assert.match(rationale, /brief is a projection of canonical summary data/iu);
   assert.match(rationale, /only two trustworthy outcomes/iu);
   assert.match(
     globalContext,
@@ -464,9 +498,14 @@ test("Long-Task carries shared architecture quality once through Final Gate", as
       ),
       read("PROJECT_SPEC.md"),
     ]);
-  const guidance = [skill, authoring, lifecycle, workflow, rationale, spec].join(
-    "\n",
-  );
+  const guidance = [
+    skill,
+    authoring,
+    lifecycle,
+    workflow,
+    rationale,
+    spec,
+  ].join("\n");
 
   assert.match(
     guidance,
@@ -504,7 +543,10 @@ test("Long-Task carries shared architecture quality once through Final Gate", as
     guidance,
     /changed candidate|candidate change|later candidate.*invalidates/iu,
   );
-  assert.doesNotMatch(guidance, /architecture_conformance_state|architecture_gate_receipt/iu);
+  assert.doesNotMatch(
+    guidance,
+    /architecture_conformance_state|architecture_gate_receipt/iu,
+  );
 });
 
 test("Mechanism Admission Rule is explicit and creates no registry", async () => {

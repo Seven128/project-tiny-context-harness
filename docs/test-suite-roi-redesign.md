@@ -1,7 +1,7 @@
 # Test Suite ROI Redesign
 
 Status: **Implemented — initial rollout**
-Implementation status: **Routing, Trust Gate, CI split, timing, tests, and Context are active**
+Implementation status: **Routing, Trust Gate, CI split, build freshness, fixture reuse, reviewed isolation lanes, timing, tests, and Context are active**
 Owning area: `harness-package`
 Context entry: `project_context/areas/harness-package/verification.md`
 
@@ -9,13 +9,19 @@ The initial rollout was implemented on 2026-07-20. It changes package-developmen
 
 ## Current Implementation
 
-- `tools/test_suite_policy.mjs` is the canonical executable list for focused and Trust Boundary coverage.
+- `tools/test_suite_policy.mjs` is the canonical executable list for focused and Trust Boundary coverage and for the fail-closed Long-Task isolation classes.
 - `tools/affected_change_discovery.mjs` separates explicit paths, dirty local work, clean local commits, explicit bases, and CI bases; dirty local work is never unioned with an inferred historical branch diff.
 - `npm run test:long-task:trust` builds once and runs the canonical Long-Task Trust Boundary Gate; package-level `test:trust:built` runs the complete default suite plus that gate for PR CI.
-- `npm test` remains the complete default plus complete Long-Task release regression used by `main` and publish.
-- Every package-suite run emits `test-suite-timing-v1`; Package CI uploads the JSON files as 14-day diagnostic artifacts. They are never acceptance state.
+- `npm test` remains the complete default plus complete Long-Task release regression used by `main` and publish; a complete affected plan explicitly supersedes a separate Trust run.
+- `--no-build` reuse first verifies a deterministic input/output fingerprint written only by the current package build, so stale `dist` fails before test execution.
+- Every package-suite run emits per-file `test-suite-timing-v2`; Package CI uploads the JSON files as 14-day diagnostic artifacts. They are never acceptance state or historical-result cache.
+- Long-Task suites prepare immutable default/external Git seeds once, then copy each fixture into a unique repository with independent Git state and cleanup.
+- The reviewed pure/isolated lane defaults to concurrency two; the exclusive and every unknown file remain serial, and `TY_CONTEXT_LONG_TASK_ISOLATED_CONCURRENCY=1` is the mechanical rollback.
+- Inferred local discovery omits and reports only untracked `.work_products/**` scratch; tracked files and explicit `--path` values remain fail-safe inputs.
+- Canonical Trust/focused/hotspot review budgets block silent feedback-tier growth, while complete-suite auto-discovery remains exhaustive. Controlled Ubuntu CI may additionally supply generous per-suite wall-time ceilings; local timing remains diagnostic.
 - Two fresh Windows Trust Gate runs passed 32 tests across 9 files in 205.681 and 207.986 seconds after a current build. The complete default tier passed 173 tests across 41 files in 113.199 seconds, so the measured PR-equivalent default-plus-Trust path is approximately 321.185 seconds (5 minutes 21 seconds) without another build. These are rollout observations, not yet a multi-sample median or p95 claim.
-- Coverage deletion, stateful parallelism, and the 20-change/30-day ROI review remain deliberately deferred until timing and mutation evidence justify them.
+- One bounded Windows A/B on 2026-07-23 exercised 33 identities across six representative Authority/Final-Gate files: serial took 206.276 seconds and two concurrency-two runs took 147.228 and 128.054 seconds. Identities, terminal outcomes, seed state and workspace state were equal and no fixture root leaked; this is rollout evidence, not a formal cross-environment benchmark.
+- Coverage deletion and the 20-change/30-day overlap review remain deliberately deferred until timing and mutation evidence justify them.
 
 ## Retrieval Index
 
@@ -57,7 +63,7 @@ The core change is therefore not “delete slow tests.” It is:
 
 ## `TS-BASELINE` — Motivating Observation
 
-The current Long-Task runner discovers every `long-task-*.test.mjs` file, sorts them, and runs them with `--test-concurrency=1`.
+At the motivating baseline, the Long-Task runner discovered every `long-task-*.test.mjs` file, sorted them, and ran them with `--test-concurrency=1`.
 
 Current inventory observed on 2026-07-20:
 
@@ -67,6 +73,8 @@ Current inventory observed on 2026-07-20:
 - two recent complete runs took 629.4 seconds and 770.5 seconds; four complete invocations therefore consumed roughly 47 minutes in the motivating task.
 
 Those timings are task observations, not a formal benchmark. A fresh controlled baseline is required before making a performance claim.
+
+The 2026-07-22 anti-regression review found approximately 44 default files, 60 Long-Task files and 11 Trust files versus the rollout inventory of 41/58/9. Two comparable Ubuntu workflow snapshots showed complete default-plus-Long-Task wall time rising from 181.096 seconds to 203.728 seconds (about 12.5%), and PR default-plus-Trust rising from 69.178 seconds to 80.097 seconds (about 15.8%). The earlier Windows complete observations remain 629.4–770.5 seconds. These sparse observations justify review guards and generous catastrophic ceilings, not a median, p95 or cross-environment benchmark claim.
 
 The four-run sequence also shows the ROI problem:
 
@@ -113,7 +121,7 @@ The gate should contain one canonical end-to-end proof for each independent high
 - Hook/profile/package parity and one consumer workflow smoke where they cross a trust boundary;
 - the platform boundary: no Harness-owned model routing, orchestration, branch, worktree, or agent authority.
 
-The canonical first-rollout files are `long-task-active-authority-continuity`, `long-task-authority-adversarial`, `long-task-authority-revision-classification`, `long-task-authority-revision-diagnosis`, `long-task-context-evolution`, `long-task-final-closure-mutation-smoke`, `long-task-profile-hook`, `long-task-qualified-completion`, and `long-task-workflow-black-box`. The list lives once in `tools/test_suite_policy.mjs` and is exercised by both the runner and selection tests.
+The canonical list lives once in `tools/test_suite_policy.mjs` and is exercised by both the runner and selection tests. Its reviewed file-count budget is an explicit change-review trigger: a new independent invariant may raise the budget with rationale, but a maintainer must not remove a sentinel merely to fit it. The complete Long-Task suite remains independently auto-discovered and uncapped.
 
 Trigger:
 
@@ -148,13 +156,15 @@ The selection source must be explicit and environment-specific:
 
 | Invocation | Default change source |
 | --- | --- |
-| Local, dirty workspace | `HEAD` working-tree diff plus untracked files only |
+| Local, dirty workspace | `HEAD` working-tree diff plus untracked files, except reported untracked `.work_products/**` scratch |
 | Local, clean workspace | explicit `--base`, otherwise a documented single-commit fallback such as `HEAD^` |
 | Pull-request CI | merge-base against the supplied CI base revision |
 | Explicit task scope | `--path` values; do not add inferred historical paths |
 | Explicit comparison | `--base`; use exactly that comparison plus documented working-tree behavior |
 
 The local default must not union an historical branch-base diff into a non-empty working set. CI must not infer its base from whichever local ref happens to exist.
+
+The `.work_products/**` exception applies only to untracked paths discovered implicitly in a local workspace. A tracked file under that directory remains in the working-tree/comparison diff, an explicit `--path` bypasses inference, and CI does not receive this local-scratch exemption. The plan reports omitted paths as `ignored_untracked_local_artifacts`; no `.gitignore` mutation or broad untracked-file exclusion is implied.
 
 Fail-safe widening remains required:
 
@@ -167,6 +177,8 @@ Fail-safe widening remains required:
 | Release/publish workflow change | Complete release regression plus pack/release gates |
 
 The canonical executable mapping is `tools/test_suite_policy.mjs`, shared by the planner and runner. It is static source configuration, not a mutable registry, persisted task-test state, or cached acceptance result.
+
+The policy also owns reviewed maximums for canonical Trust files, Long-Task-focused files, Delivery-Contract-focused files and one hotspot path's mapped fan-out. Module load fails closed when a list exceeds its reviewed maximum or contains duplicates. Raising a maximum requires an explicit rationale update; complete-suite discovery has no such limit, so the guard cannot lower release coverage.
 
 ## `TS-RERUN` — Rerun Policy
 
@@ -205,6 +217,8 @@ Local complete-suite budget per task:
 
 A source change after a green aggregate gate invalidates that result, but the rerun tier should match the change. A documentation-only correction should rerun its static/Context gates; it should not automatically trigger the complete suite unless package or release policy maps it there.
 
+Static source tests must assert repository membership rather than the absence of legitimate ignored runtime state. In particular, `.codex/hooks.json` may exist after Long-Task is enabled; the invariant is that it remains ignored and untracked, while Hook installation and shape are covered by isolated fixture tests.
+
 ## `TS-RELEASE-HANDOFF` — One Verified Artifact
 
 Trusted Publishing uses a two-job graph inside one workflow run:
@@ -221,12 +235,105 @@ Trusted Publishing uses a two-job graph inside one workflow run:
 
 Optimization must preserve independent false-completion interception.
 
-1. Establish a fresh baseline with separate cold-build and test-only timing, at least five clean samples per supported benchmark environment, and per-file durations stored only as ephemeral CI artifacts.
+1. Establish a fresh baseline with separate cold-build and test-only timing, at least five clean samples per supported benchmark environment, and per-file durations stored only as ephemeral CI artifacts. Until then, only controlled Ubuntu CI may use generous environment-specific catastrophic ceilings; do not impose narrow local or cross-environment wall-clock gates.
 2. Classify test files by isolation: pure/static, isolated temporary repository, shared process/environment, Hook/profile mutation, or distribution/consumer smoke.
 3. Parallelize only proven-isolated groups. Keep real Git races, shared Hook/profile state, process-environment mutation, and distribution flows serial until isolation tests prove otherwise.
 4. Move combinatorial parser/classifier cases in-process where they do not need a CLI boundary. Retain at least one real CLI lifecycle per cross-boundary invariant.
 5. Reuse setup only inside a sequential scenario whose state transitions are themselves under test. Do not share mutable fixtures merely to save time.
 6. Remove or merge a case only when an invariant-coverage comparison and mutation sentinel prove that another case intercepts the same failure path.
+
+## `TS-PHASE4-SOURCE` — Runtime ROI Delivery Source
+
+This section is the single real Source for the current Phase 4 delivery. It was synthesized under the user's explicit instruction to open one Goal, index every relevant detail, preserve the suite's design purpose, and optimize execution cost without materially reducing test effectiveness.
+
+Input inventory and disposition:
+
+- `USER-TEST-ROI-1`: the original three-part report. Its first two issues concern the missing Authority Revision approval summary and the first-lock model-choice stop. They are already represented by inherited workspace changes and are background only for this Goal. The third issue asks whether the Long-Task suite regressed and recalls the earlier affected/failed-only and finer-tier ROI redesign.
+- `SCREENSHOT-APPROVAL`: `codex-clipboard-26fb5cc6-4e6d-431d-9477-2a7176e6df25.png`, SHA-256 `f54b7029b34426cb524183ca9f8cd80e012f88fd0bf2741ccfca22e91b833a2c`, visually shows an approval request that exposes only a revision identity without a human problem/change summary. Incorporated as background for the already-present approval-brief work; it supplies no test-ROI acceptance evidence.
+- `SCREENSHOT-MODEL-STOP`: `codex-clipboard-83c28c67-f4be-4ac6-a7de-56b1b3df796c.png`, SHA-256 `c9748013d2b02bb898c1cdae16cf8ee346284ceb2dc04daf231e3b561fbc3218`, visually shows implementation continuing past the model-selection boundary before later stopping. Incorporated as background for the already-present strict checkpoint work; it supplies no test-ROI acceptance evidence.
+- `USER-TEST-ROI-2`: preserve the test suite's design purpose/effect while adding anti-regression protection and reducing execution cost.
+- `USER-TEST-ROI-3`: the previous Goal ran for about two hours and appeared to spend most of that time repeatedly running the suite; every run must have a defensible purpose.
+- `USER-TEST-ROI-4`: perform one test-suite optimization based on design purpose, raise ROI without a large change in test effectiveness, explain the design, then open a dedicated Goal and index every required detail.
+- `USER-TEST-ROI-5`: explicit scope confirmation that this Goal is dedicated only to test-suite ROI optimization.
+- `OBS-WINDOWS-2026-07-22`: one uncontrolled but directly relevant Windows observation from the immediately preceding delivery: Trust 42/42 in about 671.5 seconds, default 44 files in about 128.3 seconds, Long-Task 60 files/281 tests in about 2,282.9 seconds, and the complete command in about 2,416.4 seconds. At least one separate Trust run was redundant before complete coverage; a stale `dist` run and lost timeout output also created avoidable cost. This is an operational baseline for this delivery, not a formal median or p95 benchmark.
+- `REPO-STATIC-2026-07-23`: the current tree contains 44 default files, 60 Long-Task files and 11 Trust files. The original sorted 60-file Long-Task name set has SHA-256 `2588af5d3ebd640de78a295aa39482aaac6d5ece34958b3260d8f295b40daa37`. A bounded static scan found 380 obvious CLI/process call sites, 164 `createDeliveryFixture()` call sites and 370 explicit filesystem-mutation call sites. The shared fixture currently pays five Git subprocesses per creation (`init`, two `config`, `add`, `commit`), approximately 820 Git subprocesses before test-specific CLI work.
+- `REPO-ROUTING-2026-07-23`: `run_affected_tests.mjs` already chooses one highest tier per plan. The regression is therefore not missing selection power; it is ambiguous guidance/manual invocation, unsafe `--no-build`, aggregate-only timing, and repeated fixture setup. The correct owner-level change is to expose aggregate dominance and make the canonical route unambiguous, not to add a second final-test workflow.
+- `REPO-ISOLATION-2026-07-23`: a conservative static review identifies 11 pure/static candidates, 41 isolated-temp-repository candidates and 8 exclusive-review candidates. This is a candidate classification, not permission to parallelize: Hook/profile, environment, distribution, verifier migration and Git-race files remain serial until behavioral isolation proof exists, and every unknown/new file defaults to serial.
+- `WORKSPACE-2026-07-23`: execution stays in the currently selected `C:/Dev/worktrees/project-tiny-context-harness/development` workspace on its existing `codex/development` branch with inherited uncommitted changes. This delivery creates no branch, worktree, worker, subagent scheduler or parallel mutation plane.
+
+Authoring mode is synthesis. The user fixed the material preference envelope: preserve false-completion interception and test effectiveness first, then minimize recurring execution cost; a measured or causally proven material saving is preferred over a marginal optimization. No external research, payment, deployment, publication, destructive mutation or human approval is required.
+
+<!-- ty-source-item:start key=phase4-runtime-roi-result kind=outcome_result -->
+On the same supported machine and a comparable test snapshot, the Long-Task package suite executes at materially lower cost, targets at least a 30% test-only wall-time reduction from the recorded 2,282.9-second Windows observation, and preserves the existing false-completion interception and complete current-snapshot release purpose.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=highest-aggregate-only kind=requirement -->
+One canonical final invocation selects exactly one highest required aggregate tier; when complete release regression is selected it supersedes a separate Trust Boundary run.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=fresh-build-fingerprint kind=technical_obligation -->
+`--no-build` must fail fast unless a deterministic fingerprint proves that `dist` was built from the current package source, configuration, package metadata, and lockfile inputs.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=ephemeral-file-timing kind=technical_obligation -->
+Each package-suite invocation must report every selected test file's identity, duration, and terminal status in ephemeral diagnostics without caching a passing result or creating acceptance state.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=isolated-fixture-seed kind=technical_obligation -->
+Fixture setup may be amortized through an immutable suite-scoped initialized seed, but every delivery fixture must copy into a unique temporary repository with an independent `.git` common directory, worktree, local configuration, no remote, mutation isolation, and deterministic cleanup; standalone test execution must retain a semantically equivalent fallback.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=conservative-isolation-lanes kind=requirement -->
+Only explicitly reviewed pure/static or isolated temporary-repository files may use bounded concurrency beginning at two; Hook/profile, environment, distribution, verifier-migration, Git-race, and every unknown file remain serial until behavioral isolation proof exists.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=coverage-preservation kind=requirement -->
+The optimized complete Long-Task runner must still discover the original 60-file set whose sorted-name SHA-256 is `2588af5d3ebd640de78a295aa39482aaac6d5ece34958b3260d8f295b40daa37` and execute at least the previously observed 281 Long-Task test identities with no missing, skipped, cancelled, or silently excluded case; new tests may add coverage but may not replace an original identity.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=rerun-discipline kind=technical_obligation -->
+During implementation run only focused or affected repair checks; after a failure rerun failed and affected coverage; after the candidate is frozen run exactly one required highest aggregate with durable output and sufficient timeout, and do not run Trust before complete.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=cross-platform-runtime kind=technical_obligation -->
+Implementation must preserve Windows and macOS path, process-launch, Git-copy, cleanup, and npm-script behavior.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=serial-rollback kind=technical_obligation -->
+If isolation or concurrency equivalence is not proven, execution must fail closed or retain serial behavior, and the serial complete runner remains the mechanical rollback during rollout.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=prior-workflow-fixes-background-only kind=non_completing -->
+Inherited approval-summary and first-lock stopping changes are context only and contribute no completion credit to this test-suite ROI delivery.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=no-coverage-trade kind=forbidden_shortcut -->
+Do not obtain speed by deleting or weakening tests, sharing mutable fixtures, reusing historical green results, substituting proxy, fixed, or self-reported evidence, enabling unproven broad concurrency, or adding a persistent test scheduler, selection registry, result cache, Receipt, or second Authority.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=full-suite-population-risk kind=risk_fact fact=full_population_operation outcome=test-suite-roi -->
+The preservation claim covers the full original Long-Task test population, so incomplete discovery or identity reporting must fail closed.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=routing-and-build-ac kind=acceptance -->
+Given a complete-routed change and stale and current build inputs, when the canonical final route is inspected and `--no-build` is validated, then complete supersedes Trust, stale output is rejected before tests start, and output from the matching source snapshot is accepted.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=fixture-isolation-ac kind=acceptance -->
+Given multiple fixtures created from the amortized seed, when one fixture's files, Git configuration, refs, and worktree are mutated, then every other fixture remains unchanged, uses a different common directory, has no remote, and preserves the legacy initial repository semantics.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=timing-and-lanes-ac kind=acceptance -->
+Given the complete selected file set and the reviewed isolation policy, when the suite runs, then one ephemeral report contains one terminal record per selected file, the safe and exclusive lanes are disjoint and exhaustive, unknown files execute serially, and any opt-in concurrency result has the same test identities and terminal outcomes as serial execution.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=coverage-and-roi-ac kind=acceptance -->
+Given the frozen final candidate, when the one highest complete aggregate executes with retained output, then the original 60-file Long-Task set and at least 281 prior test identities pass with zero skipped, cancelled, missing, or trust-mutation escape, and the measured test-only cost is compared honestly with the recorded Windows observation without being promoted to a cross-environment benchmark.
+<!-- ty-source-item:end -->
+
+<!-- ty-source-item:start key=no-shortcut-ac kind=acceptance -->
+Given the final implementation and diagnostics, when the optimization boundary is inspected, then inherited approval-summary and model-stop work contributes no completion credit and no forbidden coverage, authority, cache, shared-state, proxy-evidence, or unproven-concurrency shortcut is present.
+<!-- ty-source-item:end -->
 
 ## `TS-MIGRATION` — Phased Implementation
 
@@ -252,17 +359,27 @@ The fresh Windows default and two Trust Gate measurements are recorded above. Mu
 - update workflow entry-point tests and CI routing without removing the full release gate;
 - prove the gate against the trust-boundary mutation sentinels.
 
-### Phase 3 — Enforce Rerun Order (implemented as fail-safe routing and guidance)
+### Phase 3 — Enforce Rerun Order (implemented as fail-safe routing, entry-point checks and guidance)
 
 - add cheap parity/idempotence/side-effect checks before aggregate suites;
 - document the diff-freeze and batched-repair policy in contributor verification guidance;
 - report the selected tier and selection reason in command output.
+- keep pull-request guidance on affected/focused plus frozen-candidate Trust, with complete regression conditional on the same routing rules as executable policy.
 
-### Phase 4 — Optimize Runtime (timing active; structural optimization deferred)
+### Phase 3b — Prevent Routing/Cost Regression (implemented)
 
-- parallelize only isolated groups;
-- reduce redundant process and fixture setup while preserving real boundary tests;
-- compare every change against the Phase 0 baseline and mutation sentinels.
+- omit and report only inferred local untracked `.work_products/**` scratch while preserving tracked and explicit-path fail-safe routing;
+- fail policy load when reviewed Trust/focused/hotspot structural budgets are exceeded or duplicated;
+- keep complete-suite discovery exhaustive and retain serial execution as the mechanical rollback;
+- apply generous per-suite wall-time ceilings only when a controlled Ubuntu workflow opts in, preserving local diagnostics and all coverage.
+
+### Phase 4 — Optimize Runtime (implemented; full-population Final Gate measurement pending)
+
+- verify current package build identity before any `--no-build` reuse;
+- emit exhaustive per-file timing without caching historical results;
+- amortize Git initialization through immutable suite-scoped seeds while copying every fixture into an independent repository;
+- run only the explicitly reviewed safe lane at bounded concurrency two, retain exclusive/unknown serial execution and keep concurrency one as rollback;
+- compare representative A/B identities, outcomes and side effects before enabling concurrency, then use the one frozen-candidate Final Gate for full-population coverage and wall-time proof.
 
 ### Phase 5 — Review Coverage Overlap (post-rollout)
 
@@ -315,6 +432,8 @@ The initial deployable rollout is complete. Long-term ROI closure still requires
 8. one invocation builds at most once and `--no-build` cannot be presented as safe across different source snapshots;
 9. no result cache, persisted selection state, second authority, or test runner outcome is accepted as Delivery Contract proof;
 10. the current full runner remains callable as a rollback until the new routing has completed its review period.
+11. untracked local work products cannot silently widen an unrelated task, while tracked or explicit work-product paths still route fail safe;
+12. Trust/focused/hotspot expansion requires an explicit reviewed budget update, complete discovery remains exhaustive, and controlled timing ceilings cannot be mistaken for acceptance evidence.
 
 Rollback is mechanical: route package and CI scripts back to the current complete runner. No Contract, runtime state, Receipt, or migration data is required to reverse the test-tier selection.
 
@@ -329,4 +448,5 @@ This redesign does not:
 - parallelize stateful tests without isolation proof;
 - claim a formal benchmark from the motivating task's two timings;
 - add a runtime workflow registry, scheduler, Receipt, or persistent task-test state;
+- ignore tracked or explicitly supplied work-product paths, cap complete-suite discovery, or use a timing budget as permission to delete coverage;
 - change current verification requirements before implementation and conformance are complete.

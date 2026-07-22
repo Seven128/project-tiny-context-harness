@@ -113,8 +113,14 @@ test("Authoring Preflight aggregates independent diagnostics", async () => {
     );
     assert.equal(duplicateRequirement.repair_priority, "primary");
     assert.equal(uncoveredRequirement.repair_priority, "dependent");
-    assert.equal(duplicateRequirement.repair_group, "first.requirement.observe-first");
-    assert.equal(uncoveredRequirement.repair_group, duplicateRequirement.repair_group);
+    assert.equal(
+      duplicateRequirement.repair_group,
+      "first.requirement.observe-first",
+    );
+    assert.equal(
+      uncoveredRequirement.repair_group,
+      duplicateRequirement.repair_group,
+    );
     assert.deepEqual(uncoveredRequirement.blocked_by, [
       duplicateRequirement.diagnostic_id,
     ]);

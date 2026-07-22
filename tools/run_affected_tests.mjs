@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { resolveAffectedChanges } from "./affected_change_discovery.mjs";
 import { selectAffectedTests } from "./affected_test_selection.mjs";
 import { npmCommandSpec } from "./npm_command_spec.mjs";
+import { verifyPackageBuildFingerprint } from "./package_build_fingerprint.mjs";
 
 const repository = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -33,6 +34,10 @@ console.log(
 );
 
 if (options.list) process.exit(0);
+
+if (selection.requires_build && options.noBuild) {
+  await verifyPackageBuildFingerprint({ repositoryRoot: repository });
+}
 
 if (selection.requires_build && !options.noBuild) {
   await runNpm(["run", "build", "--workspace", "project-tiny-context-harness"]);

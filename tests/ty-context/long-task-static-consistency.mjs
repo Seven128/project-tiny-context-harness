@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 
@@ -43,7 +43,6 @@ export async function assertLongTaskStaticConsistency(repoRoot) {
     `${projectSpec}\n${workflowContext}`,
     /machine_accepted_external_pending/u,
   );
-  await assert.rejects(() => access(path.join(repoRoot, ".codex/hooks.json")));
   assert.match(gitignore, /^\.codex\/hooks\.json$/mu);
   const tracked = await gitOutput(repoRoot, [
     "ls-files",
@@ -56,7 +55,10 @@ export async function assertLongTaskStaticConsistency(repoRoot) {
     "--",
     ".codex/hooks.json",
   ]);
-  assert.ok(!tracked || deleted === ".codex/hooks.json");
+  assert.ok(
+    !tracked || deleted === ".codex/hooks.json",
+    "the package-owned runtime Hook may exist locally but must not be source",
+  );
 }
 
 async function gitOutput(cwd, args) {

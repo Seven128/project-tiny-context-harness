@@ -187,14 +187,17 @@ Long-Task 会先在同一流程内把原始/修订方案、选定设计资源和
   "execution_model_checkpoint": {
     "required": true,
     "phase": "post_authority_lock_pre_implementation",
-    "options": ["continue_current_model", "switch_model_then_resume"]
+    "options": ["continue_current_model", "switch_model_then_resume"],
+    "turn_boundary": "end_current_turn",
+    "explicit_task_specific_choice_required": true,
+    "generic_continue_satisfies": false
   }
 }
 ```
 
-Agent 此时在实现前只暂停一次，请用户选择：继续当前模型，或切换模型后恢复同一 active Long-Task。如果用户已明确给出本任务的模型策略，则视为已完成选择。后续 `compile --revise` 返回 `required: false`，不会重复暂停。Harness 不会自动切换模型，也不持久化 acknowledgement、model route 或 checkpoint state；模型选择不是验收证据。
+这是严格的终止当前回合边界。除非用户此前已明确给出本任务的“当前模型继续”或“切换后恢复”策略，Agent 在该结果后不得继续产品实现、文件编辑、构建或测试，必须结束当前回合并询问选择。“继续”“恢复”“完成”“继续 Goal”等泛化表达不能满足卡点。后续 `compile --revise` 返回 `required: false`，不会重复暂停。Harness 不会自动切换模型，也不持久化 acknowledgement、model route 或 checkpoint state；模型选择不是验收证据。
 
-锁定后的修订分三类：机器可证明的单调证据增强和机械安全变化自动采用；如果唯一的受保护原因只是扩大 owner、expected-change 或 allowed-support path（可以同时带有安全的单调增强），就能用 `diagnose-revision` 在不切换 Authority 的前提下运行原 Active Authority 已有且未更换的 Check；产品/Source/Acceptance 语义变化、证明弱化、verifier 内容或 runner 变化、风险上升只给摘要，不运行候选，风险降级则直接拒绝。滚动实现遇阻本身不是 External Confirmation，也不允许删除机器可验证范围；真正的范围变化必须先成为 marked Source。诊断结果不是 Progress 或 acceptance，也不会写 pending/approval、cache、Receipt 或 marker。相关修改只在同一份 `delivery-contract.yaml` 中累计，最终由一次 `compile --revise` 生成精确 hash 与包含语义字段、Source/Product Claim 缩减、proof 缩减和 external-confirmation key 的短摘要；`status`/`resume` 投影同一个待批决策。批准并原子采用后返回 `delivery_completed_by_this_event: false`，旧证据失效并回到滚动实现或修复，完整 Final Gate 仍必须重跑。
+锁定后的修订分三类：机器可证明的单调证据增强和机械安全变化自动采用；如果唯一的受保护原因只是扩大 owner、expected-change 或 allowed-support path（可以同时带有安全的单调增强），就能用 `diagnose-revision` 在不切换 Authority 的前提下运行原 Active Authority 已有且未更换的 Check；产品/Source/Acceptance 语义变化、证明弱化、verifier 内容或 runner 变化、风险上升只给摘要，不运行候选，风险降级则直接拒绝。滚动实现遇阻本身不是 External Confirmation，也不允许删除机器可验证范围；真正的范围变化必须先成为 marked Source。诊断结果不是 Progress 或 acceptance，也不会写 pending/approval、cache、Receipt 或 marker。相关修改只在同一份 `delivery-contract.yaml` 中累计，最终由一次 `compile --revise` 生成精确 hash、canonical material 摘要，以及由它派生的人类 `decision_brief`；brief 概括审批原因、Source/Product/proof/runner/scope/risk/external-confirmation 变化、受影响 Outcome 和采用/Final-Gate 后果，`status`/`resume` 投影同一个待批决策。必须先展示 brief 再请求精确 identity 的批准。批准并原子采用后返回 `delivery_completed_by_this_event: false`，旧证据失效并回到滚动实现或修复，完整 Final Gate 仍必须重跑。
 
 Long-Task Skill 采用渐进读取：主 `SKILL.md` 只保留目标、硬边界和阶段路由；Source Authoring、Contract Authoring、Evidence Design 与 Authority Lifecycle 细节只在对应阶段读取一层 reference。这只是指令组织，不产生第二权威。共享 Architecture Deliberation 在 Source/Contract authoring 中完成；material 架构不变量使用已有 obligations/constraints/forbidden shortcuts、owner/path/Binding 和项目原生 executable Checks，Final Gate 是唯一的 Long-Task Architecture Conformance 承载点。
 
@@ -230,9 +233,9 @@ ty-context long-task abandon <workdir> [--force-corrupt-state]
 
 - `init` 创建单文件 inline Outcome 的 Compact Contract 模板。
 - `preflight` 应用 Compact 默认值并一次输出 Source/REQ/CTRL/OBL/AC、Stage closure、required-target/root/runner、scenario/journey、capability、external impact、Product Conformance、Context、风险、路径/Binding、Runner/Input 与 Proof 诊断；它完全只读，不创建 Authority Lock、marker、cache、progress、Receipt、pending revision、状态锁，也不运行项目 Check。
-- `compile` 生成 Global 与 Outcome Result/Requirement/Control-field/Non-completing/Technical Claim，拒绝未覆盖 Claim，并让第一次正式成功 Compile 成为 Authority Lock。每次结果都包含 lifecycle event、`delivery_completed_by_this_event: false`、`native_goal_effect: none` 和 next action。第一次结果附带 `execution_model_checkpoint.required: true`，后续 Compile 返回 `false`；这些字段不进入 Authority state。
+- `compile` 生成 Global 与 Outcome Result/Requirement/Control-field/Non-completing/Technical Claim，拒绝未覆盖 Claim，并让第一次正式成功 Compile 成为 Authority Lock。每次结果都包含 lifecycle event、`delivery_completed_by_this_event: false`、`native_goal_effect: none` 和 next action。第一次结果附带 `execution_model_checkpoint.required: true` 及 terminal-turn/explicit-choice 契约，后续 Compile 返回 `false`；这些字段不进入 Authority state。
 - `diagnose-revision` 只做无副作用候选 Compile；仅 scope-only 候选能运行 Active Authority 已有且未更换的 Check，输出固定为非验收、非 Progress、非 pending。
-- `compile --revise` 自动采用可证明安全的修订；受保护修订在 stdout 返回 `authority_revision_pending`、精确 decision id 与确定性 material 摘要，并继续 fail closed，直到用户批准完全相同的 id。候选内容再变会生成新 id，并使旧批准失效。采用后输出 `authority_revision_adopted` 并回到滚动执行，不表示交付完成。
+- `compile --revise` 自动采用可证明安全的修订；受保护修订在 stdout 返回 `authority_revision_pending`、精确 decision id、确定性 material 摘要和人类 `decision_brief`。必须先展示 brief，再继续 fail closed 等待用户批准完全相同的 id。候选内容再变会生成新 id，并使旧批准失效。采用后输出 `authority_revision_adopted` 并回到滚动执行，不表示交付完成。
 - `verify` 在重查 active task/revision/compiled/worktree identity 后写 scoped Progress；targeted verify 始终只是修复证据。
 - `status` 输出 `unverified`、`progress_passing`、`progress_failing`、`progress_stale` 或 `blocked_external`，由当前 Progress 派生 `stages`、`ready_stages` 和受 Stage 约束的 Outcome frontier，不持久化 Stage 完成。它同时报告 fresh `final_workflow_status`、target profile/state、完整 `external_confirmations` 与唯一的 `pending_authority_revision`。`progress_passing` 只能表述为定向修复证据，不能简称“Outcome 完成”；`progress_stale` 不是当前通过，`final_workflow_status: null` 表示 Goal 尚未完成。
 - `resume` 完全只读，恢复 task/contract identity、风险、相关 Context、Git 状态、相同的 Final/target/Stage/external/pending surface、ready Outcome、findings 和 next safe action。
@@ -305,7 +308,7 @@ node packages/ty-context/dist/cli.js package check-source
 make validate-harness
 ```
 
-`test:affected` 用于日常修改和修复循环；`test:long-task:trust` 是冻结候选版本后的高风险边界门，也是 PR CI 使用的层级；`npm test` 是 `main` 和发布保留的完整发布回归，不应在每次小修复后重跑。Delivery Contract 和完整 Long-Task 门仍可通过 package workspace scripts 显式执行。
+`test:affected` 用于日常修改和修复循环；本地推断只会报告并略过未跟踪的 `.work_products/**`，tracked 与显式路径仍按 fail-safe 路由。`test:long-task:trust` 是冻结候选版本后的高风险边界门，也是 PR CI 使用的层级；经审阅的 Trust/focused/hotspot 预算防止反馈层静默膨胀，但完整套件发现不设裁剪上限。`npm test` 是 `main` 和发布保留的完整发布回归，不应在每次小修复后重跑。受控 Ubuntu CI 使用有充分余量的分层灾难性耗时上限，本地耗时仍只做诊断。Delivery Contract 和完整 Long-Task 门仍可通过 package workspace scripts 显式执行。
 
 模块化门禁是 `ty-context check-modularity`；例外必须包含 `owner`、`introduced_at`、`reason`、`tracking_issue` 和 `expiry_condition`。
 

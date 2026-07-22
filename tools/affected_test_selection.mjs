@@ -1,5 +1,6 @@
 import path from "node:path";
 import {
+  assertHotspotTestFanoutBudget,
   DELIVERY_CONTRACT_FOCUSED_TESTS,
   LONG_TASK_FOCUSED_TESTS,
   LONG_TASK_TRUST_TESTS,
@@ -120,6 +121,14 @@ const HOTSPOT_TESTS = new Map([
   [
     "packages/ty-context/src/lib/long-task-authority-revision-diagnosis.ts",
     ["long-task-authority-revision-diagnosis.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-authority-revision-brief.ts",
+    [
+      "long-task-authority-revision-classification.test.mjs",
+      "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+    ],
   ],
   [
     "packages/ty-context/src/lib/long-task-authority-revision-summary.ts",
@@ -329,6 +338,8 @@ const HOTSPOT_TESTS = new Map([
   ],
 ]);
 
+assertHotspotTestFanoutBudget(HOTSPOT_TESTS);
+
 export function selectAffectedTests(changedPaths, options = {}) {
   const scope = options.scope ?? "auto";
   if (scope === "all") return plan("full-suite", [], true, ["scope:all"]);
@@ -356,6 +367,16 @@ export function selectAffectedTests(changedPaths, options = {}) {
   let mode = "selected";
 
   for (const file of normalized) {
+    if (
+      file === "tests/ty-context/run-package-suite.mjs" ||
+      file === "tests/ty-context/test-suite-file-reporter.mjs"
+    ) {
+      tests.add(testPath("test-suite-runtime.test.mjs"));
+      tests.add(testPath("workflow-test-entrypoints.test.mjs"));
+      reasons.push(`${file}:suite_runtime_tooling`);
+      continue;
+    }
+
     if (file.startsWith(`${TEST_ROOT}/`)) {
       if (file.endsWith(".test.mjs")) {
         tests.add(file);
@@ -378,6 +399,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
     }
 
     if (
+      file === "tools/package_build_fingerprint.mjs" ||
       file === "tools/affected_change_discovery.mjs" ||
       file === "tools/affected_test_selection.mjs" ||
       file === "tools/run_affected_tests.mjs" ||
@@ -385,6 +407,8 @@ export function selectAffectedTests(changedPaths, options = {}) {
     ) {
       tests.add(testPath("affected-change-discovery.test.mjs"));
       tests.add(testPath("affected-test-selection.test.mjs"));
+      if (file === "tools/package_build_fingerprint.mjs")
+        tests.add(testPath("test-suite-runtime.test.mjs"));
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
       reasons.push(`${file}:affected_test_tooling`);
       continue;
@@ -474,6 +498,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
 
     if (
       file.startsWith(".github/workflows/") ||
+      file === ".github/PULL_REQUEST_TEMPLATE.md" ||
       file.startsWith("tools/release_")
     ) {
       tests.add(testPath("workflow-test-entrypoints.test.mjs"));
@@ -517,10 +542,18 @@ function plan(mode, tests, requiresBuild, reasons) {
     mode,
     tier: tierForMode(mode),
     purpose: purposeForMode(mode),
+    supersedes: supersededTiers(mode),
     tests: [...new Set(tests)].sort(),
     requires_build: requiresBuild,
     reasons: [...new Set(reasons)].sort(),
   };
+}
+
+function supersededTiers(mode) {
+  if (mode === "full-suite" || mode === "long-task-suite")
+    return ["developer-feedback", "trust-boundary"];
+  if (mode === "trust-boundary") return ["developer-feedback"];
+  return [];
 }
 
 function widen(current, next) {

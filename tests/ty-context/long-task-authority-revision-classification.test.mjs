@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { buildAuthorityRevisionDecisionBrief } from "../../packages/ty-context/dist/lib/long-task-authority-revision-brief.js";
 import {
   createDeliveryFixture,
   runCli,
@@ -61,6 +62,25 @@ test("semantic or proof changes are previewed but never candidate-executed", asy
         "artifact_removed",
       ),
     );
+    assert.match(diagnosis.revision.decision_brief.headline, /Approval required/iu);
+    assert.match(
+      diagnosis.revision.decision_brief.approval_reason,
+      /protected delivery meaning|proof|execution authority/iu,
+    );
+    assert.ok(
+      diagnosis.revision.decision_brief.material_changes.some((change) =>
+        /Product Claims or semantics changed/iu.test(change),
+      ),
+    );
+    assert.ok(
+      diagnosis.revision.decision_brief.material_changes.some((change) =>
+        /Acceptance or proof was reduced/iu.test(change),
+      ),
+    );
+    assert.deepEqual(diagnosis.revision.decision_brief.affected_outcomes, [
+      "first",
+      "second",
+    ]);
     assert.ok(
       diagnosis.revision.approval_summary.protected_reasons.includes(
         "owner_path_expanded",
@@ -81,6 +101,12 @@ test("semantic or proof changes are previewed but never candidate-executed", asy
       pending.pending_authority_revision.revision_identity,
       diagnosis.revision.revision_identity,
     );
+    assert.deepEqual(
+      pending.pending_authority_revision.decision_brief,
+      diagnosis.revision.decision_brief,
+    );
+    assert.match(pending.next_action, /Decision brief:/u);
+    assert.match(pending.next_action, new RegExp(diagnosis.revision.revision_identity, "u"));
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
@@ -124,6 +150,14 @@ test("additive verification dependencies remain automatic and are summarized", a
       revised.authority_revision_change.approval_summary
         .added_verification_dependencies,
       ["first.first-check:tests/extra.mjs"],
+    );
+    assert.match(
+      revised.authority_revision_change.decision_brief.headline,
+      /No user approval is required/iu,
+    );
+    assert.match(
+      revised.authority_revision_change.decision_brief.if_approved[0],
+      /may be atomically adopted without user approval/iu,
     );
     assert.equal(
       await exists(
@@ -176,9 +210,58 @@ The first outcome must be observable.
       "fixture-external:removed",
     ]);
     assert.equal(summary.external_confirmations_changed, true);
+    const brief = pending.pending_authority_revision.decision_brief;
+    assert.match(brief.headline, /Source\/Claims[\s\S]*external confirmations/iu);
+    assert.ok(
+      brief.material_changes.some((change) =>
+        /fixture-external:removed/u.test(change),
+      ),
+    );
+    assert.match(pending.next_action, /previous Authority remains active/iu);
+    assert.match(pending.next_action, /do not complete delivery/iu);
+    assert.match(pending.next_action, /Final Gate remains mandatory/iu);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
+});
+
+test("decision brief names verifier, runner, and risk changes without raw payloads", () => {
+  const brief = buildAuthorityRevisionDecisionBrief(
+    {
+      product_semantics_changed: false,
+      global_or_technical_semantics_changed: false,
+      source_or_claims_changed: false,
+      context_authority_changed: false,
+      acceptance_or_proof_weakened: false,
+      verifier_or_runner_changed: true,
+      write_scope_expanded: false,
+      risk_changed: true,
+      external_confirmations_changed: false,
+      semantic_fields_changed: [],
+      source_claim_changes: [],
+      product_claim_changes: [],
+      proof_reductions: [],
+      external_confirmation_changes: [],
+      added_verification_dependencies: [],
+      expanded_owner_paths: [],
+      expanded_expected_change_paths: [],
+      expanded_allowed_support_paths: [],
+      protected_reasons: [
+        "runner_definition_changed",
+        "risk_changed_requires_review",
+      ],
+      affected_outcomes: ["first"],
+    },
+    "protected_semantic_or_proof_change",
+    true,
+  );
+
+  assert.match(brief.headline, /verifier\/runner[\s\S]*risk/iu);
+  assert.deepEqual(brief.material_changes, [
+    "Verifier or runner authority changed.",
+    "The effective risk authority changed.",
+  ]);
+  assert.deepEqual(brief.affected_outcomes, ["first"]);
 });
 
 async function exists(file) {

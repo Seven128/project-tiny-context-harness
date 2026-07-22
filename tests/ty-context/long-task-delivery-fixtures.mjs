@@ -1,5 +1,14 @@
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { rmSync } from "node:fs";
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,9 +18,57 @@ import YAML from "yaml";
 const exec = promisify(execFile);
 const repo = fileURLToPath(new URL("../..", import.meta.url));
 const cli = path.join(repo, "packages/ty-context/dist/cli.js");
+const fixtureSeedEnvironment = "TY_CONTEXT_DELIVERY_FIXTURE_SEED_ROOT";
+const ownedFixtureSeeds = new Set();
+let standaloneSeedPromise = null;
+let cleanupHookRegistered = false;
 
 export async function createDeliveryFixture(options = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-delivery-"));
+  try {
+    const seedRoot = await resolveFixtureSeedRoot(options.fixtureSeedRoot);
+    const variant = options.externalConfirmation ? "external" : "default";
+    const template = path.join(seedRoot, variant);
+    await assertSeedRepository(template);
+    await cp(template, root, { recursive: true, force: true });
+  } catch (error) {
+    await rm(root, { recursive: true, force: true });
+    throw error;
+  }
+  const workdir = path.join(root, ".long-task");
+  await mkdir(workdir, { recursive: true });
+  const contract = deliveryContract(options);
+  addDefaultSensitivityControls(contract);
+  await writeContract(workdir, contract);
+  return { root, workdir, contract };
+}
+
+export async function prepareDeliveryFixtureSeed() {
+  const root = await mkdtemp(
+    path.join(os.tmpdir(), "ty-context-delivery-seed-"),
+  );
+  try {
+    await initializeSeedRepository(path.join(root, "default"), false);
+    await initializeSeedRepository(path.join(root, "external"), true);
+  } catch (error) {
+    await rm(root, { recursive: true, force: true });
+    throw error;
+  }
+  ownedFixtureSeeds.add(root);
+  registerSeedCleanupHook();
+  let cleaned = false;
+  return {
+    root,
+    async cleanup() {
+      if (cleaned) return;
+      cleaned = true;
+      ownedFixtureSeeds.delete(root);
+      await rm(root, { recursive: true, force: true });
+    },
+  };
+}
+
+async function initializeSeedRepository(root, externalConfirmation) {
   await mkdir(path.join(root, "src"), { recursive: true });
   await mkdir(path.join(root, "tests"), { recursive: true });
   await mkdir(path.join(root, "artifacts"), { recursive: true });
@@ -32,7 +89,7 @@ export async function createDeliveryFixture(options = {}) {
 The first outcome must be observable.
 <!-- ty-source-item:end -->
 ${
-  options.externalConfirmation
+  externalConfirmation
     ? `
 ## Fixture external
 
@@ -123,12 +180,34 @@ default = true
   await exec("git", ["config", "user.name", "Fixture"], { cwd: root });
   await exec("git", ["add", "."], { cwd: root });
   await exec("git", ["commit", "-m", "fixture"], { cwd: root });
-  const workdir = path.join(root, ".long-task");
-  await mkdir(workdir, { recursive: true });
-  const contract = deliveryContract(options);
-  addDefaultSensitivityControls(contract);
-  await writeContract(workdir, contract);
-  return { root, workdir, contract };
+}
+
+async function resolveFixtureSeedRoot(explicitRoot) {
+  if (explicitRoot) return path.resolve(explicitRoot);
+  if (process.env[fixtureSeedEnvironment])
+    return path.resolve(process.env[fixtureSeedEnvironment]);
+  standaloneSeedPromise ??= prepareDeliveryFixtureSeed();
+  return (await standaloneSeedPromise).root;
+}
+
+async function assertSeedRepository(root) {
+  for (const relative of [".git", "source.md", "package.json"]) {
+    const info = await stat(path.join(root, relative)).catch(() => null);
+    if (!info)
+      throw new Error(
+        `delivery_fixture_seed_invalid: missing ${relative} in ${root}`,
+      );
+  }
+}
+
+function registerSeedCleanupHook() {
+  if (cleanupHookRegistered) return;
+  cleanupHookRegistered = true;
+  process.once("exit", () => {
+    for (const root of ownedFixtureSeeds)
+      rmSync(root, { recursive: true, force: true });
+    ownedFixtureSeeds.clear();
+  });
 }
 
 export function deliveryContract(options = {}) {

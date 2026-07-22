@@ -34,6 +34,52 @@ test("dirty local discovery uses only the current worktree", async () => {
   assert.deepEqual(git.comparisonCalls, []);
 });
 
+test("local inference reports and omits only untracked work products", async () => {
+  const git = fakeGit({
+    working: ["packages/ty-context/src/lib/current.ts"],
+    untracked: [
+      ".work_products/design/review.md",
+      ".work_products/skill-validator-python/yaml.py",
+      "notes/new-test-input.md",
+    ],
+  });
+  const changes = await resolveAffectedChanges({ environment: {}, git });
+
+  assert.deepEqual(changes.paths, [
+    "notes/new-test-input.md",
+    "packages/ty-context/src/lib/current.ts",
+  ]);
+  assert.deepEqual(changes.discovery, {
+    source: "local-worktree",
+    base: null,
+    includes_worktree: true,
+    ignored_untracked_local_artifacts: [
+      ".work_products/design/review.md",
+      ".work_products/skill-validator-python/yaml.py",
+    ],
+  });
+});
+
+test("tracked and explicit work-product paths remain discovery inputs", async () => {
+  const tracked = await resolveAffectedChanges({
+    environment: {},
+    git: fakeGit({ working: [".work_products/tracked-authority.md"] }),
+  });
+  assert.deepEqual(tracked.paths, [".work_products/tracked-authority.md"]);
+  assert.equal(
+    "ignored_untracked_local_artifacts" in tracked.discovery,
+    false,
+  );
+
+  const explicit = await resolveAffectedChanges({
+    explicitPaths: [".work_products/explicit-authority.md"],
+    git: failIfCalled(),
+  });
+  assert.deepEqual(explicit.paths, [
+    ".work_products/explicit-authority.md",
+  ]);
+});
+
 test("clean local discovery uses only the current commit parent", async () => {
   const git = fakeGit({
     refs: ["HEAD^"],
@@ -112,8 +158,11 @@ function fakeGit(options = {}) {
   const comparisonCalls = [];
   return {
     comparisonCalls,
-    async workingTreePaths() {
-      return options.working ?? [];
+    async workingTreeChanges() {
+      return {
+        tracked: options.working ?? [],
+        untracked: options.untracked ?? [],
+      };
     },
     async refExists(ref) {
       return refs.has(ref);

@@ -106,6 +106,12 @@ test("scope-only candidates can be diagnosed without state, batched into one exa
       diagnosis.revision.revision_identity,
     );
     assert.equal(firstDecision.change_class, "scope_only_expansion");
+    assert.match(firstDecision.decision_brief.headline, /write scope/iu);
+    assert.match(
+      firstDecision.decision_brief.approval_reason,
+      /expands declared implementation ownership or write scope/iu,
+    );
+    assert.deepEqual(firstDecision.decision_brief.affected_outcomes, ["first"]);
 
     const status = await runCli(fixture.root, [
       "long-task",
@@ -119,7 +125,9 @@ test("scope-only candidates can be diagnosed without state, batched into one exa
       fixture.workdir,
     ]);
     assert.deepEqual(resume.pending_authority_revision, firstDecision);
+    assert.match(resume.next_safe_action, /Decision brief:/u);
     assert.match(resume.next_safe_action, /Ask the user to approve or reject/u);
+    assert.match(resume.next_safe_action, new RegExp(firstDecision.revision_identity, "u"));
 
     await runCli(fixture.root, [
       "long-task",

@@ -24,6 +24,7 @@ test("package CI separates the Trust tier from complete release regression", () 
   assert.match(packageWorkflow, /make validate-harness/);
   assert.match(pullRequestJob, /Trust boundary package tests/);
   assert.match(pullRequestJob, /TY_CONTEXT_TEST_TIMING_DIR/);
+  assert.match(pullRequestJob, /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/);
   assert.match(
     pullRequestJob,
     /npm run test:trust:built --workspace project-tiny-context-harness --ignore-scripts/,
@@ -37,6 +38,7 @@ test("package CI separates the Trust tier from complete release regression", () 
     /Complete package tests[\s\S]*npm test --workspace project-tiny-context-harness --ignore-scripts/,
   );
   assert.match(mainJob, /TY_CONTEXT_TEST_TIMING_DIR/);
+  assert.match(mainJob, /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/);
   assert.match(packageWorkflow, /set -o pipefail/);
   assert.match(packageWorkflow, /tee package-test\.log/);
   assert.match(packageWorkflow, /Upload package test diagnostics/);
@@ -92,13 +94,17 @@ test("package CI separates the Trust tier from complete release regression", () 
   assert.equal(packageJson.scripts["test:composite-workflow"], undefined);
 
   const suiteRunner = read("tests/ty-context/run-package-suite.mjs");
+  const suiteReporter = read("tests/ty-context/test-suite-file-reporter.mjs");
   assert.match(suiteRunner, /longTaskTestName/);
   assert.match(suiteRunner, /\(selectedSuite === "long-task"\)/);
   assert.match(suiteRunner, /\^long-task-/);
   assert.match(suiteRunner, /LONG_TASK_TRUST_TEST_FILES/);
   assert.match(suiteRunner, /long-task-trust/);
-  assert.match(suiteRunner, /test-suite-timing-v1/);
+  assert.match(suiteRunner, /test-suite-file-reporter/);
+  assert.match(suiteReporter, /test-suite-timing-v2/);
   assert.match(suiteRunner, /resolveTestTimingOutput\(repositoryRoot, suite\)/);
+  assert.match(suiteRunner, /resolveSuiteWallTimeBudgetMs\(suite\)/);
+  assert.match(suiteRunner, /wall_time_budget_status/);
   assert.match(suiteRunner, /CI[\s\S]*--test-reporter=dot/);
 });
 
@@ -117,6 +123,10 @@ test("publish, tarball, and consumer gates retain complete release boundaries", 
   assert.match(
     publishWorkflow,
     /Complete package tests[\s\S]*run: npm test --workspace project-tiny-context-harness/,
+  );
+  assert.match(
+    publishWorkflow,
+    /Complete package tests[\s\S]*TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/,
   );
   assert.doesNotMatch(publishWorkflow, /npm run test:long-task-workflow/);
   assert.match(publishWorkflow, /release:check-version/);
@@ -197,6 +207,20 @@ test("publish, tarball, and consumer gates retain complete release boundaries", 
     /release_tarball_smoke\.mjs[^\r\n]*--portable-only/u,
   );
   assert.match(tarballSmoke, /if \(!portableOnly\)/);
+});
+
+test("pull-request template follows affected, Trust, and conditional complete routing", () => {
+  const template = read(".github/PULL_REQUEST_TEMPLATE.md");
+  assert.match(template, /npm run test:affected/u);
+  assert.match(template, /npm run test:long-task:trust/u);
+  assert.match(
+    template,
+    /npm test --workspace project-tiny-context-harness` only when/u,
+  );
+  assert.doesNotMatch(
+    template,
+    /- \[ \] `npm test --workspace project-tiny-context-harness`\s*$/mu,
+  );
 });
 
 test("affected-test launcher stays portable and has a Windows gate", () => {

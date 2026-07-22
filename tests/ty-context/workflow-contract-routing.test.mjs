@@ -177,10 +177,17 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(guidance, /Local fixes preserving durable semantics are `none`/);
   assert.match(
     guidance,
-    /After the first Authority Lock, stop once before implementation/iu,
+    /After the first Authority Lock,[\s\S]*terminal-turn boundary/iu,
   );
-  assert.match(guidance, /continue with the current model or switch models/iu);
-  assert.match(guidance, /no model route or checkpoint state/iu);
+  assert.match(guidance, /continue_current_model[\s\S]*switch models/iu);
+  assert.match(
+    guidance,
+    /Generic continue\/resume\/finish\/continue-goal language does not satisfy/iu,
+  );
+  assert.match(
+    guidance,
+    /no model route or checkpoint acknowledgement state/iu,
+  );
   assert.match(
     guidance,
     /`ty-context enable long-task` installs the Long-Task Workflow Skill, the retired Source Plan compatibility pointer and package-owned completion Hook/iu,

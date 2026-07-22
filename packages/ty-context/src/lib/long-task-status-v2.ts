@@ -1,5 +1,6 @@
 import path from "node:path";
 import { compileDeliveryContract } from "./long-task-delivery-compiler.js";
+import { authorityRevisionDecisionNextAction } from "./long-task-authority-revision-brief.js";
 import type { AuthorityRevisionDecisionV2 } from "./long-task-authority-revision-types.js";
 import { projectAuthorityRevisionDecision } from "./long-task-authority-revision-summary.js";
 import type {
@@ -436,7 +437,9 @@ function acceptedScopeMessage(
 
 function nextAction(status: DeliveryStatusV2): string {
   if (status.pending_authority_revision)
-    return `Ask the user to approve or reject Authority Revision ${status.pending_authority_revision.revision_identity}; keep the previous Authority active until then.`;
+    return authorityRevisionDecisionNextAction(
+      status.pending_authority_revision,
+    );
   if (status.findings.length) return status.findings.at(-1)!.next_action;
   if (status.ready_outcomes.length)
     return `Implement and verify ready Outcome: ${status.ready_outcomes[0]}.`;

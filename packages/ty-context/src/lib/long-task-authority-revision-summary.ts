@@ -4,6 +4,7 @@ import type {
   AuthorityRevisionDecisionV2,
   AuthorityRevisionDiffV2,
 } from "./long-task-authority-revision-types.js";
+import { buildAuthorityRevisionDecisionBrief } from "./long-task-authority-revision-brief.js";
 
 const SCOPE_EXPANSION_REASONS = new Set([
   "owner_path_expanded",
@@ -144,30 +145,38 @@ export function projectAuthorityRevisionDecision(value: {
   );
   const storedSummary = value.approval_summary as
     Partial<AuthorityRevisionApprovalSummaryV2> | undefined;
+  const approvalSummary = storedSummary
+    ? {
+        ...computedSummary,
+        ...storedSummary,
+        semantic_fields_changed:
+          storedSummary.semantic_fields_changed ??
+          computedSummary.semantic_fields_changed,
+        source_claim_changes:
+          storedSummary.source_claim_changes ??
+          computedSummary.source_claim_changes,
+        product_claim_changes:
+          storedSummary.product_claim_changes ??
+          computedSummary.product_claim_changes,
+        proof_reductions:
+          storedSummary.proof_reductions ?? computedSummary.proof_reductions,
+        external_confirmation_changes:
+          storedSummary.external_confirmation_changes ??
+          computedSummary.external_confirmation_changes,
+      }
+    : computedSummary;
+  const changeClass = value.change_class ?? classifyAuthorityRevision(diff);
+  const approvalRequired = value.approval_required ?? true;
   return {
     revision_identity: value.revision_identity,
-    change_class: value.change_class ?? classifyAuthorityRevision(diff),
-    approval_required: value.approval_required ?? true,
-    approval_summary: storedSummary
-      ? {
-          ...computedSummary,
-          ...storedSummary,
-          semantic_fields_changed:
-            storedSummary.semantic_fields_changed ??
-            computedSummary.semantic_fields_changed,
-          source_claim_changes:
-            storedSummary.source_claim_changes ??
-            computedSummary.source_claim_changes,
-          product_claim_changes:
-            storedSummary.product_claim_changes ??
-            computedSummary.product_claim_changes,
-          proof_reductions:
-            storedSummary.proof_reductions ?? computedSummary.proof_reductions,
-          external_confirmation_changes:
-            storedSummary.external_confirmation_changes ??
-            computedSummary.external_confirmation_changes,
-        }
-      : computedSummary,
+    change_class: changeClass,
+    approval_required: approvalRequired,
+    approval_summary: approvalSummary,
+    decision_brief: buildAuthorityRevisionDecisionBrief(
+      approvalSummary,
+      changeClass,
+      approvalRequired,
+    ),
   };
 }
 

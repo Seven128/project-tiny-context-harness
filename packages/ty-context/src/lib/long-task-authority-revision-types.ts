@@ -50,11 +50,20 @@ export interface AuthorityRevisionProposalV2 {
   revision_identity: string;
 }
 
+export interface AuthorityRevisionDecisionBriefV2 {
+  headline: string;
+  approval_reason: string;
+  material_changes: string[];
+  affected_outcomes: string[];
+  if_approved: string[];
+}
+
 export interface AuthorityRevisionDecisionV2 {
   revision_identity: string;
   change_class: AuthorityRevisionChangeClassV2;
   approval_required: boolean;
   approval_summary: AuthorityRevisionApprovalSummaryV2;
+  decision_brief: AuthorityRevisionDecisionBriefV2;
 }
 
 export interface AuthorityRevisionDiffV2 {

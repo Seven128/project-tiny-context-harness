@@ -9,7 +9,14 @@ import {
   LONG_TASK_TRUST_TESTS,
   selectAffectedTests,
 } from "../../tools/affected_test_selection.mjs";
-import { resolveTestTimingOutput } from "../../tools/test_suite_policy.mjs";
+import {
+  assertHotspotTestFanoutBudget,
+  assertReviewedTestList,
+  resolveSuiteWallTimeBudgetMs,
+  resolveTestTimingOutput,
+  suiteWallTimeBudgetStatus,
+  TEST_TIER_REVIEW_BUDGETS,
+} from "../../tools/test_suite_policy.mjs";
 
 test("hotspot source changes select focused regression tests", () => {
   const selection = selectAffectedTests([
@@ -200,6 +207,14 @@ test("shared package runtime and dependency changes fail safe to the full suite"
   }
 });
 
+test("explicit work-product paths remain fail-safe selection inputs", () => {
+  const selection = selectAffectedTests([
+    ".work_products/skill-validator-python/yaml.py",
+  ]);
+  assert.equal(selection.mode, "full-suite");
+  assert.match(selection.reasons[0], /unclassified_fail_safe/u);
+});
+
 test("guidance-only changes select static consistency checks", () => {
   const selection = selectAffectedTests([
     ".codex/skills/long-task-workflow/SKILL.md",
@@ -307,6 +322,14 @@ test("affected tooling changes select discovery, selection, and entry-point cove
   }
 });
 
+test("pull-request template changes select workflow policy coverage", () => {
+  const selection = selectAffectedTests([".github/PULL_REQUEST_TEMPLATE.md"]);
+  assert.equal(selection.mode, "selected");
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/workflow-test-entrypoints.test.mjs",
+  ]);
+});
+
 test("direct test edits run that test while shared fixture edits widen safely", () => {
   const direct = selectAffectedTests([
     "tests/ty-context/long-task-context-evolution.test.mjs",
@@ -376,4 +399,88 @@ test("suite timing paths are rooted at the repository, not the npm workspace cwd
     absoluteFile,
   );
   assert.equal(resolveTestTimingOutput(repositoryRoot, "default", {}), null);
+});
+
+test("reviewed tier and hotspot budgets fail closed without limiting complete discovery", () => {
+  assert.equal(
+    LONG_TASK_TRUST_TESTS.length,
+    TEST_TIER_REVIEW_BUDGETS.long_task_trust.max_files,
+  );
+  assert.equal(
+    LONG_TASK_FOCUSED_TESTS.length,
+    TEST_TIER_REVIEW_BUDGETS.long_task_focused.max_files,
+  );
+  assert.equal(
+    DELIVERY_CONTRACT_FOCUSED_TESTS.length,
+    TEST_TIER_REVIEW_BUDGETS.delivery_contract_focused.max_files,
+  );
+  for (const budget of Object.values(TEST_TIER_REVIEW_BUDGETS)) {
+    assert.match(budget.reviewed_on, /^\d{4}-\d{2}-\d{2}$/u);
+    assert.ok(budget.rationale.length > 40);
+  }
+
+  assert.throws(
+    () =>
+      assertReviewedTestList(
+        "synthetic tier",
+        ["a.test.mjs", "b.test.mjs"],
+        { max_files: 1 },
+      ),
+    /above its reviewed maximum[\s\S]*do not delete coverage/iu,
+  );
+  assert.throws(
+    () =>
+      assertReviewedTestList(
+        "synthetic tier",
+        ["a.test.mjs", "a.test.mjs"],
+        { max_files: 2 },
+      ),
+    /duplicate/iu,
+  );
+  assert.throws(
+    () =>
+      assertHotspotTestFanoutBudget([
+        [
+          "synthetic/source.ts",
+          Array.from(
+            {
+              length:
+                TEST_TIER_REVIEW_BUDGETS.hotspot_fanout.max_tests_per_path +
+                1,
+            },
+            (_, index) => `test-${index}.test.mjs`,
+          ),
+        ],
+      ]),
+    /hotspot[\s\S]*above its reviewed maximum/iu,
+  );
+});
+
+test("suite wall-time budgets are opt-in, suite-complete, and fail closed", () => {
+  const environment = {
+    TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON:
+      '{"default":120000,"long-task-trust":240000,"long-task":600000}',
+  };
+  assert.equal(resolveSuiteWallTimeBudgetMs("default", environment), 120000);
+  assert.equal(
+    resolveSuiteWallTimeBudgetMs("long-task-trust", environment),
+    240000,
+  );
+  assert.equal(resolveSuiteWallTimeBudgetMs("long-task", environment), 600000);
+  assert.equal(resolveSuiteWallTimeBudgetMs("default", {}), null);
+  assert.equal(suiteWallTimeBudgetStatus(120000, 120000), "within_budget");
+  assert.equal(suiteWallTimeBudgetStatus(120001, 120000), "exceeded");
+  assert.equal(suiteWallTimeBudgetStatus(1, null), "not_configured");
+  assert.throws(
+    () => resolveSuiteWallTimeBudgetMs("long-task", {
+      TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: '{"default":120000}',
+    }),
+    /positive integer budget for long-task/u,
+  );
+  assert.throws(
+    () => resolveSuiteWallTimeBudgetMs("default", {
+      TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: "not-json",
+    }),
+    /Invalid TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/u,
+  );
 });

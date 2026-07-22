@@ -39,7 +39,7 @@ Source-quality authoring and Contract Draft authoring belong inside `long-task-w
 
 The workflow uses one native Goal, one selected workspace, one Contract and one Final Gate. New authoring uses inline vertical Outcomes grouped by ordered Stages; existing `outcome_files` are physical compatibility only. Target profiles name required product targets and root runtimes; Checks declare Given/When journeys and all-of Evidence Capabilities. Stage/frontier state is derived from ordinary Progress and creates no second Gate, Receipt, scheduler or completion authority.
 
-After the first Authority Lock, stop once before implementation and ask the user to continue with the current model or switch models and then resume the active Long-Task. A model choice already stated explicitly for this task satisfies the checkpoint; later revisions do not repeat it. Harness records no model route or checkpoint state.
+After the first Authority Lock, treat `execution_model_checkpoint.required: true` as a terminal-turn boundary. Unless the user already stated an explicit task-specific choice naming current-model continuation or a model switch, end the current turn before product implementation, file edits, builds or tests and ask the user to choose `continue_current_model` or switch models and then resume. Generic continue/resume/finish/continue-goal language does not satisfy the checkpoint; later revisions do not repeat it. Harness records no model route or checkpoint acknowledgement state.
 
 Before authoring, proof design or authority lifecycle work, read the phase-specific references in the package-managed `long-task-workflow` Skill. Use `ty-context long-task help` for CLI syntax instead of treating this startup router as a command reference.
 
