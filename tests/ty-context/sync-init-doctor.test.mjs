@@ -59,6 +59,7 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
       ".agent/skills/context_surface_contract/SKILL.md",
       ".agent/skills/context_full_project_export/SKILL.md",
       ".agent/skills/context_harness_upgrade/SKILL.md",
+      ".agent/skills/design-system-authoring/SKILL.md",
       ".agent/skills/design-resource-authoring/SKILL.md",
       ".agent/skills/normal-long-task/SKILL.md",
     ]) {

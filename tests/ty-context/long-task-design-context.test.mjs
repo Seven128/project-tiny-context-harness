@@ -22,7 +22,7 @@ test("PROJECT_SPEC defines the controlling objective and trusted results", async
     "Long-Task Workflow Controlling Objective",
     "Authority Scope And Trusted Results",
     "Contract Draft And Draft Outcome Semantics",
-    "Source Plan And Contract Draft Boundary",
+    "Integrated Source Authoring And Contract Draft Boundary",
     "Integrated Contract Authoring Rationale",
     "Mechanism Admission Rule",
   ]) {
@@ -241,11 +241,14 @@ test("target-runtime feedback stays live, rolling, and state-free", async () => 
   assert.match(sourceCode, /\bimplementation_complete\b/u);
 });
 
-test("Source Plan and Contract Draft authoring responsibilities stay separate", async () => {
-  const [spec, sourcePlan, longTask, agents, publicReadmes] = await Promise.all(
-    [
+test("Source authoring and Contract Draft authoring stay in one long-task loop", async () => {
+  const [spec, sourcePlan, sourceAuthoring, longTask, agents, publicReadmes] =
+    await Promise.all([
       read("PROJECT_SPEC.md"),
       read(".codex/ty-context-managed/skills/source-plan-authoring/SKILL.md"),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/source-authoring.md",
+      ),
       read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
       read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
       Promise.all([
@@ -253,74 +256,30 @@ test("Source Plan and Contract Draft authoring responsibilities stay separate", 
         read("README.zh-CN.md"),
         read("packages/ty-context/README.md"),
       ]).then((contents) => contents.join("\n")),
-    ],
-  );
+    ]);
 
-  assert.match(sourcePlan, /This Skill authors Source, not a Contract Draft/iu);
-  assert.match(
-    sourcePlan,
-    /does not replace Contract Draft authoring inside `long-task-workflow`/iu,
-  );
-  assert.match(
-    sourcePlan,
-    /recommended structure is optional input guidance/iu,
-  );
-  assert.match(
-    sourcePlan,
-    /`design-resource-authoring` may consume the same raw inputs independently[\s\S]*Neither Skill invokes the other[\s\S]*does not generate or select those resources/iu,
-  );
-  assert.match(
-    spec,
-    /ordinary prose plan, research proposal, external proposal/iu,
-  );
+  assert.match(sourcePlan, /Retired: Source Plan Authoring/iu);
+  assert.match(sourcePlan, /no longer defines a separate handoff/iu);
+  assert.match(sourcePlan, /invoke `\/long-task-workflow`/iu);
+  assert.match(sourcePlan, /pre-existing Source Plan remains valid ordinary Source/iu);
+  assert.match(sourcePlan, /Do not rewrite it merely for compatibility/iu);
+  assert.match(sourceAuthoring, /not a standalone Source Plan stage/iu);
+  assert.match(sourceAuthoring, /Assign every proposal, selected design resource[\s\S]*a stable input ID/iu);
+  assert.match(sourceAuthoring, /`direct`[\s\S]*`derived`[\s\S]*`delegated`[\s\S]*`evidence-backed`[\s\S]*`decision_required`/iu);
+  assert.match(sourceAuthoring, /materialize exactly one project-native Markdown Source/iu);
+  assert.match(sourceAuthoring, /fidelity versus cost[\s\S]*ask one concise targeted clarification/iu);
+  assert.match(spec, /Integrated Source Authoring And Contract Draft Boundary/iu);
   assert.match(spec, /meaning-preserving structural decomposition/iu);
-  assert.match(
-    spec,
-    /repository bindings[\s\S]*real repository or Context evidence/iu,
-  );
-  assert.match(
-    spec,
-    /defensible recommended plan choice[\s\S]*delegation[\s\S]*real Source/iu,
-  );
-  assert.match(
-    spec,
-    /quality versus cost[\s\S]*stops and asks one concise targeted clarification before research or selection/iu,
-  );
-  assert.match(
-    spec,
-    /After the material preference envelope is clear[\s\S]*authoritative or primary sources/iu,
-  );
-  assert.match(spec, /high-risk external action[\s\S]*External Confirmation/iu);
-  assert.match(
-    spec,
-    /conflicting, user-reserved or unsupported product semantics[\s\S]*`decision_required`/iu,
-  );
-  assert.match(longTask, /Do not create a standalone Contract Draft Skill/iu);
-  assert.match(
-    agents,
-    /Contract Draft authoring belongs inside `long-task-workflow`/iu,
-  );
-  assert.match(publicReadmes, /Source Plan is Source, not a Contract Draft/iu);
-  assert.match(
-    publicReadmes,
-    /Optional Design Resource Authoring[\s\S]*Candidates and inspiration authorize no fidelity[\s\S]*stable immutable identity/iu,
-  );
-  assert.match(
-    publicReadmes,
-    /unknown user priority such as quality versus cost[\s\S]*change the research scope, candidate set or recommendation/iu,
-  );
-  assert.match(
-    publicReadmes,
-    /未知偏好会实质改变对比调研或选型，必须先询问用户/u,
-  );
-  assert.doesNotMatch(
-    sourcePlan,
-    /Codex|Claude|ChatGPT|Web\s?GPT|Windows|macOS|Linux/iu,
-  );
-  assert.doesNotMatch(
-    [spec, longTask, agents, publicReadmes].join("\n"),
-    /Web\s?GPT|Web GPT-to-Codex/iu,
-  );
+  assert.match(spec, /repository bindings[\s\S]*real repository or Context evidence/iu);
+  assert.match(spec, /defensible recommended plan choice[\s\S]*real Source/iu);
+  assert.match(spec, /writable initial proposal[\s\S]*revised as the real Source/iu);
+  assert.match(longTask, /use the Source-authoring reference now/iu);
+  assert.match(longTask, /internal authoring step in the same Goal/iu);
+  assert.match(agents, /Source-quality authoring and Contract Draft authoring belong inside `long-task-workflow`/iu);
+  assert.match(publicReadmes, /compatibility pointer/iu);
+  assert.match(publicReadmes, /initial proposal[\s\S]*Web GPT/iu);
+  assert.match(publicReadmes, /revised proposal plus selected immutable resources/iu);
+  assert.doesNotMatch(sourcePlan, /ty-context long-task (?:init|preflight|compile)/u);
 
   for (const root of [
     ".codex/ty-context-managed/skills",

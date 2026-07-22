@@ -23,7 +23,14 @@ Rich background improves a bounded artifact. It never authorizes more artifacts.
 | `handoff` | “Can another designer/developer reliably consume this without inventing material in-scope UI/UX decisions?” | Minimum sufficient project-native resources plus scope-bound coverage, provenance, limitations and relevant checks |
 | `selected-source-preparation` | “Preserve this explicitly selected direction for later use.” | Immutable identity or approved snapshot, explicit selection basis and downstream notes |
 
-Intent is task-local and need not be persisted. Selected-source preparation does not itself adopt Design Authority.
+Intent and style dependency are task-local and need not be persisted. Selected-source preparation does not itself adopt Design Authority.
+
+Classify each commission before capability selection:
+
+- `style-bearing`: high-fidelity/branded output, visual-direction candidate, typography/color/density treatment, component visual specification or production-style prototype;
+- `non-fidelity`: low-fidelity hierarchy, IA/flow topology, semantics-only interaction/state study or explicitly non-fidelity prototype.
+
+Mixed work is style-bearing unless it can be split into a genuinely independent non-fidelity commission. Style-bearing work requires configured project Design Authority and an Open Design project bound to the adopted system. Missing authority stops and points to the explicitly invoked `$design-system-authoring`; it never triggers that Skill automatically.
 
 ## 3. Inventory relevant input roles
 
@@ -152,15 +159,15 @@ This is an explanatory shape, not a required file or schema. Never paste or para
 - For exploration, stop as soon as the requested decision is supported.
 - For an implementation handoff, stop only when every material in-scope coverage item has an explicit disposition and the resource mapping leaves no material user-visible design decision for the implementer to invent. Honest `decision-required` or `unavailable` items may stop generation but remain visible blockers/limitations; this does not claim Design Authority or implementation acceptance.
 
-When a human explicitly selects or rejects a direction, return an accepted-design-decision delta when requested rather than editing the initial proposal. Include accepted, rejected and unresolved choices; product, information, control/state and visual implications; affected stable keys; and selected artifact locators/hashes. Do not require a delta after every iteration. Interim observations remain task-local and may be returned once as a consolidated delta after the design direction is final. A separate plan owner decides whether, when and what to revise.
+During iteration, keep accepted, rejected and unresolved implications in a task-local delta buffer. Do not require or emit an interim delta after every iteration and never continuously synchronize the initial proposal. After explicit human selection or explicitly delegated selection, consolidate the buffer once and reconcile only accepted decisions into the initial proposal. If it is a writable file, update it in place while preserving original intent/provenance; otherwise return one complete revised proposal. The operation must be idempotent, name selected artifact locators/hashes and affected stable keys, and exclude rejected/unresolved choices. Never write a Source Plan, Context, `DESIGN.md`, code, tests or Contract.
 
 ## Worked scope examples
 
 - **Large draft, one filter control:** select a control-state study if anatomy and states are uncertain; omit page/flow resources.
-- **One page, style preview:** select one high-fidelity candidate; do not add a design-system pack or validator run.
+- **One page, style preview:** first require configured Design Authority and matching Open Design binding, then select one high-fidelity candidate; do not add a design-system pack or validator run.
 - **One page scheduled for development:** use a page/flow target for layout and context, map ordinary buttons/inputs to selected component variants, and add grouped component-state or dedicated complex-control studies only where relevant static/dynamic states, feedback, motion, responsiveness or accessibility remain uncovered.
 - **Local panel inside a large app:** include enough surrounding page context to place and size the panel, but generate detailed resources only for the panel, its in-scope controls and affected states.
 - **One comprehensive interactive artifact:** accept it as the minimum set when its sections and reachable states explicitly cover every material in-scope item; do not add duplicate control boards. If it exposes only a static/default view, commission the missing state/interaction coverage instead of inferring it.
 - **Three-screen interaction flow:** select a low-fi flow and an interactive high-fi prototype only if topology and interaction/visual behavior are independently unresolved.
 - **Local style fix with exact target:** select no new design resource and route to implementation.
-- **Raw draft before Source Plan:** iterate only requested candidates, optionally return one consolidated accepted-decision delta when requested after selection, and leave both draft revision and later Source Plan authoring separate.
+- **Initial proposal before execution:** iterate only requested candidates, keep one task-local delta buffer, then after selection reconcile accepted decisions once. Pass the revised proposal plus selected immutable resources directly to the default Goal or `long-task-workflow`.

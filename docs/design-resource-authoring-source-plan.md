@@ -40,8 +40,10 @@
 The implemented Skill is a thin, provider-aware commissioning and handoff layer over Open Design, not a local copy of Open Design prompts, templates or generation logic.
 
 ```text
-current request + raw draft/product/technical/design Source + optional Source Plan
+explicit request + initial proposal/product/technical/design Source
+  -> explicit design-system initialization/adoption when requested at cold start
   -> explicit output/development-scope ceiling and necessary surrounding context
+  -> style-bearing gate plus adopted Open Design design-system binding
   -> material in-scope UI/UX coverage through relevant controls
   -> subtract sufficient selected-source coverage and expose unresolved meaning
   -> live Open Design capability discovery
@@ -57,9 +59,21 @@ No resource type is globally mandatory. A prototype is expected to be high-value
 
 For an implementation handoff, sufficiency is development-corresponding rather than product-global: every material user-visible design decision inside the explicit development scope is covered by selected existing or newly generated Source, is not applicable, is excluded by that scope, or is honestly unresolved/unavailable. One addressable page/prototype/board may cover many conditions; repeated controls may map to a shared component family; only unique or complex uncovered controls need dedicated studies. A static/default view proves no unshown state, interaction, motion, responsive or accessibility behavior. Design resources express user-visible interaction semantics and product-rule presentation, while business, data, permission and algorithmic rules remain owned by product/technical Source.
 
-The generation Skill never updates `project_context/**`, `DESIGN.md` or production code merely because generation succeeded. It never promotes a candidate to `exact-target`, creates Contract authority or claims product acceptance. Those decisions remain downstream.
+The resource-generation Skill never updates `project_context/**`, `DESIGN.md` or production code merely because generation succeeded. It never promotes a candidate to `exact-target`, creates Contract authority or claims product acceptance. The separate explicit-only `design-system-authoring` Skill may adopt one selected system into canonical project authority.
 
-`source-plan-authoring` is neither a prerequisite nor an automatic next step. A raw first draft may enter an exploration loop directly: generate a bounded candidate, iterate and obtain an explicit human selection. When requested, the Skill may then return one consolidated accepted-design-decision delta. A separate owning step may revise the first draft later. If the delivery later uses `source-plan-authoring`, it should receive both that revised draft and the selected design resources so control, state, interaction and visual details are not flattened into prose. The generation Skill never edits either draft.
+`source-plan-authoring` is no longer a recommended next step and remains only a compatibility pointer. A raw initial proposal enters a bounded design loop directly. During iteration the Skill buffers decision effects task-locally; after explicit or delegated final selection it performs one consolidated idempotent reconciliation of accepted decisions into that proposal. The revised proposal plus selected immutable resources then goes directly to the current native Goal or `long-task-workflow`, whose integrated Source authoring prevents semantic flattening.
+
+## 2026-07-22 Workflow And Provider Amendment
+
+This amendment supersedes older statements below that assigned proposal revision to another owner or recommended a later standalone Source Plan handoff. Historical experiment observations remain valid.
+
+- Add explicit-only `design-system-authoring` to the base managed set. It is normally invoked by the user at project cold start and is never auto-run by `init`, `sync`, default Workflow or `design-resource-authoring`.
+- Open Design 0.15.1 MCP server 0.2.0 exposes design systems as `od://design-systems/<id>/DESIGN.md` resources and `create_project.designSystem`, but no design-system creation tool. The Skill feature-detects a future MCP lifecycle tool first, otherwise uses the same official daemon's `/api/design-systems/generation-jobs`, revision, revision-status, preview/file and token-rebuild routes.
+- The final read-only live smoke enumerated 152 concrete design-system resources and read one body successfully. Current MCP returns `-32601` for `resources/templates/list`, so concrete `resources/list`/`resources/read` is the required path and template enumeration remains optional capability discovery.
+- Candidate generation, explicit/delegated selection, provider revision acceptance and project authority adoption are distinct. Project `DESIGN.md`, one authored exact-value token source/generation direction and owning Context remain canonical; provider ID/revision/digest/project binding are synchronization provenance.
+- `design-resource-authoring` gates only style-bearing work. High-fidelity/branded/visual-treatment/prod-style resources require configured Design Authority and a matching `get_project.designSystemId`; low-fidelity structure, IA/flow and semantics-only state studies remain allowed. Missing authority stops and points to explicit `$design-system-authoring` without invoking it.
+- Proposal effects remain task-local during iteration. Final selection triggers exactly one consolidated, idempotent writeback of accepted decisions to the initial proposal; rejected/unresolved choices are excluded. No Source Plan, Context, `DESIGN.md`, code or Contract is mutated.
+- Source-quality synthesis/refinement is integrated into `long-task-workflow`. The recommended inputs are the revised proposal plus selected immutable resources. `/source-plan-authoring` is a retired compatibility pointer; legacy Source Plans remain valid ordinary Source.
 
 <a id="dra-input-inventory"></a>
 ## Input Inventory And Treatment
@@ -77,7 +91,7 @@ The generation Skill never updates `project_context/**`, `DESIGN.md` or producti
   - generation alone must not update Context or implementation;
   - a user may provide extensive background while requesting only one control, one screen or a few screens for style exploration;
   - an initial draft may go directly through repeated design-resource exploration before any Source Plan exists;
-  - after explicit selection, the Skill should report accepted design decisions and their likely draft impact, while a separate step owns any revision of the initial draft;
+  - after explicit/delegated final selection, the Skill consolidates impacts and performs one idempotent accepted-decision reconciliation of the initial proposal;
   - efficiency and quality both matter, and unnecessary post-generation packaging/validation work should not obscure a simple preview request;
   - this Goal must research source and live behavior, execute bounded experiments, produce a complete plan and index important details.
 
@@ -130,7 +144,7 @@ The generation Skill never updates `project_context/**`, `DESIGN.md` or producti
   - Tiny Context already consumes externally authored flows, wireframes, visual candidates, prototypes, token exports, component specifications and Figma resources without requiring a common pack;
   - default Workflow owns UI Authority Closure, `Context Delta`, durable adoption, implementation and project verification;
   - Long-Task accepts such resources through existing Source, Binding, verification-input, protected revision and Check mechanisms;
-  - Source Plan authoring may supply richer upstream meaning but is optional and does not generate designs;
+  - integrated Long-Task Source authoring may supply richer downstream meaning; the retired Source Plan pointer does not generate designs;
   - at research time the product specification did not yet include this thin commissioner; the separately authorized implementation delivery therefore treated adding it as a product-boundary change and applied the normal package-authoring impact review.
 
 ### `IN-DRA-OD-001` — Open Design official repository and protocol sources
@@ -488,7 +502,7 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 - `REQ-DRA-003` — Inventory every supplied input and preserve its role as exact target, constraint, inspiration, current implementation evidence or background.
 - `REQ-DRA-004` — Treat explicit output or development scope as a hard ceiling independent of background breadth; when scope is partial, include only necessary surrounding context and never expand detailed generation to unaffected page/product areas.
 - `REQ-DRA-005` — Ask only for a genuine missing preference that materially changes the provider commission; otherwise use traceable, reversible judgment.
-- `REQ-DRA-006` — Accept a raw initial draft without invoking `source-plan-authoring`; after explicit selection, optionally return one consolidated accepted-design-decision delta when requested for a separately authorized later draft revision, and never edit or regenerate the draft or a Source Plan.
+- `REQ-DRA-006` — Accept a raw initial proposal without invoking `source-plan-authoring`; buffer iteration effects task-locally, then after explicit/delegated final selection perform one consolidated idempotent reconciliation of accepted decisions into the proposal. Never edit or regenerate a Source Plan.
 
 ### Resource planning
 
@@ -525,7 +539,16 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 - `REQ-DRA-034` — Never update Context, `DESIGN.md`, production code or a Delivery Contract unless the user separately enters and authorizes the consuming workflow.
 - `REQ-DRA-035` — In a handoff, identify the explicit output/development scope, necessary surrounding context and exclusions; identify every resource by stable surface/flow/region/component/control keys, candidate/constraint/selected classification, declared viewport/mode/state/content/interaction/motion/accessibility coverage, source locator/hash, selection basis if any, unresolved decisions and forbidden inferences. For an implementation handoff, map every material in-scope condition to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition.
 - `REQ-DRA-036` — If the user explicitly selects a candidate and asks to prepare it for team/development use, export or snapshot it to a user-approved durable location; do not rely on Open Design's mutable project preview URL.
-- `REQ-DRA-037` — When design exploration precedes Source Plan authoring, keep candidate iterations and interim observations task-local; do not require a delta after every iteration; after selection, identify accepted, rejected and unresolved decisions plus their product/control/state implications, return differences only when requested, optionally consolidate them once at the end, and let a separate plan owner decide whether and when to reconcile accepted changes.
+- `REQ-DRA-037` — Keep candidate iterations/interim observations task-local and never continuously rewrite the proposal. After final selection, consolidate accepted/rejected/unresolved implications once, write only accepted changes into an authorized writable proposal (or return the complete revised conversation-only proposal), preserve original meaning/provenance and make reruns idempotent.
+
+### Design-system authority and binding
+
+- `REQ-DSA-001` — Install `design-system-authoring` in the base managed set with `allow_implicit_invocation: false`; run only from explicit user intent.
+- `REQ-DSA-002` — Prefer live Open Design MCP for discovery/read/binding and feature-detect lifecycle tools; while creation is absent, use only the official same-daemon generation/revision/accept API.
+- `REQ-DSA-003` — Require explicit human selection or explicit delegated selection before adoption; generation/job success alone never selects or adopts.
+- `REQ-DSA-004` — Adopt one selected system into canonical root `DESIGN.md`, one authored exact-value token source/generation direction and only owning Context; record provider ID/version/revision/digest as non-authoritative provenance.
+- `REQ-DSA-005` — For style-bearing resource work, require configured authority, read the matching MCP design-system resource, pass its ID through `create_project.designSystem` and verify `get_project.designSystemId`; stop and route to explicit system authoring on absence/mismatch.
+- `REQ-DSA-006` — Do not gate low-fidelity hierarchy, IA/flow topology, semantics-only state/behavior studies or explicitly non-fidelity prototypes.
 
 ### Distribution and verification planning
 
@@ -583,11 +606,11 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 
 ### Initial-draft exploration loop
 
-1. A raw initial proposal, mixed notes or other `source-plan-authoring` inputs may be used directly; no Source Plan is generated as a side effect.
+1. A raw initial proposal and mixed inputs may be used directly; no Source Plan is generated as a side effect.
 2. Candidate iterations remain task-local and do not continuously rewrite the proposal.
-3. After the user explicitly selects or rejects a direction, the Skill may return an accepted-design-decision delta covering accepted, rejected and unresolved choices plus affected surface/control/state keys. It need not emit a delta after each iteration; task-local observations may instead be returned once as a consolidated delta when requested after the direction is final.
-4. A separately authorized product/plan-owning step revises the initial proposal. The Skill neither applies nor assumes that revision.
-5. If `source-plan-authoring` is later used, its inputs should include the revised proposal and selected immutable design resources. This preserves rich visual/interaction Source without making either input depend on the other.
+3. After explicit/delegated final selection, the Skill consolidates accepted, rejected and unresolved choices plus affected keys exactly once.
+4. The Skill applies only accepted changes to an authorized writable initial proposal, or returns one complete revised proposal for conversation-only input. Reruns update rather than duplicate the decision/reference.
+5. The revised proposal and selected immutable resources go directly to the default native Goal or `long-task-workflow`; integrated Source authoring preserves rich meaning.
 
 ### Default Workflow Contract consumption
 
@@ -598,7 +621,7 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 
 ### Long-Task Workflow consumption
 
-1. The resource or optional Source Plan is ordinary upstream Source to Contract authoring.
+1. The revised proposal plus selected immutable resources are ordinary upstream Source to integrated Source/Contract authoring; a legacy Source Plan is also accepted if supplied.
 2. Contract Source/Bindings identify stable surfaces, controls, target files/URLs/hashes and conditions; verification inputs/checks cover only declared machine-verifiable claims.
 3. Authority Lock, protected revisions and Final Gate remain the only Long-Task authority lifecycle. The generation Skill creates no Contract Draft, outcome, receipt or Gate.
 4. If a selected target changes, the downstream workflow applies its normal Source/Authority revision rules; an Open Design rerun alone never mutates Contract authority.
@@ -621,7 +644,7 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 - `NCOMP-DRA-006` — Do not equate a rendered image with an interactive prototype or claim unsupported platform/state/accessibility coverage.
 - `NCOMP-DRA-007` — Do not require the user to reduce a rich input set merely because the requested output is small.
 - `NCOMP-DRA-008` — This Source Plan alone does not authorize implementation or publication; either requires a separate explicit delivery request and the normal package-authoring workflow.
-- `NCOMP-DRA-009` — Do not invoke `source-plan-authoring`, rewrite an initial draft or treat candidate iteration as accepted product-plan change.
+- `NCOMP-DRA-009` — Do not invoke `source-plan-authoring`, continuously rewrite an initial proposal during iteration or write rejected/unresolved candidate meaning as accepted product change.
 - `NCOMP-DRA-010` — Do not expand a partial development request into detailed design for the rest of its page, flow or product merely because broader background is available.
 - `NCOMP-DRA-011` — Do not require one design file per control, but also do not treat a page prototype, design-system label or static/default view as coverage for conditions it does not specify or demonstrate.
 - `NCOMP-DRA-012` — Do not invent business/data/permission/algorithmic rules or make a visual resource their sole owner; designs may only carry the user-visible presentation and interaction consequences of owning Source.
@@ -735,7 +758,10 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - `AC-DRA-013` — Given an exploration request, the nested provider cannot run its own browser verification, but the artifact renders and its requested scope is intact; the outer Skill performs only the promised sanity check and does not launch a validation pack. Accepts `REQ-DRA-029`, `REQ-DRA-030`, `FIND-DRA-007`.
 - `AC-DRA-014` — Given an explicit Figma deliverable request with only catalogue pointers or missing connector/auth, the Skill reports exact setup/unavailability and offers a non-Figma resource only if it preserves intent; it never labels HTML or a manifest record as an editable Figma design. Accepts `REQ-DRA-025`, `REQ-DRA-026`, `REQ-DRA-033`.
 - `AC-DRA-015` — Given a provider run that emitted a final message and complete retrievable artifact but remains nonterminal, the Skill may show it with its hash and `artifact-ready/run-unreconciled` qualifier. If the provider later terminates with a post-artifact timeout, the result becomes `artifact-ready/provider-failed`, retains the exact failure and run locator, claims neither provider success nor product acceptance and is not automatically retried or discarded. Accepts `REQ-DRA-024`, `REQ-DRA-028`, `REQ-DRA-033`, `FIND-DRA-008`.
-- `AC-DRA-016` — Given only an initial product draft, the Skill iterates bounded candidates without creating a Source Plan or rewriting the draft. After explicit user selection it returns no per-iteration delta; when requested after the direction is final, it may return one consolidated accepted-design-decision delta. A later `source-plan-authoring` call can independently consume the separately revised draft and selected immutable resources. Accepts `REQ-DRA-002`, `REQ-DRA-006`, `REQ-DRA-014`, `REQ-DRA-037`, `NCOMP-DRA-009`.
+- `AC-DRA-016` — Given only an initial proposal, the Skill iterates bounded candidates without creating a Source Plan or continuously rewriting. After explicit/delegated final selection it consolidates once, updates only accepted decisions idempotently and hands the revised proposal plus selected immutable resources directly to the default Goal or `long-task-workflow`. Accepts `REQ-DRA-002`, `REQ-DRA-006`, `REQ-DRA-014`, `REQ-DRA-037`, `NCOMP-DRA-009`.
+- `AC-DSA-001` — Given an unconfigured project and a style-bearing resource request, resource authoring creates no project/run, emits the exact explicit `$design-system-authoring` route and does not auto-invoke it. Given a low-fidelity flow request, it proceeds without the style gate. Accepts `REQ-DSA-001`, `REQ-DSA-005`, `REQ-DSA-006`.
+- `AC-DSA-002` — Given Open Design 0.15.1, system authoring reads MCP resources, observes no lifecycle tool, starts/polls the official daemon generation job, reviews/revises a candidate and accepts only the explicitly selected revision. Accepts `REQ-DSA-002`, `REQ-DSA-003`.
+- `AC-DSA-003` — Given a selected system, adoption writes canonical `DESIGN.md`/one token direction/owning Context, records provider provenance and verifies an MCP project reports the matching `designSystemId`; no provider record becomes authority. Accepts `REQ-DSA-004`, `REQ-DSA-005`.
 - `AC-DRA-017` — Given a large application plan but development scope limited to one local panel, the Skill may include the minimum surrounding page context needed to place the panel, but commissions detailed layout/control/state/interaction resources only for that panel and its affected conditions. Accepts `REQ-DRA-004`, `REQ-DRA-010`, `REQ-DRA-015`, `NCOMP-DRA-010`.
 - `AC-DRA-018` — Given a selected page prototype and design system that show ordinary controls only in default state while a development handoff includes unique multi-state controls, the Skill maps ordinary controls to shared component variants, does not commission one file per instance, and selects grouped component-state or dedicated unique/complex-control studies for uncovered variants, feedback, motion, responsive or accessibility conditions. Accepts `REQ-DRA-012`, `REQ-DRA-015` through `REQ-DRA-017`, `NCOMP-DRA-011`.
 - `AC-DRA-019` — Given one large addressable interactive artifact whose sections and reachable states explicitly cover every material item inside the development scope, the Skill accepts that one artifact as the smallest sufficient set and generates no duplicate control boards. Given only a static/default frame, it does not infer unseen dynamic coverage. Accepts `REQ-DRA-011`, `REQ-DRA-012`, `REQ-DRA-016`, `REQ-DRA-017`.

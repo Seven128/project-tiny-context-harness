@@ -1,0 +1,98 @@
+# Integrated Source Authoring Reference
+
+Read this when raw, mixed, attachment-heavy or incomplete inputs need to become self-contained delivery Source before Contract mapping. This work occurs inside the same `long-task-workflow` Goal and feeds the same Contract Draft; it is not a standalone Source Plan stage or second lifecycle.
+
+## Objective and boundary
+
+Preserve every material user, product, technical, visual and acceptance constraint from the initial/revised proposal and supplied resources. Add only traceable necessary derivations, defensible delegated choices and evidence-backed repository facts. Make the real Source understandable without the original conversation.
+
+Do not create a Source Plan schema, CLI, Preflight, Compile, Receipt, cache, authority or state. Do not bind a choice only in Contract YAML. Do not let current implementation silently redefine intent. A pre-existing Source Plan is simply one possible input.
+
+## Input inventory
+
+1. Assign every proposal, selected design resource, screenshot, document, diagram, table and other attachment a stable input ID.
+2. Inspect all material pages/frames/screens/tables/visible states; never silently sample a multi-part artifact.
+3. Classify each input as user instruction, product requirement, technical constraint, existing proposal, selected target, repository/Context evidence, constraint, inspiration or background.
+4. For visual resources, preserve selection basis, classification (`exact-target`, `constraint` or `inspiration`), stable resource/surface/control/state/target keys, declared platform/viewport/mode/state/content coverage, provider/project/run/entry provenance and immutable digest/snapshot. Unselected candidates authorize no fidelity.
+5. Record incorporated meaning and every unreadable, conflicting or intentionally unused part. Higher authority and user-stated precedence win; unresolved conflicts remain decisions.
+
+## Preference and research gate
+
+Before comparative research or a material product, technical, architecture or provider selection, identify decision-changing criteria such as fidelity versus cost, delivery speed, reliability/support, privacy/compliance, lock-in/control, operational burden, platform scope and extensibility.
+
+Infer preferences only from user words, Source, Context or controlling constraints. If an unknown preference would materially change research or recommendation, ask one concise targeted clarification before proceeding. Do not impose a questionnaire, re-ask known preferences or pause for minor reversible choices with the same defensible recommendation.
+
+Use current primary/authoritative evidence for changing external facts. Record source, scope and retrieval date. Preference clarification authorizes plan meaning, not payment, contracting, deployment/publication, destructive production mutation, permission grants, sensitive-data transmission or required legal/security/human approval; those remain typed external confirmations.
+
+## Authoring modes
+
+Infer rather than ask the user to choose:
+
+- **refinement:** preserve and complete a substantially developed proposal;
+- **synthesis:** build coherent Source from a goal plus mixed inputs;
+- **hybrid:** use one proposal as backbone and fill gaps from other inputs.
+
+A short request is sufficient when roles, goal and reference authority are recoverable. Reuse an authorized writable proposal as the real Source. If the delivery exists only in conversation, materialize exactly one project-native Markdown Source according to repository convention. Do not create a parallel planning artifact.
+
+## Semantic authoring
+
+For every material item, preserve one origin:
+
+- `direct`: stated by user or controlling input, with all qualifiers;
+- `derived`: unavoidable for completeness/falsifiability, identifies `Derived From`, states why necessary and changes no user capability, business rule or scope;
+- `delegated`: a defensible choice requested by instructions to synthesize/refine/use judgment, records `Delegated By`, preference/evidence basis and exact added meaning;
+- `evidence-backed`: repository/Context fact with exact source and no promotion of incidental code shape to product intent;
+- `decision_required`: conflicting authority, explicitly user-reserved choice, missing material preference or no defensible recommendation.
+
+High impact or several options is not itself a reason to pause when criteria support one recommendation. Keep real high-risk actions as external confirmations. Never introduce a requirement for the first time only inside acceptance criteria.
+
+## Structure and stable keys
+
+Use stable semantic lowercase-kebab keys and Markdown anchors where practical. Preserve keys when wording changes but meaning does not; never renumber for ordering or reuse a retired key for new meaning.
+
+Define vertical Outcomes only when observable results are independently decidable and later verifiable. Do not split by response length, frontend/backend layer, module count, agent capacity or desired parallelism; do not merge distinct results merely for brevity.
+
+Use only applicable semantic types:
+
+- result/Outcome;
+- Requirement (`REQ`);
+- user-visible Control (`CTRL`);
+- technical obligation (`OBL`);
+- explicitly non-completing meaning (`NCOMP`);
+- acceptance scenario (`AC`);
+- global non-goal/constraint and forbidden shortcut;
+- risk with exact Fact, Affected Outcome, Basis and Consequence;
+- external confirmation (`EXT`);
+- genuine decision (`DEC`);
+- advisory implementation hint (`HINT`), which is not a material requirement.
+
+## UI and control completeness
+
+For each in-scope surface, record purpose, entry/exit/navigation, regions/overlays and included Control keys. For every material interactive control, independently preserve applicable:
+
+`surface`, `region`, `control type`, `label/content`, `location`, `user task`, `visibility`, `availability`, `trigger`, `input`, `validation`, `default`, `interaction`, `navigation/result`, `loading`, `empty`, `success`, `failure`, `recovery`, `permission`, `feedback` and `accessibility`.
+
+Do not invent controls for a non-interface delivery. A coarse frame or configured design system does not supply unshown states. Selected design resources and product/technical Source remain parallel: visuals cannot invent business/data/permission/algorithmic rules.
+
+## Acceptance and risk
+
+Each AC has exactly one Given/When/Then scenario, names the REQ/CTRL/OBL/NCOMP meaning it accepts and introduces no undeclared product semantics. Keep representative/sample/framework checks distinct from full-population claims and partial delivery distinct from completion.
+
+Use the Runtime's exact risk Fact names when marking risk. Data migration is `data_migration`; a weakly observable critical path is separate `critical_user_path` and `weak_observability` facts; preserve `multi_repository_change` in Source so Contract compilation can reject unsupported delivery honestly.
+
+## Completeness audit
+
+Before Contract mapping confirm:
+
+1. Every material original statement and qualifier is preserved.
+2. Every supplied input is incorporated or has an explicit unreadable/unused/conflict disposition.
+3. Distinct requirements and independently decidable Outcomes were not collapsed.
+4. Every material UI surface/control/state is explicit or marked not applicable/unresolved.
+5. Every REQ and material CTRL state has acceptance, external confirmation, decision or explicit exception.
+6. Derived/delegated/evidence-backed items have traceable basis and no hidden product expansion.
+7. Non-goals, forbidden shortcuts, risks and recovery are concrete.
+8. No unsupported number, threshold, metric or external claim appears.
+9. Selected design resources retain stable identity and exact declared coverage; candidates remain non-authoritative.
+10. The Source is self-contained enough for Contract authoring and names every still-required external artifact.
+
+Then add non-rendering `ty-source-item:start/end` markers to the real Markdown Source without rewriting direct text, and proceed to `contract-authoring.md`. The markers and Contract mapping are part of this same Long-Task authoring loop.

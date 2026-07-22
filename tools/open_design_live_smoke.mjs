@@ -6,6 +6,7 @@ const REQUIRED_DISCOVERY_TOOLS = Object.freeze([
   "list_skills",
   "list_plugins",
   "create_project",
+  "get_project",
   "start_run",
   "get_run",
   "list_files",
@@ -124,11 +125,14 @@ export async function runOpenDesignMcpDiscoverySmoke(options) {
   });
   try {
     const initialized = await initialize(client);
-    const toolNames = await listToolNames(client);
+    const tools = await listTools(client);
+    const toolNames = tools.map((tool) => tool.name).sort();
     assertRequiredTools(toolNames);
+    const projectBinding = inspectProjectBindingSchema(tools);
+    const resources = await inspectDesignSystemResources(client);
     const probes = await probeDiscoveryTools(client);
     return {
-      schema_version: "open-design-discovery-smoke-v1",
+      schema_version: "open-design-discovery-smoke-v2",
       provider: {
         name: initialized?.serverInfo?.name ?? "unknown",
         version: initialized?.serverInfo?.version ?? "unknown",
@@ -136,6 +140,8 @@ export async function runOpenDesignMcpDiscoverySmoke(options) {
       },
       tool_count: toolNames.length,
       required_tools: [...REQUIRED_DISCOVERY_TOOLS],
+      project_binding: projectBinding,
+      design_system_resources: resources,
       probes,
       mutations_performed: false,
     };
@@ -170,12 +176,11 @@ async function initialize(client) {
   return initialized;
 }
 
-async function listToolNames(client) {
+async function listTools(client) {
   const listed = await client.request("tools/list");
-  return (listed?.tools ?? [])
-    .map((tool) => tool?.name)
-    .filter((name) => typeof name === "string")
-    .sort();
+  return (listed?.tools ?? []).filter(
+    (tool) => tool && typeof tool.name === "string",
+  );
 }
 
 function assertRequiredTools(toolNames) {
@@ -186,6 +191,85 @@ function assertRequiredTools(toolNames) {
     throw new Error(
       `Open Design MCP is missing required discovery/commissioning tools: ${missing.join(", ")}`,
     );
+}
+
+function inspectProjectBindingSchema(tools) {
+  const createProject = tools.find((tool) => tool.name === "create_project");
+  const properties = createProject?.inputSchema?.properties ?? {};
+  if (!Object.hasOwn(properties, "designSystem"))
+    throw new Error(
+      "Open Design MCP create_project is missing the designSystem binding input",
+    );
+  const getProject = tools.find((tool) => tool.name === "get_project");
+  if (!getProject)
+    throw new Error("Open Design MCP is missing get_project binding verification");
+  return {
+    create_project_design_system_input: true,
+    get_project_verification_tool: true,
+  };
+}
+
+async function inspectDesignSystemResources(client) {
+  const listed = await client.request("resources/list");
+  const templates = await requestOptionalMethod(
+    client,
+    "resources/templates/list",
+  );
+  const resources = Array.isArray(listed?.resources) ? listed.resources : [];
+  const resourceTemplates = Array.isArray(templates?.resourceTemplates)
+    ? templates.resourceTemplates
+    : [];
+  const concrete = resources.find(
+    (resource) =>
+      typeof resource?.uri === "string" &&
+      resource.uri.startsWith("od://design-systems/") &&
+      resource.uri.endsWith("/DESIGN.md"),
+  );
+  const template = resourceTemplates.find(
+    (resource) =>
+      typeof resource?.uriTemplate === "string" &&
+      resource.uriTemplate.startsWith("od://design-systems/") &&
+      resource.uriTemplate.endsWith("/DESIGN.md"),
+  );
+  if (!concrete && !template)
+    throw new Error(
+      "Open Design MCP exposes no od://design-systems/<id>/DESIGN.md resource surface",
+    );
+  let readable = false;
+  if (concrete) {
+    const result = await client.request("resources/read", {
+      uri: concrete.uri,
+    });
+    readable =
+      Array.isArray(result?.contents) &&
+      result.contents.some(
+        (content) =>
+          typeof content?.text === "string" && content.text.trim().length > 0,
+      );
+    if (!readable)
+      throw new Error(
+        "Open Design MCP design-system resource returned no readable text",
+      );
+  }
+  return {
+    concrete_resource_count: resources.filter(
+      (resource) =>
+        typeof resource?.uri === "string" &&
+        resource.uri.startsWith("od://design-systems/"),
+    ).length,
+    template_method_supported: templates !== null,
+    template_present: Boolean(template),
+    sample_read: readable,
+  };
+}
+
+async function requestOptionalMethod(client, method, params = {}) {
+  try {
+    return await client.request(method, params);
+  } catch (error) {
+    if (error?.mcpCode === -32601) return null;
+    throw error;
+  }
 }
 
 async function probeDiscoveryTools(client) {
@@ -205,9 +289,11 @@ async function probeDiscoveryTools(client) {
 }
 
 function toMcpError(method, message) {
-  return new Error(
+  const error = new Error(
     `Open Design MCP ${method} failed (${message.error.code ?? "unknown"})`,
   );
+  error.mcpCode = message.error.code;
+  return error;
 }
 
 function parseArgsJson(value) {

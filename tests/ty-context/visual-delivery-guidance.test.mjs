@@ -271,7 +271,7 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(workflow, /conditional order-of-thought guidance/iu);
   assert.match(
     workflow,
-    /design-resource-authoring[\s\S]*context_uiux_design.*adopt or repair durable authority/isu,
+    /design-system-authoring[\s\S]*never auto-runs[\s\S]*design-resource-authoring[\s\S]*style-bearing work stops on unconfigured authority/isu,
   );
   assert.doesNotMatch(workflow, /Visual Coverage Set/u);
   assert.match(agents, /Before material production UI implementation/iu);
@@ -282,7 +282,7 @@ test("default workflow routes Design Authority readiness without adding a visual
   );
   assert.match(
     agents,
-    /Local style fixes and explicit non-fidelity prototypes remain lightweight/iu,
+    /non-fidelity work remains lightweight/iu,
   );
   assert.match(
     agents,

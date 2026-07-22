@@ -42,7 +42,7 @@ export function help(): void {
   console.log(`ty-context commands:
   init [--adopt] [--harness-folder <path>]
                        Initialize/adopt a project; without --harness-folder, choose target agent first
-  enable long-task     Install Source Plan/Long-Task Skills, Stop Hook and templates
+  enable long-task     Install Long-Task Skill, Source Plan pointer, Stop Hook and templates
   disable long-task    Remove only package-owned long-task profile assets
   sync                 Refresh managed assets; does not run migrations
   upgrade [--check] [--json]

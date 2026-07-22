@@ -79,13 +79,20 @@ npx --yes project-tiny-context-harness ty-context validate-context
 npx --yes project-tiny-context-harness ty-context doctor
 ```
 
-Default profiles are `core-portable` and `workflow-default`; the base managed set includes `/design-resource-authoring`. Explicitly enable long-task support:
+Default profiles are `core-portable` and `workflow-default`; the base managed set includes explicitly invoked `/design-system-authoring` and `/design-resource-authoring`. Explicitly enable long-task support:
 
 ```powershell
 ty-context enable long-task
 ```
 
-Enabling Long-Task additionally installs `/source-plan-authoring`, `/long-task-workflow` and the completion Hook. Disable only those Long-Task-owned surfaces with `ty-context disable long-task`; the base `/design-resource-authoring` remains. Tiny Context does not install Open Design or another design-generation runtime.
+Enabling Long-Task additionally installs `/long-task-workflow`, the retired `/source-plan-authoring` compatibility pointer and the completion Hook. Disable only those Long-Task-owned surfaces with `ty-context disable long-task`; both base design Skills remain. Tiny Context does not install Open Design or another design-generation runtime.
+
+## Recommended Usage
+
+- **Long delivery:** initial product intent or detailed external/Web GPT proposal → explicitly run `/design-system-authoring` if project Design Authority is absent → `/design-resource-authoring` selects resources and reconciles accepted decisions into the proposal once → pass the revised proposal plus selected immutable resources to `/long-task-workflow`, which performs integrated Source and Contract Draft authoring in the same Goal.
+- **Non-long delivery:** use the same proposal/design-resource path, then give the revised proposal plus resources directly to the current native Goal under the default Workflow Contract.
+
+The design-system Skill is normally used at cold start but never auto-runs. Only style-bearing resource work is gated; low-fidelity structure, IA/flow and semantics-only state studies remain available. A legacy Source Plan remains ordinary input, not a recommended intermediate service.
 
 ## Positioning
 
@@ -137,7 +144,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.7.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.8.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -193,7 +200,7 @@ For material UI, **UI Authority Closure** reconciles each stable surface/control
 
 ### Visual Delivery Guidance
 
-The default Workflow performs UI Authority Closure and a conditional Design Authority Check before material production UI. It reads the owning Surface/Screen/Control Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, candidate, style-only prose or inspiration does not authorize invented production layout, and a configured project visual system does not claim every page is implementation-ready. Explicit standalone resource generation routes to `/design-resource-authoring`, which commissions external Open Design capabilities without adopting authority; downstream durable adoption/repair routes through `context_uiux_design`. Ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
+The default Workflow performs UI Authority Closure and a conditional Design Authority Check before material production UI. It reads the owning Surface/Screen/Control Context, `DESIGN.md`, one authored exact token source/generation direction and selected design references. Each reference is `exact-target`, `constraint` or `inspiration`; an unconfigured starter, candidate, style-only prose or inspiration does not authorize invented production layout, and a configured project visual system does not claim every page is implementation-ready. Explicit project design-system initialization/adoption routes to `/design-system-authoring`; explicit standalone resource generation routes to `/design-resource-authoring`, which commissions external Open Design capabilities without adopting authority. The consuming workflow and `context_uiux_design` still own UI Authority Closure and later durable repairs outside design-system cold-start/adoption. Ordinary implementation with sufficient authority, local style fixes and throwaway prototypes remain lightweight.
 
 For material work, `context_uiux_design` keeps a task-local risk-proportional Visual Coverage Set; durable interaction facts remain in `project_context/**`, durable visual semantics and the design-reference registry remain in `DESIGN.md`, and versioned targets stay at project-native paths. `context_development_engineer` binds that intent to production routes and reports only combinations actually rendered and checked. An implementation screenshot cannot become its own target.
 
@@ -203,33 +210,35 @@ Combined design-and-implementation work may author candidates in ordinary Outcom
 
 `ty-context doctor` keeps its compatible `missing | unconfigured | configured` project-level status and adds advisory Design Authority Index, token-source and classified-reference signals. It explicitly does not infer surface implementation readiness; that requires the owning Screen/Control meaning, selected target/constraints and project-owned verification.
 
+### Explicit Design System Authoring
+
+Use `/design-system-authoring` only on an explicit request to initialize, generate, select, adopt, replace or repair the project design system/style. It discovers live Open Design MCP resources/tools and feature-detects lifecycle methods; because Open Design 0.15.1 exposes design systems as MCP resources but no creation tool, the documented compatibility path uses the same installed daemon's official generation/revision/accept API. Candidates require explicit human or explicitly delegated selection before adoption into canonical project `DESIGN.md`, one authored token source/direction and only owning Context. Provider ID/revision/digest and `get_project.designSystemId` are synchronization provenance, not another authority.
+
 ### Optional Design Resource Authoring
 
-Use `/design-resource-authoring` only for an explicit request to generate, iterate or prepare standalone design resources, prepare resources for a named development scope, or use Open Design. It accepts raw notes or an initial proposal, product/technical plans, a visual brief, screenshots, existing resources or an optional Source Plan. Source Plan authoring is not a prerequisite; both Skills consume raw inputs independently and neither invokes the other.
+Use `/design-resource-authoring` only for an explicit request to generate, iterate or prepare standalone design resources, prepare resources for a named development scope, or use Open Design. It accepts raw notes or an initial proposal, product/technical plans, a visual brief, screenshots, existing resources or a legacy Source Plan. A standalone Source Plan is neither prerequisite nor recommended middle stage.
 
 The Skill makes the explicit output or development content its hard ceiling; a local slice includes only necessary surrounding context. For an implementation handoff it accounts for material UI/UX meaning through relevant surfaces/flows/regions/components/controls and applicable visual/content, state, interaction/feedback/motion, responsive/platform/input, accessibility and asset conditions, then subtracts only explicit selected-source coverage. It discovers current Open Design capabilities and assigns every considered resource a reasoned `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` disposition.
 
+High-fidelity/branded output, visual direction, typography/color/density, component visual treatment and production-style prototypes are style-bearing. If Design Authority is unconfigured or lacks one authored token source/direction, the Skill stops before project/run creation and tells the user to explicitly invoke `/design-system-authoring`; it never auto-initializes. Low-fidelity structure, IA/flow and semantics-only state studies remain non-fidelity. Style-bearing Open Design projects pass the adopted ID through `create_project.designSystem` and verify `get_project.designSystemId`.
+
 It commissions only the smallest sufficient set through structured MCP with bounded fallback. Repeated controls may map to one component family, one inspectable artifact may cover several needs and only unique/complex uncovered controls need dedicated studies. Static/default views do not imply unseen behavior. No prototype, low/high-fidelity pair, component board, Figma handoff, one-file-per-control rule, artifact count or directory is mandatory, and Tiny Context copies no provider prompt/template or catalogue. Designs carry user-visible interaction semantics, not sole ownership of business/data/permission/algorithmic rules.
 
-Exploration returns a visible scoped candidate after minimal sanity review. An implementation handoff adds provenance, explicit entry, declared coverage, limitations and a concise stable-key mapping from every material in-scope item to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition; it is sufficient only when implementation need not invent a material user-visible choice inside scope. This mapping creates no pack, registry or acceptance authority. Selected-source preparation requires explicit human selection and immutable identity. Iteration stays task-local. A final consolidated accepted/rejected/unresolved delta may inform a separately owned proposal revision, but the Skill never edits that proposal, Context, `DESIGN.md`, production code or a Delivery Contract and creates no Design Authority.
+Exploration returns a visible scoped candidate after minimal sanity review. An implementation handoff adds provenance, binding, explicit entry, declared coverage, limitations and a concise stable-key mapping. Iteration keeps accepted/rejected/unresolved effects task-local. After explicit or delegated final selection, the Skill performs one consolidated idempotent reconciliation of accepted decisions into a writable initial proposal, or returns a complete revised proposal when conversation-only; it excludes rejected/unresolved choices and never edits a Source Plan, Context, `DESIGN.md`, production code or a Delivery Contract.
 
 Actual generation remains with configured Open Design/Product Design, Figma, image-generation, prototype or human systems. Their outputs enter the default Workflow or Long-Task as ordinary external Source. Candidates and inspiration authorize no fidelity. A selected exact target controls only its declared conditions and needs stable immutable identity before it can affect a `verification_input`. `context_uiux_design` performs downstream UI Authority Closure; implementation renders and diffs remain evidence rather than self-authorizing targets.
 
 Maintainers may set `TY_CONTEXT_OPEN_DESIGN_MCP_COMMAND` plus optional `TY_CONTEXT_OPEN_DESIGN_MCP_ARGS_JSON` and run `npm run smoke:open-design` for an opt-in, read-only discovery smoke. Normal tests use a local mock MCP and do not depend on Open Design or nondeterministic output.
 
-### Optional Source Plan Authoring
+### Retired Source Plan Compatibility
 
-Use `/source-plan-authoring` for an explicitly requested initial plan, Source Plan, source draft, or synthesis/refinement/audit of later implementation or Contract-authoring Source. It accepts either one substantially complete plan or a sparse goal plus mixed notes, product/technical documents, screenshots, diagrams and other attachments; a short instruction identifying their roles, the goal, reference authority and desired elaboration is sufficient.
-
-It produces one self-contained Markdown document with a complete input inventory, preserved direct requirements and traceable necessary derivations. Before comparative research or a material product, technical, architecture or provider selection, it asks a concise targeted question when an unknown user priority such as quality versus cost, speed, reliability, privacy, lock-in or operational burden could change the research scope, candidate set or recommendation; there is no fixed questionnaire and known preferences are not re-asked. Once that preference envelope is clear, it decides what research is needed and uses current authoritative or primary sources for external capability, price, quota, license, compatibility, region, security or support claims. A request to synthesize, refine, complete or use judgment then delegates plan-level authoring: each supported recommendation is recorded as `delegated` with its instruction, preference/evidence basis and exact meaning instead of triggering approval, including high-impact plan semantics. Real payment, contracting, production release, destructive production mutation, permission grants, sensitive-data transmission and required legal/security/human approval remain `EXT`; only conflicts, user-reserved choices, missing material preferences or cases with no defensible recommendation remain `DEC`/`decision_required`. Interactive products are expanded through every in-scope surface to material control level, including placement, behavior, validation, navigation, loading/empty/success/failure/recovery/permission feedback and accessibility. The plan retains semantic Outcome boundaries, stable keys/anchors, Runtime-exact Fact/Affected-Outcome `RISK` items, distinct `OBL`/`HINT` items and one observable scenario per `AC` with explicit accepted `REQ`/`CTRL`/`OBL`/`NCOMP` keys. Risk names are the ten Contract facts: use `data_migration`, split critical-path weak observability into `critical_user_path` plus `weak_observability`, and preserve `multi_repository_change` for Compiler rejection.
-
-It does not update Context, bind a repository, generate Delivery Contract YAML, execute implementation, create workflow state or claim completion. `HINT` is not a Material Source Item, and the Skill emits no `ty-source-item` markers. A Source Plan is Source, not a Contract Draft. The structure is optional; ordinary prose remains valid Long-Task Source.
+`/source-plan-authoring` is retained only as a compatibility pointer. `/long-task-workflow` now performs mixed-input inventory/synthesis, stable-key/control-level Source authoring, preference/research/delegation traceability and acceptance/risk completeness inside the same Goal before Contract mapping. Existing Source Plans remain ordinary Source; no standalone Source Plan handoff, schema, gate, state or second plan is created.
 
 ## Single-Goal Rolling Delivery
 
 The explicit Long-Task Workflow uses one platform-native Goal, one user-selected repository/workspace, one complete `long-task-delivery-v2` Contract and one Final Gate. Outcomes are independently decidable acceptance units; Delivery Set orchestration and top-level Contract splitting inside one selected delivery are retired.
 
-Contract authoring preserves stable Source keys/anchors where practical. If an unknown preference could materially change comparative research or selection, it asks before proceeding. Once the decision criteria are clear, a defensible recommended plan choice is recorded in real Source with its delegation, preference/evidence basis and exact meaning before Contract mapping; it is never added only in YAML. Plan delegation does not authorize a real high-risk external action, which remains an explicit external confirmation. Meaning-preserving structural decomposition and evidence-backed repository binding may continue, while conflicting, user-reserved, missing-preference or unsupported new product semantics require `decision_required`. Missing recommended Source Plan structure alone never blocks authoring.
+Long-Task now makes raw/revised proposals, selected design resources and mixed attachments self-contained in real Source before Contract mapping, preserving complete input coverage, stable keys, control-level meaning, acceptance/risk and direct/derived/delegated/evidence-backed provenance. Unknown decision-changing preferences still trigger one targeted clarification; defensible recommendations are written into real Source rather than hidden in YAML, while high-risk actions remain external confirmations. Legacy Source Plan structure never blocks authoring.
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` revises the same Draft across repository/Context reads and Preflight repairs; a complete Contract need not fit one response. Integrated authoring keeps repository evidence and findings attached to the same object and avoids a second handoff, plan, authority or Receipt. There is no standalone Contract Draft Skill or Authoring State.
 
@@ -312,7 +321,7 @@ ty-context sync
 
 Version 0.6.0 retires V1 and the repo-local Hook. Development-period V2 Active Authority, Progress and Receipts are not migrated; doctor reports `manual_required`, and the operator upgrades the Contract before forming a new Authority Lock. Invalid JSON, marker/record mismatch or stale lock is never guessed from damaged record paths; doctor reports the explicit contained cleanup command `ty-context long-task abandon <workdir> --force-corrupt-state`.
 
-Version 0.6.0 keeps the `long-task-delivery-v2` name and physical `outcome_files` parser form while defining the first public V2 semantics; development-period Drafts receive explicit migration diagnostics. Optional Source Plan authoring and the additive execution-model checkpoint add no Schema, CLI, Preflight, Validator, Receipt, Authority or persisted model-routing state. Preflight and direct Compile share one activation-safety validator, so readable `criterion` text and all other completion-safety rules remain mandatory when Preflight is skipped.
+Version 0.6.0 keeps the `long-task-delivery-v2` name and physical `outcome_files` parser form while defining the first public V2 semantics; development-period Drafts receive explicit migration diagnostics. Its former optional Source Plan helper and the additive execution-model checkpoint added no Schema, CLI, Preflight, Validator, Receipt, Authority or persisted model-routing state. Current releases integrate Source authoring into `/long-task-workflow` and keep the old entry only as a pointer. Preflight and direct Compile share one activation-safety validator.
 
 After updating the package, run `ty-context upgrade`. Use `ty-context upgrade --check` first when you need a read-only plan.
 
@@ -340,7 +349,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.7.7.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.8.tgz`.
 
 ## Community And Further Reading
 

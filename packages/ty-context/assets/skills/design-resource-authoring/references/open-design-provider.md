@@ -37,10 +37,27 @@ Prefer, in order:
 
 Never vendor a fallback template catalogue or guess a template ID from prior runs. Do not implement a transport helper unless the live host truly lacks a safe structured path; any helper may normalize metadata and transport only.
 
+## Conditional Design Authority gate and binding
+
+Before any style-bearing commission, read project `DESIGN.md` and its declared authored exact-value token source/generation direction. Style-bearing means the resource materially expresses visual fidelity, brand, typography/color/density, component visual treatment or a production-style prototype. Low-fidelity structure, IA/flow topology and semantics-only behavior/state studies are non-fidelity and do not require the gate.
+
+If authority is absent, explicitly `unconfigured`, still a starter, style-only/inspiration-only, or lacks one authored token source/generation direction, stop before creating a project or run. Direct the user to explicitly invoke `$design-system-authoring`; never auto-run it. A combined explicit request authorizes the sequence.
+
+For configured style-bearing work:
+
+1. read the adopted Open Design design-system ID and digest/provenance from project Design Authority;
+2. confirm `od://design-systems/<id>/DESIGN.md` is readable through MCP;
+3. pass that ID as `designSystem` to `create_project`;
+4. immediately call `get_project` and require `designSystemId` to match;
+5. when reusing a project, check its binding before every new style-bearing run;
+6. on missing/mismatch, prefer a new bounded project with the correct binding when MCP has no safe update method; otherwise feature-detect and verify the provider's structured update.
+
+Never silently use the provider's default or a different system. A provider-side mismatch is a synchronization/rebinding issue; it does not erase the canonical project `DESIGN.md`.
+
 ## Structured commission sequence
 
-1. Record provider version, selected agent/model, functional capability, rendering template, design system and relevant plugin/export readiness as reported live.
-2. Reuse an existing task-local project only when its scope and prior inputs match; otherwise create a bounded project.
+1. Record provider version, selected agent/model, functional capability, rendering template, adopted design system and relevant plugin/export readiness as reported live.
+2. Reuse an existing task-local project only when its scope, prior inputs and required design-system binding match; otherwise create a bounded project. For style-bearing work, pass `designSystem` and verify `get_project.designSystemId` before the run.
 3. Start a run with the product-specific commission envelope and the provider-native capability identifier.
 4. Poll with a bounded cadence. During a long run, report meaningful progress at least once per minute without flooding the user.
 5. Preserve run IDs and the latest provider diagnostic. Support cancellation when the user requests it and the provider exposes it.

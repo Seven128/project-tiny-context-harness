@@ -1,70 +1,31 @@
-# Design Resource Handoff
+# Design Resource Handoff And Proposal Reconciliation
 
-Generated resources remain ordinary external Source. This reference preserves enough identity and meaning for later work without creating a Tiny Context-specific pack, registry or authority lifecycle.
+Generated resources remain ordinary external Source. Preserve enough identity and meaning for downstream work without creating a Tiny Context pack, registry or authority lifecycle.
 
 ## Candidate, selection and authority are separate
 
-- **Candidate:** provider output proposed for review. It authorizes no fidelity.
-- **Human selection:** an explicit user/team choice with a stated basis. It permits selected-source preparation, not automatic durable adoption.
-- **Authority adoption:** a downstream workflow reconciles the selected Source with product/surface Context and `DESIGN.md`, records durable ownership where required and binds implementation/verification to declared conditions.
+- **Candidate:** provider output proposed for review; it authorizes no fidelity.
+- **Selection:** an explicit user/team choice, or explicit delegation with known criteria; it permits proposal reconciliation and selected-source preparation.
+- **Authority adoption:** a downstream development workflow reconciles selected Source with product/surface Context and `DESIGN.md` and binds implementation/verification to declared conditions.
 
-The Skill may preserve an input already classified as `exact-target`; it may not promote its own candidate to `exact-target`. Unknown coverage remains unknown.
+This Skill may preserve an input already classified as `exact-target`; it may not promote its own candidate to one. Unknown coverage remains unknown.
 
 ## Development-scope coverage
 
-An implementation-facing handoff is complete at the authoring layer only for the user's explicit development scope. Record the in-scope surfaces/flows/regions/component families/unique controls, the minimum surrounding context needed to place them and the explicit exclusions. Broader product Source remains background and does not authorize generating detailed resources for unaffected areas.
+For every material in-scope surface/flow/region/component/control condition, record selected existing Source, newly generated Source, `not-applicable`, `excluded-by-scope`, `decision-required` or `unavailable`. Include only necessary surrounding context and explicit exclusions. One larger addressable artifact may cover several items; a static frame covers only conditions it actually shows.
 
-Map every material in-scope UI/UX item to selected existing Source, a newly generated resource, `not-applicable`, `excluded-by-scope`, `decision-required` or `unavailable`. The mapping may be concise prose or a task-local structured block; it is not a required pack, persistent coverage authority or acceptance record.
+Design resources may show user-visible triggers, transitions, states, feedback and product-rule presentation. Business, data, permission and algorithmic rules remain owned by product/technical Source and must not be invented by visuals.
 
-A page target, interactive prototype, component-family workbench or one larger addressable design board may each cover several items. Do not require a separate file per control. Reuse selected component variants for repeated controls and commission dedicated resources only for unique or complex uncovered meaning. A static frame covers only the conditions it actually shows; it does not silently cover dynamic states, interaction, motion, responsiveness or accessibility.
+## Final proposal reconciliation
 
-The handoff may specify user-visible triggers, transitions, states, feedback, recovery and the presentation of product rules. Business, data, permission and algorithmic rules remain owned by product/technical Source and must be referenced rather than invented or made authoritative only in visuals.
-
-## Intent-sized response
-
-### Exploration
-
-Return promptly:
-
-- requested scope and intent;
-- visible candidate/preview;
-- resource dispositions and obvious limitations;
-- provider/artifact qualifier when execution is not clean;
-- minimal sanity review actually performed.
-
-Do not require files, schemas, packs, hashes or validator runs for a throwaway unselected preview unless they are needed to retrieve/show it reliably.
-
-### Handoff
-
-Add only the fields needed for another person or workflow to consume it:
-
-- explicit output/development scope, necessary surrounding context and exclusions;
-- stable resource key plus surface/control/state/target keys when known;
-- classification: candidate, inspiration, constraint or pre-existing exact target;
-- provider version, project/run, selected capability/template, agent/model and design-system provenance as reported live;
-- explicit source entry or preview locator and immutable hash/snapshot when available;
-- declared platform, viewport, mode, state, content and interaction coverage;
-- for an implementation handoff, a stable-key mapping from each material surface/flow/region/component/control condition to its owning existing/generated resource or unresolved disposition;
-- selection basis if a human selection already exists;
-- unresolved decisions, known limitations and forbidden inferences;
-- outer review performed and provider status qualifier.
-
-No dedicated Markdown/YAML file or directory is mandatory. Use concise prose for simple work and a task-local structured block when fields would otherwise become ambiguous.
-
-### Selected-source preparation
-
-Require explicit human selection and record who/what supplied the selection basis. Preserve the exact artifact by hash or a user-approved durable snapshot. Do not rely on a mutable preview URL. Do not choose a repository destination, edit authority files or start implementation without separate authorization.
-
-## Accepted-design-decision delta
-
-When raw-draft exploration leads to an explicit selection, report a delta for the separately owned proposal-revision step:
+Keep a task-local buffer during candidate iteration:
 
 ```yaml
-selection_basis: explicit user/team decision
+selection_basis: explicit user/team choice | explicit delegated selection
 selected_resources:
-  - resource key, explicit locator and immutable hash/snapshot
+  - stable key, provider/project/run/entry, declared conditions, immutable digest/snapshot
 accepted:
-  - decision and rationale
+  - decision, rationale and affected proposal section/stable keys
 rejected:
   - alternative and reason
 unresolved:
@@ -77,62 +38,71 @@ impacts:
   state_keys: []
   interaction_rules: []
   visual_constraints: []
-forbidden_inference:
-  - candidate iteration did not itself revise the proposal or establish Design Authority
 ```
 
-This is an explanatory shape, not a required schema. Include only known changes. Do not emit or apply a delta after every iteration: interim observations remain task-local and may be returned once as a consolidated delta when the direction is final. The Skill does not write back the proposal, decide when a separately authorized owner rewrites it, or invoke `source-plan-authoring`.
+This is an explanatory shape, not a schema or required file. Do not write during iteration. Once the direction is final:
 
-## Initial proposal and Source Plan routing
+1. confirm the selection basis and immutable resource identity;
+2. consolidate duplicate/intermediate notes;
+3. apply accepted decisions once while preserving all unaffected original requirements and source provenance;
+4. exclude rejected and unresolved choices from requirements, keeping unresolved items visibly unresolved;
+5. record selected resource keys, conditions, locators and digests in the proposal where downstream consumers can recover them;
+6. make reruns idempotent—update the existing decision/reference instead of appending it again;
+7. if the initial proposal has an authorized writable path, edit that file; otherwise return the full revised proposal in the response.
 
-The components are independent and composable:
+Never mutate a Source Plan, `project_context/**`, `DESIGN.md`, Delivery Contract, production code or tests. A small request may generate, select and reconcile in one turn; “once” describes final semantic writeback, not a required waiting phase.
+
+If no selection occurs, return candidates plus a consolidated pending delta and leave the proposal unchanged.
+
+## Intent-sized handoff
+
+### Exploration
+
+Return scope/intent, visible candidates, resource dispositions, obvious limitations, provider/artifact qualifiers and the sanity review performed. Do not require a pack, hash or validator for a throwaway unselected preview unless retrieval needs it.
+
+### Implementation handoff
+
+Add:
+
+- output/development scope, necessary context and exclusions;
+- stable resource, surface/control/state/target keys;
+- candidate/inspiration/constraint/pre-existing-exact-target classification;
+- provider version, project/run, capability/template, agent/model and live design-system binding;
+- exact entry/preview locator plus SHA-256 or approved snapshot;
+- declared platform, viewport, mode, state, content, interaction, accessibility and motion coverage;
+- stable-key coverage mapping and unresolved dispositions;
+- selection basis, proposal reconciliation path/status and known limitations;
+- outer review and separate provider/artifact/design qualifiers.
+
+No dedicated Markdown/YAML file or directory is mandatory.
+
+## Recommended downstream routing
 
 ```text
-raw draft -> design-resource-authoring -> candidates -> explicit selection
-raw draft -> source-plan-authoring -> Source Plan
-revised raw draft + selected design resources -> source-plan-authoring -> richer Source Plan
-selected design resources -> default Workflow or Long-Task Source
+initial proposal
+  -> design-resource-authoring
+  -> selected immutable resources + reconciled initial proposal
+  -> long-task-workflow (explicit long delivery)
+     OR current native Goal + default Workflow Contract (non-long delivery)
 ```
 
-The recommended design-first loop for substantial new Web/App work is:
+`source-plan-authoring` is not an intermediate stage. A legacy Source Plan remains valid ordinary Source if supplied, but design-resource authoring never creates or edits one.
 
-1. explore from the initial proposal;
-2. iterate inside the requested scope;
-3. obtain explicit human selection;
-4. when requested, return one consolidated accepted-design-decision delta;
-5. let a separately authorized plan owner revise the proposal;
-6. if requested, pass both the revised proposal and selected immutable resources to `source-plan-authoring`.
+### Default Workflow consumption
 
-This is a useful path, not a universal required lifecycle. `source-plan-authoring` remains optional upstream synthesis and does not generate design resources.
+The consuming Goal brings the revised proposal and selected resources as ordinary Source, performs UI Authority Closure, classifies coverage, decides `Context Delta`, adopts durable facts through existing owners, implements and runs project-owned verification.
 
-## Default Workflow Contract consumption
+### Long-Task consumption
 
-When the user later authorizes concrete development:
-
-1. bring the selected generated resource as ordinary Source;
-2. perform UI Authority Closure against product/surface Context, `DESIGN.md`, tokens and declared targets;
-3. classify the resource and confirm selection basis/coverage;
-4. decide `Context Delta` and adopt durable facts only through their existing owners;
-5. implement and run project-owned verification.
-
-Open Design run success, a candidate screenshot or this handoff cannot authorize fidelity or acceptance.
-
-## Long-Task consumption
-
-- A selected resource and an optional Source Plan are parallel ordinary Source inputs to Contract authoring.
-- Contract `source_paths`, bindings, verification inputs, check input paths and artifact globs should name only the stable locators/conditions they actually consume.
-- Surface/control/state/target keys should connect product meaning, source targets, implementation and checks where applicable.
-- Authority Lock, protected Authority Revision and Final Gate remain the only Long-Task authority lifecycle.
-- This Skill creates no Contract Draft, outcome, receipt, Check result or Gate.
-- A later Open Design rerun does not silently revise locked Source; the downstream workflow uses its normal revision rules.
+The same revised proposal and selected resources enter `long-task-workflow`. Its integrated Source-quality authoring makes the delivery self-contained, then Contract `source_paths`, Bindings, `verification_inputs`, Check `input_paths` and `artifact_globs` name only stable locators and conditions actually consumed. Authority Lock, protected revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
 
 ## Forbidden inferences
 
 Unless independently proven downstream, never infer that a generated resource:
 
 - is selected, authoritative or accepted;
-- covers unlisted states, viewports, modes, platforms or accessibility behavior;
-- is a native implementation because an HTML/image preview renders;
-- is editable in Figma because a Figma capability was listed;
-- changed the initial proposal, Source Plan, Context, `DESIGN.md`, code or Contract;
-- proves production fidelity, product correctness, test completion or release readiness.
+- covers unlisted states, viewports, modes, platforms or accessibility;
+- is native implementation because an HTML/image preview renders;
+- is editable in Figma because a capability was listed;
+- changed Context, `DESIGN.md`, a Source Plan, code or Contract;
+- proves production fidelity, correctness, test completion or release readiness.

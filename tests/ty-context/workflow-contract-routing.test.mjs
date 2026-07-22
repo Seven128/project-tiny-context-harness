@@ -84,7 +84,7 @@ test("CLI and managed guidance route only explicit or active work to long-task",
     "help",
   ]);
   assert.match(stdout, /long-task <subcommand>/);
-  assert.match(stdout, /Install Source Plan\/Long-Task Skills/);
+  assert.match(stdout, /Install Long-Task Skill, Source Plan pointer/);
   assert.doesNotMatch(
     stdout,
     /validate-plan-contract|validate-plan-acceptance/,
@@ -109,9 +109,9 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(guidance, /no model route or checkpoint state/iu);
   assert.match(
     guidance,
-    /`ty-context enable long-task` installs the Source Plan Authoring Skill, Long-Task Workflow Skill and package-owned completion Hook/iu,
+    /`ty-context enable long-task` installs the Long-Task Workflow Skill, the retired Source Plan compatibility pointer and package-owned completion Hook/iu,
   );
-  assert.match(guidance, /Design Authority status/iu);
+  assert.match(guidance, /`design-system-authoring` is an explicit-only cold-start\/repair capability/iu);
 });
 
 test("Workflow Contract names the complete Draft-to-qualified-result lifecycle", async () => {
@@ -121,18 +121,19 @@ test("Workflow Contract names the complete Draft-to-qualified-result lifecycle",
   const summary = workflow.match(/The workflow is:\r?\n\r?\n`([^`]+)`/u)?.[1];
   assert.ok(summary);
   for (const concept of [
-    "optional Source Plan and external design Source",
-    "Contract Draft",
-    "Draft Outcome decomposition",
-    "Preflight repair loop",
+    "initial/revised proposal + selected design resources",
+    "integrated Source inventory/synthesis/refinement",
+    "one Contract Draft",
+    "Preflight",
     "Authority Lock",
-    "execution-model choice",
+    "one-time model choice",
     "Rolling Frontier",
-    "one-snapshot Final Gate",
+    "source-recompiled one-snapshot Final Gate",
     "qualified machine result",
-    "qualification-preserving output",
+    "Stop/close",
+    "native Goal veto review",
   ]) {
-    assert.match(summary, new RegExp(concept, "iu"));
+    assert.ok(summary.includes(concept), concept);
   }
   assert.doesNotMatch(
     summary,
@@ -160,11 +161,11 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   assert.match(active, /Final Gate/i);
   assert.match(
     active,
-    /ordinary prose plan, optional Source Plan or externally authored design resource/is,
+    /ordinary prose proposal, legacy Source Plan or externally authored design resource/is,
   );
   assert.match(
     active,
-    /does not need to match a recommended authoring structure/is,
+    /does not need to match a recommended structure/is,
   );
   assert.match(active, /stable semantic keys and Markdown anchors/is);
   assert.match(
@@ -257,36 +258,40 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   );
 });
 
-test("optional Source Plan authoring does not create a second Contract authority", async () => {
-  const [sourcePlan, workflowContext] = await Promise.all([
+test("retired Source Plan entry points to integrated long-task Source authoring", async () => {
+  const [sourcePlan, sourceAuthoring, workflowContext] = await Promise.all([
     read(".codex/ty-context-managed/skills/source-plan-authoring/SKILL.md"),
+    read(
+      ".codex/ty-context-managed/skills/long-task-workflow/references/source-authoring.md",
+    ),
     read(
       "project_context/areas/harness-package/contracts/workflow-contract.md",
     ),
   ]);
-  assert.match(sourcePlan, /Do not generate Delivery Contract YAML/);
-  assert.match(sourcePlan, /Do not update `project_context\/\*\*`/);
-  assert.match(sourcePlan, /This Skill authors Source, not a Contract Draft/iu);
-  assert.match(
-    sourcePlan,
-    /does not replace Contract Draft authoring inside `long-task-workflow`/iu,
-  );
-  assert.match(sourcePlan, /Do not create:[\s\S]*Source Plan Schema/);
-  assert.match(
-    sourcePlan,
-    /classify the interpretation as `exact-target`, `constraint` or `inspiration`/iu,
-  );
+  assert.match(sourcePlan, /Retired: Source Plan Authoring/iu);
+  assert.match(sourcePlan, /invoke `\/long-task-workflow`/iu);
+  assert.match(sourcePlan, /Do not rewrite it merely for compatibility/iu);
+  assert.match(sourcePlan, /create a new Source Plan artifact/iu);
   assert.doesNotMatch(
     sourcePlan,
     /ty-context long-task (?:init|preflight|compile)/,
   );
+  assert.match(sourceAuthoring, /not a standalone Source Plan stage/iu);
   assert.match(
-    workflowContext,
-    /ordinary prose plan, optional Source Plan or external design resource remains ordinary Source input/is,
+    sourceAuthoring,
+    /Do not create a Source Plan schema, CLI, Preflight, Compile, Receipt, cache, authority or state/iu,
+  );
+  assert.match(
+    sourceAuthoring,
+    /classification \(`exact-target`, `constraint` or `inspiration`\)/iu,
   );
   assert.match(
     workflowContext,
-    /material (?:preference|priority).*unknown or ambiguous.*stop before that research or selection and ask a concise targeted question/is,
+    /research proposal, ordinary prose plan, legacy Source Plan or external design resource remains ordinary Source/is,
+  );
+  assert.match(
+    workflowContext,
+    /unknown preference could materially change research or selection, ask before comparative research/is,
   );
   assert.match(
     workflowContext,
@@ -300,7 +305,7 @@ test("optional Source Plan authoring does not create a second Contract authority
     workflowContext,
     /No lifecycle phases, fixed Contract plans, separate Contract-Authoring Skill/is,
   );
-  assert.match(workflowContext, /one continuously revised Contract Draft/);
+  assert.match(workflowContext, /one continuously revised.*Contract Draft/);
   assert.match(workflowContext, /one current snapshot/);
   assert.match(
     workflowContext,

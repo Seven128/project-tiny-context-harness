@@ -24,10 +24,11 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 ## External Design Resource Consumption / 外部设计资源消费
 
 - `design-resource-authoring` 可以按明确请求在上游动态委托 Open Design 产生 flow、低保真、候选方向、组件族/独特复杂控件状态、交互原型或条件式 Figma handoff；它以明确输出/开发内容为上限，在范围内补齐材料性 UI/UX 含义但不要求逐控件一份稿，不复制 provider 的提示词/模板，也不把任何资源设为全局必选。
+- `design-system-authoring` 是另一个仅显式调用的冷启动/修复 Skill：它用 Open Design 生成或选择候选，经过明确或受托选择后，把结果采纳到 canonical `DESIGN.md`、唯一 token source/direction 与 owning Context。缺少设计系统不会让本 Skill 或 `design-resource-authoring` 自动调用它。
 - 本 Skill 不承担独立资源生产。只有进入默认开发流程或 Long-Task、需要采纳稳定结论时，本 Skill 才消费这些或其他外部设计 Source。
 - 候选、灵感和未选定输出不是 Context readiness 或实现权威，不能写入 selected registry；选定目标仍必须完成 UI Authority Closure 和 `Context Delta`。
 - 消费时核对产品 Source、Screen/Control Context、`DESIGN.md`、token owner、资源稳定身份及 exact-target 覆盖条件；只把长期稳定且无冲突的事实写入其唯一 owner，不要求统一 pack、目录或工具格式。
-- 设计资源生成本身不改 `project_context/**`、`DESIGN.md` 或 production code。下游采纳、实现与验证仍由当前 Workflow Contract 或 `long-task-workflow` 负责。
+- 设计资源生成本身不改 `project_context/**`、`DESIGN.md` 或 production code；定稿后只可一次性回改初始方案。设计系统采纳则由显式 `design-system-authoring` 完成。下游实现与验证仍由当前 Workflow Contract 或 `long-task-workflow` 负责。
 
 ## 工作方式
 
@@ -106,7 +107,7 @@ Configured is system-level visual authority only, not surface implementation-rea
 - Read the owning surface/interaction Context, `DESIGN.md`, the authored exact-value token source and generation direction, existing production components/routes and every material design reference.
 - Classify each reference as `exact-target`, `constraint` or `inspiration`. Record the affected surface/route/component, project path or URI and relevant viewport/theme/mode/state. Exact targets authorize fidelity comparison only for those conditions; constraints authorize only their named rule; inspiration proves no reproduction claim.
 - Treat a missing `DESIGN.md`, its package starter with Design authority status: `unconfigured`, style-only prose, an inspiration-only set or conflicting references as insufficient authority for invented production layout.
-- If the user explicitly delegates standalone design-resource generation, use `design-resource-authoring` to keep the explicit output/development scope as the ceiling and commission the smallest sufficient set from available Product Design/Open Design capabilities. An implementation handoff covers material in-scope UI/UX meaning through relevant controls, may reuse component families or one inspectable artifact and does not require one file per control. In this downstream Skill, adopt a selected target into durable Context/`DESIGN.md` only after UI Authority Closure. Ask only when an unknown material preference could change the result or the user reserves the choice.
+- If the user explicitly asks to initialize/generate/select/adopt the project design system, use the explicit-only `design-system-authoring`; never infer it from a missing starter. If the user explicitly delegates standalone resource generation, use `design-resource-authoring`. Style-bearing resources must stop on unconfigured authority and bind the adopted Open Design system; low-fidelity/IA/semantics-only resources remain lightweight. After final selection, resource authoring may reconcile accepted decisions into the initial proposal once, but this downstream Skill adopts durable target meaning only after UI Authority Closure.
 - Never use the implementation's own generated screenshot or diff as the target it claims to match. A target is selected Source; an implementation render is evidence. Baseline replacement requires deliberate review and cannot merely erase a failure.
 - Do not require Figma, a fixed `docs/design/**` tree, an image for every local change or universal pixel-perfect thresholds. Use project-native design assets and the smallest authority sufficient for the claimed fidelity.
 
@@ -125,7 +126,7 @@ For material design-system, redesign, high-fidelity implementation or visual-pol
 
 - 不默认创建 `.work_products/**`、UI/UX 独立文档、handoff matrix、review/test/release 文档。
 - 不要求 lifecycle phase、plan task、phase gate 或阶段 Skill。
-- 如果用户明确要求独立设计稿、mock、线框图、原型或 Figma handoff，使用 `design-resource-authoring`；本 Skill 只在后续开发流程中采纳长期事实。
+- 如果用户明确要求初始化/生成/选择/采纳项目设计系统，使用仅显式调用的 `design-system-authoring`；如果明确要求独立设计稿、mock、线框图、原型或 Figma handoff，使用 `design-resource-authoring`。本 Skill 只在后续开发流程中采纳其他长期事实。
 - `DESIGN.md` 是视觉设计系统事实源；项目流程、模块契约和下一步动作仍以 `project_context/**` 为准。
 - 如果普通页面实现已经有充分 Design Authority，或用户只要求修复 UI bug、局部改 CSS、换颜色、明确的 throwaway prototype，或只是泛泛提到“设计 / design / user experience”，不需要触发本 Skill；durable 视觉体系/Context 采纳，或 material production UI 缺失/冲突的 Design Authority 才使用。明确要求设计资源产物但尚未进入采纳/实现流程时使用 `design-resource-authoring`。
 

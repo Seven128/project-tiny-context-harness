@@ -59,6 +59,7 @@ export const STATIC_TESTS = new Set(
   [
     "affected-change-discovery.test.mjs",
     "affected-test-selection.test.mjs",
+    "design-system-authoring-skill.test.mjs",
     "design-resource-authoring-provider.test.mjs",
     "design-resource-authoring-skill.test.mjs",
     "long-task-design-context.test.mjs",

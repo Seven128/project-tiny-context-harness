@@ -1,68 +1,80 @@
 ---
 name: design-resource-authoring
-description: Use when the user explicitly asks to generate, author, plan, commission, or iterate design resources; use Open Design; create a scoped wireframe, prototype, visual candidate, component/control state study, implementation handoff, or the design resources needed for an explicitly named development scope from raw drafts, product/technical plans, optional Source Plans, visual briefs, screenshots, or existing design resources; or asks to “生成设计资源”, “使用 Open Design”, “生成原型图”, “生成高保真/低保真设计”, “为开发准备设计资源”, or “先看一个控件/页面效果” in a Minimal Context Harness project. Do not trigger for generic design discussion, UX audits, ordinary UI implementation without an explicit resource request, local CSS fixes, durable Design Authority/Context adoption, Source Plan authoring itself, or Long-Task execution.
+description: Use when the user explicitly asks to generate, author, plan, commission, or iterate design resources; use Open Design; create a scoped wireframe, prototype, visual candidate, component/control state study, implementation handoff, or the design resources needed for an explicitly named development scope from raw drafts, product/technical plans, visual briefs, screenshots, or existing design resources; or asks to “生成设计资源”, “使用 Open Design”, “生成原型图”, “生成高保真/低保真设计”, “为开发准备设计资源”, or “先看一个控件/页面效果” in a Minimal Context Harness project. Do not trigger for generic design discussion, UX audits, ordinary UI implementation without an explicit resource request, local CSS fixes, durable Design Authority adoption, initial-proposal authoring itself, or Long-Task execution.
 ---
 
 # Design Resource Authoring
 
-Commission the smallest sufficient set of design resources for the explicitly requested output or development scope from the currently available Open Design capabilities. For an implementation handoff, cover every material user-visible UI/UX decision inside that scope down through relevant controls without forcing one artifact per control or expanding into unrelated product surfaces. This Skill is a thin task-local planner, provider adapter, iteration guide and handoff layer. Open Design owns its generation logic; Tiny Context owns neither its prompts nor its runtime.
+Commission the smallest sufficient set of design resources for the explicitly requested output or development scope from live Open Design capabilities. This Skill is a thin task-local planner, provider adapter, iteration guide, final proposal reconciler and handoff layer; Open Design owns generation logic and Tiny Context owns neither its prompts nor runtime.
 
 ## Hard boundaries
 
-- A raw draft is a valid input. Never require, invoke, regenerate or edit a Source Plan.
-- Never edit an initial proposal, `project_context/**`, `DESIGN.md`, a Delivery Contract, production code or tests as a side effect of design-resource work.
-- Never make a prototype, wireframe, high-fidelity candidate, design system, Figma file, variant count or directory layout universally mandatory.
-- Treat the user's explicit output or development scope as the hard ceiling. When development covers only a region, control or partial flow, include only the surrounding context needed to design that slice; never let broader background expand generation to the rest of the page or product.
-- Never require one separate design artifact per control. Reuse exact existing component sources and group repeated controls by component family; commission a dedicated study only when a unique or complex control has material uncovered anatomy, variants, states, interaction, feedback or motion.
-- Never infer that a page prototype, design system or static frame covers control states, responsive behavior, accessibility or interaction it does not explicitly specify or demonstrate.
-- Design resources may express user-visible interaction semantics and the presentation of product rules, but they must not invent or become the sole owner of business, data, permission or algorithmic logic.
-- Generated candidates are ordinary external Source. They do not select themselves, become `exact-target`, create Design Authority or prove product acceptance.
-- Keep provider projects, runs and generated artifacts task-local until the user requests a handoff or explicitly selects a candidate.
-- Do not install or persistently configure MCP servers, plugins, authentication or new disclosure paths without separate user authorization.
-- Do not create a Tiny Context resource pack, provider registry, workflow state, Contract artifact, acceptance record or parallel authority lifecycle.
+- A raw initial proposal is a valid input. Never require, invoke, regenerate or edit a Source Plan.
+- During candidate iteration, keep accepted/rejected/unresolved proposal effects in a task-local delta buffer. Only after a direction is final may this Skill reconcile the initial proposal once. Never continuously rewrite it.
+- Proposal reconciliation changes only the initial proposal: never mutate `project_context/**`, `DESIGN.md`, a Source Plan, Delivery Contract, production code or tests as a design-resource side effect.
+- Never make a prototype, wireframe, high-fidelity candidate, design-system slice, Figma file, variant count or directory layout universally mandatory.
+- Treat the user's explicit output/development scope as the hard ceiling. Include only the surrounding context needed to design that slice.
+- Never require one artifact per control. Reuse selected component sources and group repeated controls by family; commission a dedicated study only for unique or complex uncovered meaning.
+- Never infer that a page frame or prototype covers states, responsiveness, accessibility or interaction it does not explicitly specify or demonstrate.
+- Design resources may express user-visible interaction and presentation, but must not invent or become sole owner of business, data, permission or algorithmic rules.
+- Candidates are ordinary external Source. They do not select themselves, become `exact-target`, create Design Authority or prove acceptance.
+- Do not install or persistently configure MCP, plugins, authentication or disclosure paths without separate authorization.
+- Do not create a resource pack, provider registry, workflow state, Contract artifact, acceptance record or parallel authority lifecycle.
 
 ## Read the references
 
-1. Always read [resource-selection.md](references/resource-selection.md) before deciding what to generate.
-2. Read [open-design-provider.md](references/open-design-provider.md) before capability discovery, provider execution, recovery or Figma routing.
-3. Read [downstream-handoff.md](references/downstream-handoff.md) before a handoff, selected-source preparation, accepted-decision summary or use by Source Plan/default/Long-Task workflows. A simple unselected preview may stop before this reference is needed.
+1. Always read [resource-selection.md](references/resource-selection.md) before deciding what to generate or whether the request is style-bearing.
+2. Read [open-design-provider.md](references/open-design-provider.md) before capability discovery, Design Authority gating, provider execution, recovery or Figma routing.
+3. Read [downstream-handoff.md](references/downstream-handoff.md) before final selection, initial-proposal reconciliation, handoff or downstream use. A simple unselected non-fidelity preview may stop before this reference.
 
 ## Core workflow
 
-1. **Fix the requested-scope ceiling.** Separate background coverage from requested output or development coverage. Name the in-scope surfaces, flows, regions, component families, unique controls and applicable conditions; record necessary surrounding context, explicit exclusions and whether the user wants exploration, handoff or selected-source preparation.
-2. **Inventory every supplied input.** Accept raw notes, an initial proposal, product and technical plans, an optional Source Plan, visual briefs, screenshots, references and existing artifacts. Preserve each input's role as existing exact target, constraint, inspiration, current-implementation evidence or background; report unreadable or intentionally unused material and do not invent missing authority.
-3. **Find the design gaps.** For exploration, identify only the uncertainties that block or materially improve the requested decision. For an implementation handoff, account for every material in-scope UI/UX need from surface/flow structure and layout constraints through control anatomy and variants, visual treatment, copy/content presentation, states, interaction/feedback/motion, responsive/platform/input behavior, accessibility and necessary assets. Subtract only coverage explicitly supplied by selected Source; use the task-local coverage model in `resource-selection.md`.
-4. **Discover live capabilities.** Inspect the current Open Design agent/model, functional skills, rendering templates, design systems, plugins and export routes. Treat absent or non-enumerable capabilities honestly; never substitute a remembered catalogue.
-5. **Choose the minimum sufficient commission.** Give every considered resource one disposition: `selected`, `optional`, `not-needed`, `unavailable` or `decision-required`, with one reason. A single inspectable artifact may cover several needs; several artifacts are justified only when each closes independent uncovered meaning. Ask only when a genuine missing preference materially changes the commission; otherwise use traceable, reversible judgment.
-6. **Commission through Open Design.** Send a product-specific, bounded commission envelope around the selected provider capability. Do not copy, restate or simulate the provider's internal template prompt. Prefer structured MCP; use the bounded fallbacks in the provider reference only when needed.
-7. **Observe and inspect proportionally.** Keep provider execution state, artifact readiness and design suitability separate. Exploration needs only scope/corruption sanity and a visible result; handoff needs relevant structure/interaction inspection; downstream product verification remains downstream.
-8. **Iterate within scope.** Revise the candidate from user feedback without expanding coverage or continuously rewriting the source proposal. Exploration stops when the requested design decision is supported. An implementation handoff stops only when every material in-scope UI/UX need is covered by existing or newly generated Source, is not applicable, is explicitly excluded by the development scope, or is honestly marked unresolved/unavailable; no material user-visible design choice may be left for the implementer to invent.
-9. **Return the intent-sized result.** A simple exploration should show the artifact promptly. A handoff adds compact provenance, limitations and a stable-key coverage mapping sufficient to show which resource owns each material surface/flow/region/component/control condition without requiring a pack or one file per control. Selected-source preparation requires explicit selection basis and an immutable locator/hash or approved snapshot.
+1. **Fix the scope ceiling.** Name in-scope surfaces, flows, regions, component families, unique controls, conditions, necessary context, exclusions and whether the intent is exploration, handoff or selected-source preparation.
+2. **Inventory inputs.** Accept initial proposals, notes, product/technical plans, visual briefs, screenshots, references and existing resources. Preserve each role as exact target, constraint, inspiration, current-implementation evidence or background; report unreadable/unused material.
+3. **Classify visual-style dependency.** Mark the commission `style-bearing` when it materially expresses visual fidelity, brand, typography/color/density, component visual treatment or a production-style prototype. Mark it `non-fidelity` for IA/flow topology, low-fidelity structure, semantics-only behavior/state studies or an explicitly non-fidelity prototype. Mixed work is style-bearing unless split into an independent non-fidelity commission.
+4. **Apply the conditional Design Authority gate.** For style-bearing work, read `DESIGN.md` and its token source. If authority is unconfigured, stop before project/run creation and tell the user to explicitly invoke `$design-system-authoring`; do not invoke it automatically. A combined explicit request authorizes running that Skill first and then resuming this one. Non-fidelity work remains allowed.
+5. **Find design gaps.** For handoff, account for material in-scope structure, control anatomy/variants, content/visual treatment, states, interaction/feedback/motion, adaptation/input, accessibility and assets. Subtract only coverage explicitly supplied by selected Source.
+6. **Discover live capabilities.** Inspect the current Open Design agent/model, skills, templates, design systems, plugins and export paths. Treat absent/non-enumerable capabilities honestly.
+7. **Choose the minimum sufficient commission.** Give each considered resource `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` with one reason. Ask only when a missing preference materially changes the commission.
+8. **Bind and commission through Open Design.** For style-bearing work, create or verify the Open Design project with the adopted design-system ID and require `get_project.designSystemId` to match. Send a bounded product commission through structured MCP; use documented fallbacks only when required.
+9. **Observe, inspect and iterate.** Keep provider execution, artifact readiness and design suitability separate. Iterate within scope. Keep proposal effects only in the delta buffer while candidates remain unsettled.
+10. **Finalize selection and reconcile once.** After explicit human selection or explicit delegated selection, preserve immutable identity and consolidate accepted, rejected and unresolved effects. Apply only accepted decisions once to a writable initial-proposal file; if it exists only in conversation, return one complete revised proposal. Preserve original intent/provenance and make reruns idempotent. Do not write unresolved or rejected choices as requirements.
+11. **Return an intent-sized result.** Exploration shows the artifact promptly. Handoff adds stable-key coverage, provenance, binding, limitations and immutable identity. Include the reconciled initial proposal or its updated path when final selection occurred.
 
-## Raw-draft exploration loop
+## Conditional Design Authority gate
 
-An initial proposal may go directly through this Skill before `source-plan-authoring`:
+Unconfigured means `DESIGN.md` is missing, explicitly says `Design authority status: unconfigured`, remains a starter, contains only style prose/inspiration, or lacks one authored exact-value token source/generation direction. This gate applies only to style-bearing resource authoring; it is not a general project-init gate and configured system-level authority does not by itself prove surface-level implementation readiness.
+
+The stop message must state:
 
 ```text
-raw initial proposal
-  -> bounded design candidate
-  -> user feedback and iterations
-  -> explicit human selection/rejection
-  -> optional consolidated accepted-design-decision delta (when requested)
-  -> separately authorized revision of the initial proposal
-  -> optional source-plan-authoring(revised proposal + selected resources)
+Style-bearing design resources require an adopted project design system. Explicitly invoke $design-system-authoring to generate/select/adopt one, then resume $design-resource-authoring. I will not initialize it automatically.
 ```
 
-The Skill performs only the first four transitions and returns differences as output. It does not apply the proposal revision or invoke the optional final step. The delta distinguishes accepted, rejected and unresolved choices and identifies affected surface/control/state keys when available. Do not require or emit an interim delta after every iteration: keep those observations task-local and, when requested, return one consolidated delta after the direction is final. Never continuously synchronize or write back the proposal during candidate iteration.
+## Initial-proposal reconciliation
+
+The normal design-first loop is:
+
+```text
+initial proposal
+  -> bounded Open Design candidates
+  -> feedback and iteration with a task-local delta buffer
+  -> explicit or delegated final selection
+  -> one consolidated, idempotent initial-proposal reconciliation
+  -> revised proposal + selected immutable resources
+  -> default Goal execution or long-task-workflow
+```
+
+Small requests may complete generation, selection and reconciliation in one turn; the invariant is one final semantic writeback, not an artificial pause. Reconciliation may clarify product information, controls/states, interaction and visual constraints supported by the selected resource. It preserves original requirements and records selected resource keys/locators/digests without turning provider output into product authority. If selection never occurs, return candidates and the buffered delta only; do not rewrite.
 
 ## Stop and route elsewhere
 
-- Route durable UI/UX authority adoption or repair to `context_uiux_design`.
-- Route synthesis of an implementation-ready Source Plan to `source-plan-authoring` only when the user explicitly requests that separate work.
-- Route ordinary implementation with sufficient design authority to the default Workflow Contract.
-- Route a complete explicit Single-Goal delivery to `long-task-workflow`.
-- If no new resource is justified, say so and route to the appropriate existing path instead of generating filler.
+- Route explicit design-system initialization/adoption to `design-system-authoring`.
+- Route broader durable UI/UX authority repair during development to `context_uiux_design`.
+- Route ordinary implementation with sufficient authority to the default Workflow Contract and current native Goal.
+- Route a complete explicit Single-Goal delivery, using the revised proposal plus selected resources, to `long-task-workflow`.
+- If no new resource is justified, say so instead of generating filler.
 
 ## Completion response
 
-Report the requested output/development scope, necessary surrounding context and exclusions; intent; selected/omitted/unavailable resources; visible artifacts or durable locators; provider/artifact status; review actually performed; provenance appropriate to intent; material coverage and unresolved decisions; and forbidden inferences. For an explicit selection after raw-draft iteration, return the accepted-design-decision delta when requested, without modifying any source document; it may be deferred until the end and consolidated once.
+Report scope, necessary context/exclusions, style dependency and gate result; selected/omitted/unavailable resources; visible artifacts/locators; provider, project/run and design-system binding status; review and selection basis; immutable provenance; material coverage/unresolved decisions; proposal reconciliation status/path; and forbidden inferences.

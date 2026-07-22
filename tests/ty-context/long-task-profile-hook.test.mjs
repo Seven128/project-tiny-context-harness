@@ -51,6 +51,15 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
       await pathExists(
         path.join(
           fixture.root,
+          ".codex/skills/design-system-authoring/SKILL.md",
+        ),
+      ),
+      true,
+    );
+    assert.equal(
+      await pathExists(
+        path.join(
+          fixture.root,
           ".codex/skills/design-resource-authoring/SKILL.md",
         ),
       ),
@@ -107,6 +116,15 @@ test("enable/disable owns one package-owned Hook per event and preserves user Ho
     assert.equal(
       await pathExists(
         path.join(fixture.root, ".codex/skills/user-local/SKILL.md"),
+      ),
+      true,
+    );
+    assert.equal(
+      await pathExists(
+        path.join(
+          fixture.root,
+          ".codex/skills/design-system-authoring/SKILL.md",
+        ),
       ),
       true,
     );

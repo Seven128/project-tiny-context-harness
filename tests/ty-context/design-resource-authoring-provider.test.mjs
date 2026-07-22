@@ -12,11 +12,20 @@ test("Open Design discovery transport verifies capabilities without provider mut
     command: process.execPath,
     args: [fixture],
   });
-  assert.equal(result.schema_version, "open-design-discovery-smoke-v1");
+  assert.equal(result.schema_version, "open-design-discovery-smoke-v2");
   assert.equal(result.provider.name, "mock-open-design");
   assert.equal(result.mutations_performed, false);
   assert.ok(result.required_tools.includes("start_run"));
   assert.ok(result.required_tools.includes("get_artifact"));
+  assert.ok(result.required_tools.includes("get_project"));
+  assert.deepEqual(result.project_binding, {
+    create_project_design_system_input: true,
+    get_project_verification_tool: true,
+  });
+  assert.equal(result.design_system_resources.template_present, true);
+  assert.equal(result.design_system_resources.template_method_supported, true);
+  assert.equal(result.design_system_resources.concrete_resource_count, 1);
+  assert.equal(result.design_system_resources.sample_read, true);
   assert.deepEqual(Object.keys(result.probes).sort(), [
     "list_agents",
     "list_plugins",
@@ -32,6 +41,7 @@ test("mock provider gaps and discovery errors fail closed", async () => {
   for (const [mode, expected] of [
     ["missing-tool", /missing required.*get_artifact/iu],
     ["probe-error", /list_skills returned isError=true/iu],
+    ["missing-binding", /missing the designSystem binding input/iu],
   ]) {
     await assert.rejects(
       runOpenDesignMcpDiscoverySmoke({
@@ -42,6 +52,18 @@ test("mock provider gaps and discovery errors fail closed", async () => {
       expected,
     );
   }
+
+  const concreteOnly = await runOpenDesignMcpDiscoverySmoke({
+    command: process.execPath,
+    args: [fixture],
+    env: { ...process.env, MOCK_OPEN_DESIGN_MODE: "missing-template-method" },
+  });
+  assert.equal(
+    concreteOnly.design_system_resources.template_method_supported,
+    false,
+  );
+  assert.equal(concreteOnly.design_system_resources.concrete_resource_count, 1);
+  assert.equal(concreteOnly.design_system_resources.sample_read, true);
 });
 
 test(
@@ -56,5 +78,10 @@ test(
     const result = await runOpenDesignMcpDiscoverySmoke({ command, args });
     assert.equal(result.mutations_performed, false);
     assert.ok(result.tool_count >= result.required_tools.length);
+    assert.equal(result.project_binding.create_project_design_system_input, true);
+    assert.ok(
+      result.design_system_resources.template_present ||
+        result.design_system_resources.concrete_resource_count > 0,
+    );
   },
 );
