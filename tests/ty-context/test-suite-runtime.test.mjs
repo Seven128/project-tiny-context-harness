@@ -179,10 +179,14 @@ test("Long-Task isolation lanes are explicit, exhaustive, and fail unknown files
   assert.equal(new Set(classified).size, classified.length);
   assert.deepEqual([...classified].sort(), available);
   assert.equal(LONG_TASK_PURE_TEST_FILES.length, 11);
-  assert.equal(LONG_TASK_ISOLATED_TEST_FILES.length, 40);
-  assert.equal(LONG_TASK_EXCLUSIVE_TEST_FILES.length, 9);
+  assert.equal(LONG_TASK_ISOLATED_TEST_FILES.length, 39);
+  assert.equal(LONG_TASK_EXCLUSIVE_TEST_FILES.length, 10);
   assert.equal(
     classifyLongTaskTestFile("long-task-delivery-compiler.test.mjs"),
+    "exclusive",
+  );
+  assert.equal(
+    classifyLongTaskTestFile("long-task-playwright-trust-boundary.test.mjs"),
     "exclusive",
   );
   assert.equal(classifyLongTaskTestFile("long-task-new.test.mjs"), "exclusive");
