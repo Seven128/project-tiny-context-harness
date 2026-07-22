@@ -185,7 +185,11 @@ export async function createWorkspaceSnapshot(
   const started = performance.now();
   const root = path.resolve(rootInput);
   const workdir = path.resolve(workdirInput);
-  const excluded = excludedPrefixes(root, [
+  const fingerprintExcluded = excludedPrefixes(root, [
+    workdir,
+    ...additionalExcludedWorkdirs,
+  ]);
+  const snapshotExcluded = snapshotExcludedPrefixes(root, [
     workdir,
     ...additionalExcludedWorkdirs,
   ]);
@@ -215,7 +219,7 @@ export async function createWorkspaceSnapshot(
       ...splitZero(untracked),
     ])) {
       const relative = raw.replace(/\\/gu, "/");
-      if (excludedPath(relative, excluded)) continue;
+      if (excludedPath(relative, snapshotExcluded)) continue;
       const source = path.join(root, ...relative.split("/"));
       const target = path.join(temporary, ...relative.split("/"));
       const info = await stat(source).catch(() => null);
@@ -226,12 +230,12 @@ export async function createWorkspaceSnapshot(
       await mkdir(path.dirname(target), { recursive: true });
       await copyFile(source, target);
     }
-    await removeExcludedSnapshotPaths(temporary, excluded);
+    await removeExcludedSnapshotPaths(temporary, snapshotExcluded);
     await linkDependencyTrees(root, temporary, [
       workdir,
       ...additionalExcludedWorkdirs,
     ]);
-    const after = await captureWorkspaceFingerprint(root, excluded);
+    const after = await captureWorkspaceFingerprint(root, fingerprintExcluded);
     if (after.identity !== before.identity)
       throw new Error("workspace_changed_during_snapshot");
     return {
@@ -370,8 +374,14 @@ async function untrackedIdentity(
 
 function excludedPrefixes(root: string, workdirs: string[]): string[] {
   return [
-    ...workdirs.map((workdir) => repoRelative(root, path.resolve(workdir))),
+    ...snapshotExcludedPrefixes(root, workdirs),
     "project_context",
+  ].filter(Boolean);
+}
+
+function snapshotExcludedPrefixes(root: string, workdirs: string[]): string[] {
+  return [
+    ...workdirs.map((workdir) => repoRelative(root, path.resolve(workdir))),
     "tmp/ty-context/long-task-runs",
   ].filter(Boolean);
 }

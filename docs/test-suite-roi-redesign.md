@@ -281,6 +281,10 @@ Each package-suite invocation must report every selected test file's identity, d
 
 Implementation note for that obligation: if suite setup, fixture-seed preparation, or lane startup fails, the same report fails closed with the bounded execution error and missing-file accounting instead of disappearing. The Final Gate oracle retains a bounded failed-command diagnostic in structured observations and still produces its declared diagnostic artifact when a required carrier is absent, so current-snapshot and Counterfactual failures remain attributable rather than becoming artifact-missing noise.
 
+The canonical complete aggregate reads repository Context as test input. A Long-Task execution snapshot therefore materializes the current `project_context/**` bytes for the Check runtime while continuing to exclude them from the ordinary candidate fingerprint, because the source-recompiled Gate binds them independently through `context_hashes`.
+
+Population acceptance still comes only from the complete current-run timing report. The Claim-bearing coverage Assertion and the 100% Population evaluator are separate Checks over the exact same raw execution identity: Final Gate executes the canonical complete command once, while Counterfactual sensitivity targets only the Claim-bearing Check and baseline Population completeness remains independently mandatory.
+
 <!-- ty-source-item:start key=isolated-fixture-seed kind=technical_obligation -->
 Fixture setup may be amortized through an immutable suite-scoped initialized seed, but every delivery fixture must copy into a unique temporary repository with an independent `.git` common directory, worktree, local configuration, no remote, mutation isolation, and deterministic cleanup; standalone test execution must retain a semantically equivalent fallback.
 <!-- ty-source-item:end -->

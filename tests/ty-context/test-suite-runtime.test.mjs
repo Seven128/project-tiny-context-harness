@@ -31,6 +31,7 @@ import {
   prepareDeliveryFixtureSeed,
 } from "./long-task-delivery-fixtures.mjs";
 import { buildFileTimingReport } from "./test-suite-file-reporter.mjs";
+import { createWorkspaceSnapshot } from "../../packages/ty-context/dist/lib/long-task-workspace.js";
 
 const exec = promisify(execFile);
 const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -81,6 +82,41 @@ test("build fingerprint accepts the matching snapshot and rejects stale dist", a
       /build_fingerprint_stale/u,
     );
   } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workspace snapshots materialize current Context while fingerprinting it separately", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-snapshot-context-"));
+  const workdir = path.join(root, ".work_products", "task");
+  let snapshot = null;
+  try {
+    await mkdir(path.join(root, "project_context"), { recursive: true });
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await mkdir(workdir, { recursive: true });
+    await writeFile(path.join(root, "project_context", "global.md"), "# Initial\n");
+    await writeFile(path.join(root, "src", "index.mjs"), "export {};\n");
+    await git(root, ["init"]);
+    await git(root, ["config", "user.email", "fixture@example.test"]);
+    await git(root, ["config", "user.name", "Fixture"]);
+    await git(root, ["add", "."]);
+    await git(root, ["commit", "-m", "fixture"]);
+
+    await writeFile(path.join(root, "project_context", "global.md"), "# Current\n");
+    snapshot = await createWorkspaceSnapshot(root, workdir, "context-fixture");
+
+    assert.equal(
+      await readFile(path.join(snapshot.root, "project_context", "global.md"), "utf8"),
+      "# Current\n",
+    );
+    assert.equal(
+      snapshot.manifest.files.some((file) =>
+        file.path.startsWith("project_context/"),
+      ),
+      false,
+    );
+  } finally {
+    if (snapshot) await snapshot.dispose();
     await rm(root, { recursive: true, force: true });
   }
 });
