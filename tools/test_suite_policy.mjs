@@ -125,7 +125,6 @@ export const LONG_TASK_ISOLATED_TEST_FILES = Object.freeze([
   "long-task-context-evolution.test.mjs",
   "long-task-corrupt-state-abandon.test.mjs",
   "long-task-counterfactual-integrity.test.mjs",
-  "long-task-delivery-compiler.test.mjs",
   "long-task-evidence-kernel.test.mjs",
   "long-task-evidence-sensitivity-policy.test.mjs",
   "long-task-evidence-sensitivity-surfaces.test.mjs",
@@ -157,6 +156,7 @@ export const LONG_TASK_ISOLATED_TEST_FILES = Object.freeze([
 
 export const LONG_TASK_EXCLUSIVE_TEST_FILES = Object.freeze([
   "long-task-active-authority-continuity.test.mjs",
+  "long-task-delivery-compiler.test.mjs",
   "long-task-final-authority-race.test.mjs",
   "long-task-platform-boundary.test.mjs",
   "long-task-population-environment.test.mjs",
@@ -345,10 +345,10 @@ function assertIsolationPolicy() {
     throw new Error("Long-Task isolation classes must be disjoint.");
   if (
     LONG_TASK_PURE_TEST_FILES.length !== 11 ||
-    LONG_TASK_ISOLATED_TEST_FILES.length !== 41 ||
-    LONG_TASK_EXCLUSIVE_TEST_FILES.length !== 8
+    LONG_TASK_ISOLATED_TEST_FILES.length !== 40 ||
+    LONG_TASK_EXCLUSIVE_TEST_FILES.length !== 9
   )
     throw new Error(
-      "Long-Task isolation policy changed from the reviewed 11/41/8 population; review the new file explicitly instead of parallelizing it by default.",
+      "Long-Task isolation policy changed from the reviewed 11/40/9 population; review the new file explicitly instead of parallelizing it by default.",
     );
 }

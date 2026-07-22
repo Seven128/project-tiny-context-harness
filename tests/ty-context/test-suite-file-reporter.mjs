@@ -47,6 +47,9 @@ export function buildFileTimingReport({
       duration_ms: durationMs,
       line: integerOrNull(event.data?.line),
       column: integerOrNull(event.data?.column),
+      failure_message: boundedFailureMessage(
+        event.data?.details?.failure_message,
+      ),
     });
   }
 
@@ -111,6 +114,9 @@ function serializeEvent(event) {
           duration_ms: numericDuration(data.details?.duration_ms),
           type: data.details?.type ?? null,
           failure_type: data.details?.error?.failureType ?? null,
+          failure_message: boundedFailureMessage(
+            data.details?.error?.message,
+          ),
         },
       },
     };
@@ -212,6 +218,12 @@ function numericDuration(value) {
 
 function integerOrNull(value) {
   return Number.isInteger(value) ? value : null;
+}
+
+function boundedFailureMessage(value) {
+  return typeof value === "string" && value.length > 0
+    ? value.slice(0, 2000)
+    : null;
 }
 
 function fileKey(file) {

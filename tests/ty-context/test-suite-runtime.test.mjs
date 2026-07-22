@@ -143,8 +143,12 @@ test("Long-Task isolation lanes are explicit, exhaustive, and fail unknown files
   assert.equal(new Set(classified).size, classified.length);
   assert.deepEqual([...classified].sort(), available);
   assert.equal(LONG_TASK_PURE_TEST_FILES.length, 11);
-  assert.equal(LONG_TASK_ISOLATED_TEST_FILES.length, 41);
-  assert.equal(LONG_TASK_EXCLUSIVE_TEST_FILES.length, 8);
+  assert.equal(LONG_TASK_ISOLATED_TEST_FILES.length, 40);
+  assert.equal(LONG_TASK_EXCLUSIVE_TEST_FILES.length, 9);
+  assert.equal(
+    classifyLongTaskTestFile("long-task-delivery-compiler.test.mjs"),
+    "exclusive",
+  );
   assert.equal(classifyLongTaskTestFile("long-task-new.test.mjs"), "exclusive");
 
   const lanes = planLongTaskIsolationLanes(available, 2);
@@ -191,6 +195,7 @@ test("file timing diagnostics retain one terminal record for every selected file
       { file: "beta.test.mjs", status: "failed", test_count: 1 },
     ],
   );
+  assert.equal(report.files[1].tests[0].failure_message, "fixture failed");
 });
 
 test("complete affected routing explicitly supersedes a separate Trust aggregate", () => {
@@ -208,7 +213,10 @@ function event(type, file, name, durationMs) {
     data: {
       file,
       name,
-      details: { duration_ms: durationMs },
+      details: {
+        duration_ms: durationMs,
+        failure_message: type === "test:fail" ? "fixture failed" : null,
+      },
     },
   };
 }

@@ -246,7 +246,7 @@ test("affected developer loops remain non-authoritative", async () => {
     "local-worktree",
     "HEAD^",
     "Trust Boundary Gate",
-    "test-suite-timing-v1",
+    "test-suite-timing-v2",
     "main",
     "publish",
   ])

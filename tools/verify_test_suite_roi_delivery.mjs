@@ -257,7 +257,7 @@ async function run(commandName, args, env) {
     child.stdout.on("data", (chunk) => chunks.push(chunk));
     child.stderr.on("data", (chunk) => chunks.push(chunk));
     child.once("error", reject);
-    child.once("exit", async (code, signal) => {
+    child.once("close", async (code, signal) => {
       await writeFile(logPath, Buffer.concat(chunks));
       resolve({ code, signal });
     });
