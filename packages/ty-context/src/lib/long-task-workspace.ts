@@ -46,11 +46,11 @@ export async function captureWorkspaceFingerprint(
   excludedPrefixes: string[] = [],
 ): Promise<WorkspaceFingerprintV2> {
   const root = path.resolve(rootInput);
-  const [head, headTree, indexTree, staged, unstaged, statusBytes, untracked] =
+  const indexTree = await gitOutput(root, ["write-tree"]);
+  const [head, headTree, staged, unstaged, statusBytes, untracked] =
     await Promise.all([
       gitOutput(root, ["rev-parse", "HEAD"]),
       gitOutput(root, ["rev-parse", "HEAD^{tree}"]),
-      gitOutput(root, ["write-tree"]),
       gitBuffer(
         root,
         scopedDiffArgs(
@@ -107,13 +107,12 @@ export async function captureWorkspaceManifest(
     workdir,
     ...additionalExcludedWorkdirs,
   ]);
-  const [indexBytes, modifiedBytes, untrackedBytes, fingerprint] =
-    await Promise.all([
-      gitBuffer(root, ["ls-files", "--stage", "-z"]),
-      gitBuffer(root, ["diff", "--name-only", "-z"]),
-      gitBuffer(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
-      captureWorkspaceFingerprint(root, excluded),
-    ]);
+  const fingerprint = await captureWorkspaceFingerprint(root, excluded);
+  const [indexBytes, modifiedBytes, untrackedBytes] = await Promise.all([
+    gitBuffer(root, ["ls-files", "--stage", "-z"]),
+    gitBuffer(root, ["diff", "--name-only", "-z"]),
+    gitBuffer(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
+  ]);
   const files = new Map<string, WorkspaceFileV2>();
   for (const record of splitZero(indexBytes)) {
     const tab = record.indexOf("\t");

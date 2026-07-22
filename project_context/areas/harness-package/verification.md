@@ -45,6 +45,8 @@ Long-Task fixture initialization may prepare default and external-confirmation G
 
 File-level concurrency uses explicit reviewed classes only: pure/static and proven isolated temporary-repository files enter the bounded safe lane at the reviewed default of two; Hook/profile, environment, distribution, verifier-migration, Git-race, Playwright/child-process lifecycle and unclassified files use the serial exclusive lane. Lane membership is disjoint and exhaustive, a new file defaults to exclusive, and `TY_CONTEXT_LONG_TASK_ISOLATED_CONCURRENCY=1` is the mechanical serial rollback. The default was enabled only after one serial and two concurrency-two runs over six representative lifecycle files preserved all 33 test identities, terminal outcomes, immutable seed/workspace state and cleanup while reducing the representative wall time from 206.276 seconds to 147.228 and 128.054 seconds; this bounded Windows observation is rollout evidence, not a cross-environment benchmark.
 
+Workspace manifest and fingerprint capture serializes the index-writing `git write-tree` before parallel read-only Git discovery. Git Trace2 verification binds that ordering so file-level concurrency cannot create an internal per-fixture `index.lock` race; the read-only discovery remains parallel after the lock-bearing command completes.
+
 The implementation, migration status, measurement rules and stable retrieval keys are indexed in `docs/test-suite-roi-redesign.md` under `TS-PURPOSE`, `TS-BASELINE`, `TS-TIER-DEV`, `TS-TIER-TRUST`, `TS-TIER-RELEASE`, `TS-ROUTING`, `TS-RERUN`, `TS-RELEASE-HANDOFF`, `TS-OPTIMIZE`, `TS-MIGRATION`, `TS-METRICS`, `TS-AC` and `TS-NONGOALS`.
 
 ## Focused Gates

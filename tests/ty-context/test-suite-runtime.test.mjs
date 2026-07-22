@@ -32,6 +32,7 @@ import {
 } from "./long-task-delivery-fixtures.mjs";
 import { buildFileTimingReport } from "./test-suite-file-reporter.mjs";
 import { createWorkspaceSnapshot } from "../../packages/ty-context/dist/lib/long-task-workspace.js";
+import { assertWorkspaceGitOrdering } from "./workspace-git-ordering-fixture.mjs";
 
 const exec = promisify(execFile);
 const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -120,6 +121,11 @@ test("workspace snapshots materialize current Context while fingerprinting it se
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test(
+  "workspace manifest serializes index-writing Git before parallel reads",
+  assertWorkspaceGitOrdering,
+);
 
 test("suite-scoped fixture seeds preserve independent repository semantics", async () => {
   const seed = await prepareDeliveryFixtureSeed();
