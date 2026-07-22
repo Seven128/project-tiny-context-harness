@@ -80,6 +80,7 @@ const events = [];
 const completions = [];
 let fixtureSeed = null;
 let cleanupError = null;
+let executionError = null;
 const startedAt = performance.now();
 
 try {
@@ -94,6 +95,9 @@ try {
     events.push(...(await readReporterEvents(eventFile)));
     if (completion.signal || completion.code !== 0) break;
   }
+} catch (error) {
+  executionError =
+    error instanceof Error ? error.stack ?? error.message : String(error);
 } finally {
   try {
     if (fixtureSeed) await fixtureSeed.cleanup();
@@ -110,6 +114,7 @@ try {
 const wallTimeMs = Math.round(performance.now() - startedAt);
 const completionSignal = completions.find((entry) => entry.signal)?.signal ?? null;
 const completionFailed =
+  executionError !== null ||
   completions.length !== lanes.length ||
   completions.some((entry) => entry.code !== 0 || entry.signal) ||
   cleanupError !== null;
@@ -123,6 +128,7 @@ const timing = buildFileTimingReport({
   testStatus: completionFailed ? "failed" : "passed",
   wallTimeBudgetMs,
   wallTimeBudgetStatus: budgetStatus,
+  executionError,
 });
 if (timing.missing_file_count > 0 && timing.test_status === "passed") {
   timing.test_status = "failed";
@@ -137,6 +143,7 @@ if (timingOutput) {
 }
 
 if (cleanupError) console.error(`Suite cleanup failed: ${cleanupError}`);
+if (executionError) console.error(`Suite execution failed: ${executionError}`);
 if (completionSignal) process.kill(process.pid, completionSignal);
 else if (timing.test_status !== "passed") {
   process.exitCode = completions.find((entry) => entry.code)?.code ?? 1;

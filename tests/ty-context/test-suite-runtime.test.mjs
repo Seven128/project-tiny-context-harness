@@ -174,6 +174,7 @@ test("file timing diagnostics retain one terminal record for every selected file
     selectedFiles,
     wallTimeMs: 25,
     execution: { mode: "serial", isolated_concurrency: 1 },
+    executionError: "fixture runner startup failed",
     events: [
       event("test:pass", selectedFiles[0], "alpha one", 8),
       event("test:pass", selectedFiles[0], "alpha two", 4),
@@ -196,6 +197,7 @@ test("file timing diagnostics retain one terminal record for every selected file
     ],
   );
   assert.equal(report.files[1].tests[0].failure_message, "fixture failed");
+  assert.equal(report.execution_error, "fixture runner startup failed");
 });
 
 test("complete affected routing explicitly supersedes a separate Trust aggregate", () => {

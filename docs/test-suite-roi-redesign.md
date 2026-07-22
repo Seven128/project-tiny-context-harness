@@ -279,6 +279,8 @@ One canonical final invocation selects exactly one highest required aggregate ti
 Each package-suite invocation must report every selected test file's identity, duration, and terminal status in ephemeral diagnostics without caching a passing result or creating acceptance state.
 <!-- ty-source-item:end -->
 
+Implementation note for that obligation: if suite setup, fixture-seed preparation, or lane startup fails, the same report fails closed with the bounded execution error and missing-file accounting instead of disappearing. The Final Gate oracle retains a bounded failed-command diagnostic in structured observations and still produces its declared diagnostic artifact when a required carrier is absent, so current-snapshot and Counterfactual failures remain attributable rather than becoming artifact-missing noise.
+
 <!-- ty-source-item:start key=isolated-fixture-seed kind=technical_obligation -->
 Fixture setup may be amortized through an immutable suite-scoped initialized seed, but every delivery fixture must copy into a unique temporary repository with an independent `.git` common directory, worktree, local configuration, no remote, mutation isolation, and deterministic cleanup; standalone test execution must retain a semantically equivalent fallback.
 <!-- ty-source-item:end -->

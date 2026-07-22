@@ -19,6 +19,7 @@ export function buildFileTimingReport({
   testStatus = null,
   wallTimeBudgetMs = null,
   wallTimeBudgetStatus = "not_configured",
+  executionError = null,
 }) {
   const selected = selectedFiles.map((file) => path.resolve(file));
   const stateByFile = new Map(
@@ -82,6 +83,7 @@ export function buildFileTimingReport({
     test_status: observedStatus,
     wall_time_budget_ms: wallTimeBudgetMs,
     wall_time_budget_status: wallTimeBudgetStatus,
+    execution_error: boundedFailureMessage(executionError),
     execution,
     result_cache_used: false,
     unknown_files_parallelized: execution.unknown_files_parallelized === true,

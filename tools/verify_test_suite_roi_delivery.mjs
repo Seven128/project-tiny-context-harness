@@ -107,15 +107,16 @@ for (const relativePath of requiredCarriers) {
   }
 }
 
+await rm(artifactRoot, { recursive: true, force: true });
+await mkdir(timingRoot, { recursive: true });
+
 let defaultTiming = null;
 let longTaskTiming = null;
-let command = { code: null, signal: null };
+let command = { code: null, signal: null, failure_tail: null };
 let diagnostic = null;
 
 if (missingCarriers.length === 0) {
   try {
-    await rm(artifactRoot, { recursive: true, force: true });
-    await mkdir(timingRoot, { recursive: true });
     const spec = npmCommandSpec([
       "test",
       "--workspace",
@@ -131,6 +132,9 @@ if (missingCarriers.length === 0) {
   } catch (error) {
     diagnostic = error instanceof Error ? error.message : String(error);
   }
+} else {
+  diagnostic = `required_carriers_missing:${missingCarriers.join(",")}`;
+  await writeFile(logPath, `${diagnostic}\n`, "utf8");
 }
 
 const runtimeTestPassed = filePassed(
@@ -184,6 +188,13 @@ const observations = {
   shortcut_detected: !noShortcuts,
   measured_long_task_wall_time_ms: longTaskTiming?.wall_time_ms ?? null,
   maximum_long_task_wall_time_ms: maximumLongTaskWallTimeMs,
+  complete_suite_exit_code: command.code,
+  complete_suite_signal: command.signal,
+  complete_suite_diagnostic: diagnostic,
+  complete_suite_failure_tail: command.failure_tail,
+  default_timing_present: defaultTiming !== null,
+  long_task_timing_present: longTaskTiming !== null,
+  missing_carriers: missingCarriers,
   original_long_task_file_sha256: sha256(
     `${originalLongTaskFiles.join("\n")}\n`,
   ),
@@ -257,11 +268,25 @@ async function run(commandName, args, env) {
     child.stdout.on("data", (chunk) => chunks.push(chunk));
     child.stderr.on("data", (chunk) => chunks.push(chunk));
     child.once("error", reject);
-    child.once("close", async (code, signal) => {
-      await writeFile(logPath, Buffer.concat(chunks));
-      resolve({ code, signal });
+    child.once("close", (code, signal) => {
+      const output = Buffer.concat(chunks);
+      void writeFile(logPath, output).then(
+        () =>
+          resolve({
+            code,
+            signal,
+            failure_tail:
+              code === 0 && !signal ? null : boundedOutputTail(output),
+          }),
+        reject,
+      );
     });
   });
+}
+
+function boundedOutputTail(output) {
+  const text = output.toString("utf8");
+  return text.slice(Math.max(0, text.length - 6000));
 }
 
 function sha256(value) {
