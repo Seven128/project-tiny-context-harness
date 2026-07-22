@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 
@@ -44,21 +44,33 @@ export async function assertLongTaskStaticConsistency(repoRoot) {
     /machine_accepted_external_pending/u,
   );
   assert.match(gitignore, /^\.codex\/hooks\.json$/mu);
-  const tracked = await gitOutput(repoRoot, [
-    "ls-files",
-    "--",
-    ".codex/hooks.json",
-  ]);
-  const deleted = await gitOutput(repoRoot, [
-    "ls-files",
-    "--deleted",
-    "--",
-    ".codex/hooks.json",
-  ]);
-  assert.ok(
-    !tracked || deleted === ".codex/hooks.json",
-    "the package-owned runtime Hook may exist locally but must not be source",
-  );
+  if (await pathExists(path.join(repoRoot, ".git"))) {
+    const tracked = await gitOutput(repoRoot, [
+      "ls-files",
+      "--",
+      ".codex/hooks.json",
+    ]);
+    const deleted = await gitOutput(repoRoot, [
+      "ls-files",
+      "--deleted",
+      "--",
+      ".codex/hooks.json",
+    ]);
+    assert.ok(
+      !tracked || deleted === ".codex/hooks.json",
+      "the package-owned runtime Hook may exist locally but must not be source",
+    );
+  } else {
+    assert.equal(
+      await pathExists(path.join(repoRoot, ".codex/hooks.json")),
+      false,
+      "an immutable source snapshot must not materialize the ignored runtime Hook",
+    );
+  }
+}
+
+async function pathExists(target) {
+  return Boolean(await stat(target).catch(() => null));
 }
 
 async function gitOutput(cwd, args) {

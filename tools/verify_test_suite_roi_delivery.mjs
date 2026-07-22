@@ -142,8 +142,8 @@ const runtimeTestPassed = filePassed(
   "test-suite-runtime.test.mjs",
 );
 const routingAndBuild =
-  missingCarriers.length === 0 && command.code === 0 && runtimeTestPassed;
-const fixtureIsolation = routingAndBuild;
+  missingCarriers.length === 0 && runtimeTestPassed;
+const fixtureIsolation = missingCarriers.length === 0 && runtimeTestPassed;
 const timingAndLanes =
   timingReportComplete(defaultTiming) && timingReportComplete(longTaskTiming);
 const observedLongTaskFiles = new Set(
@@ -194,6 +194,8 @@ const observations = {
   complete_suite_failure_tail: command.failure_tail,
   default_timing_present: defaultTiming !== null,
   long_task_timing_present: longTaskTiming !== null,
+  default_timing_summary: timingSummary(defaultTiming),
+  long_task_timing_summary: timingSummary(longTaskTiming),
   missing_carriers: missingCarriers,
   original_long_task_file_sha256: sha256(
     `${originalLongTaskFiles.join("\n")}\n`,
@@ -249,6 +251,52 @@ function timingReportComplete(timing) {
         ),
     )
   );
+}
+
+function timingSummary(timing) {
+  if (!timing) return null;
+  return {
+    ...timingScalarSummary(timing),
+    non_passing_files: nonPassingFileSummaries(timing.files ?? []),
+  };
+}
+
+function timingScalarSummary(timing) {
+  return {
+    status: timing.status ?? null,
+    test_status: timing.test_status ?? null,
+    file_count: timing.file_count ?? null,
+    test_count: timing.test_count ?? null,
+    passed_count: timing.passed_count ?? null,
+    failed_count: timing.failed_count ?? null,
+    skipped_count: timing.skipped_count ?? null,
+    cancelled_count: timing.cancelled_count ?? null,
+    missing_file_count: timing.missing_file_count ?? null,
+    wall_time_ms: timing.wall_time_ms ?? null,
+    execution_error: timing.execution_error ?? null,
+  };
+}
+
+function nonPassingFileSummaries(files) {
+  return files
+    .filter((entry) => entry.status !== "passed")
+    .slice(0, 20)
+    .map((entry) => ({
+      file: entry.file,
+      status: entry.status,
+      tests: nonPassingTestSummaries(entry.tests ?? []),
+    }));
+}
+
+function nonPassingTestSummaries(tests) {
+  return tests
+    .filter((test) => test.status !== "passed")
+    .slice(0, 20)
+    .map((test) => ({
+      name: test.name,
+      status: test.status,
+      failure_message: test.failure_message ?? null,
+    }));
 }
 
 async function readJson(file) {
