@@ -11,7 +11,7 @@ const root = path.resolve(
 const read = (relative) => readFile(path.join(root, relative), "utf8");
 
 test("orientation Context exposes Single-Goal Rolling Delivery authority", async () => {
-  const [global, architecture, manifest, area, model, workflow] =
+  const [global, architecture, manifest, area, model, workflow, quality] =
     await Promise.all([
       read("project_context/global.md"),
       read("project_context/architecture.md"),
@@ -20,6 +20,9 @@ test("orientation Context exposes Single-Goal Rolling Delivery authority", async
       read("project_context/areas/harness-package/foundation/context-model.md"),
       read(
         "project_context/areas/harness-package/contracts/workflow-contract.md",
+      ),
+      read(
+        "project_context/areas/harness-package/decision-rationale/architecture-quality.md",
       ),
     ]);
 
@@ -37,7 +40,12 @@ test("orientation Context exposes Single-Goal Rolling Delivery authority", async
   assert.match(manifest, /role = "decision-rationale"/);
   assert.match(manifest, /role = "implementation-index"/);
   assert.match(manifest, /role = "verification"/);
+  assert.match(manifest, /decision-rationale\/architecture-quality\.md/);
+  assert.match(manifest, /"architecture deliberation"/);
+  assert.match(manifest, /"架构考量"/);
   assert.match(area, /Role Context Map/);
+  assert.match(area, /Architecture Quality Rationale/);
+  assert.match(global, /Architecture quality rationale/);
 
   assert.match(model, /`project_context\/\*\*` is authoritative/);
   assert.match(model, /Code is current implementation evidence/);
@@ -53,6 +61,15 @@ test("orientation Context exposes Single-Goal Rolling Delivery authority", async
   assert.match(workflow, /\/long-task-workflow/);
   assert.match(workflow, /Targeted verify.*never accepted authority/s);
   assert.match(workflow, /Contract Conformance/);
+  assert.match(quality, /Reason And Honest Guarantee/);
+  assert.match(quality, /Architecture Deliberation/);
+  assert.match(quality, /Architecture Conformance/);
+  assert.match(quality, /Contract Conformance And Context Drift/);
+  assert.match(quality, /Evidence And Update Principles/);
+  assert.match(
+    quality,
+    /Final Gate is the only Long-Task post-implementation architecture-conformance owner/iu,
+  );
   assert.doesNotMatch(workflow, /Plan Validator Boundary/);
 });
 

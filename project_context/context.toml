@@ -32,6 +32,12 @@ read_policy = "on-demand"
 triggers = ["why minimal context", "why bounded search", "context recall", "trigger miss", "legacy stage", "phase gate", "thick docs", "benchmark"]
 
 [[context]]
+path = "project_context/areas/harness-package/decision-rationale/architecture-quality.md"
+role = "decision-rationale"
+read_policy = "on-demand"
+triggers = ["architecture deliberation", "architecture conformance", "architecture quality", "architecture checkpoint", "architecture closure", "contract conformance", "context drift", "technical debt", "future change", "source of truth", "dependency direction", "forbidden shortcut", "架构设计", "架构考量", "架构保障", "代码质量", "技术债"]
+
+[[context]]
 path = "project_context/areas/harness-package/decision-rationale/long-task-workflow.md"
 role = "decision-rationale"
 read_policy = "on-demand"

@@ -446,12 +446,77 @@ test("blocker revisions use causal evidence without adding completion state", as
   );
 });
 
+test("Long-Task carries shared architecture quality once through Final Gate", async () => {
+  const [skill, authoring, lifecycle, workflow, rationale, spec] =
+    await Promise.all([
+      read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/contract-authoring.md",
+      ),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+      ),
+      read(
+        "project_context/areas/harness-package/contracts/workflow-contract.md",
+      ),
+      read(
+        "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+      ),
+      read("PROJECT_SPEC.md"),
+    ]);
+  const guidance = [skill, authoring, lifecycle, workflow, rationale, spec].join(
+    "\n",
+  );
+
+  assert.match(
+    guidance,
+    /Architecture Deliberation[\s\S]*before (?:formal Compile and )?(?:the first )?implementation/iu,
+  );
+  assert.match(
+    skill,
+    /Put durable conclusions in owning Context and material falsifiable delivery conclusions in real marked Source plus existing Contract fields/iu,
+  );
+  assert.match(
+    authoring,
+    /Source-backed technical obligation, global constraint or forbidden shortcut[\s\S]*owner Context[\s\S]*Binding[\s\S]*project-owned executable architecture check/iu,
+  );
+  assert.match(
+    lifecycle,
+    /sole Long-Task `Architecture Conformance` carrier/iu,
+  );
+  assert.match(
+    skill,
+    /Do not also run the default Workflow's standalone Contract Conformance closure/iu,
+  );
+  assert.match(
+    workflow,
+    /Do not run a separate default Contract Conformance closure before or after it/iu,
+  );
+  assert.match(
+    rationale,
+    /Adding a second architecture Gate, field, Receipt or default Contract Conformance pass would duplicate ownership and runtime cost/iu,
+  );
+  assert.match(
+    rationale,
+    /independent read-only Global product-conformance Check[\s\S]*distinct from the shared Architecture Conformance obligation/iu,
+  );
+  assert.match(
+    guidance,
+    /changed candidate|candidate change|later candidate.*invalidates/iu,
+  );
+  assert.doesNotMatch(guidance, /architecture_conformance_state|architecture_gate_receipt/iu);
+});
+
 test("Mechanism Admission Rule is explicit and creates no registry", async () => {
-  const [spec, rationale] = await Promise.all([
+  const [spec, rationale, workflow, efficiency] = await Promise.all([
     read("PROJECT_SPEC.md"),
     read(
       "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
     ),
+    read(
+      "project_context/areas/harness-package/contracts/workflow-contract.md",
+    ),
+    read("docs/long-task-workflow-efficiency.md"),
   ]);
   const section = spec.match(
     /## Mechanism Admission Rule\r?\n([\s\S]*?)\r?\n## 3\. Workflow Levels/u,
@@ -467,6 +532,33 @@ test("Mechanism Admission Rule is explicit and creates no registry", async () =>
     /not a new mechanism matrix, Receipt or runtime Registry/iu,
   );
   assert.match(rationale, /not a matrix file, Receipt or runtime Registry/iu);
+
+  const policy = [section, rationale, workflow, efficiency].join("\n");
+  assert.match(
+    policy,
+    /Every Long-Task change starts from the controlling design purpose/iu,
+  );
+  assert.match(
+    policy,
+    /cost of introducing the change[\s\S]*(?:subsequent |its )?ROI judgment/iu,
+  );
+  assert.match(
+    policy,
+    /mechanism semantics[\s\S]*change the mechanism and its verification[\s\S]*(?:Otherwise change only|stays at) (?:the |its )?owning point/iu,
+  );
+  assert.match(policy, /merely positive but marginal ROI is insufficient/iu);
+  assert.match(
+    policy,
+    /measured data, benchmarks or operational evidence[\s\S]*When none exists[\s\S]*user or project owner[\s\S]*rigorous causal (?:argument|reasoning)[\s\S]*(?:simple, )?bounded validation/iu,
+  );
+  assert.match(
+    policy,
+    /Long-Task Workflow itself[\s\S]*(?:before mature longitudinal data existed|rather than mature longitudinal data)[\s\S]*(?:logic and basic validation|logic-and-basic-validation)/iu,
+  );
+  assert.match(
+    policy,
+    /(?:total cost|cost) is comparable[\s\S]*(?:purpose more effectively|stronger purpose fulfillment)[\s\S]*purpose fulfillment is comparable[\s\S]*lower implementation and operating cost/iu,
+  );
 });
 
 test("Harness Authoring Skill routes Long-Task changes through mechanism admission", async () => {
@@ -489,6 +581,21 @@ test("Harness Authoring Skill routes Long-Task changes through mechanism admissi
   ]) {
     assert.match(skill, new RegExp(concept, "iu"));
   }
+  assert.match(skill, /任何 Long-Task Workflow 改动[\s\S]*既定设计目的/iu);
+  assert.match(skill, /改动会带来的引入成本纳入后续 ROI 判断/iu);
+  assert.match(
+    skill,
+    /不涉及机制的，只修改对应 owner 点，不把局部问题升级成新机制/iu,
+  );
+  assert.match(skill, /ROI 必须为正且不能只是勉强为正/iu);
+  assert.match(
+    skill,
+    /优先使用数据、benchmark 或实际证据[\s\S]*没有数据时[\s\S]*用户或项目 owner[\s\S]*严密的因果论证[\s\S]*边界明确的验证/iu,
+  );
+  assert.match(
+    skill,
+    /成本相差不大，优先优化达到机制目的的效果[\s\S]*效果相近，优先优化实现成本/iu,
+  );
   assert.match(skill, /不生成 Mechanism Matrix、Receipt、Registry/iu);
   assert.match(
     skill,

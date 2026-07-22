@@ -43,17 +43,20 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Keep the startup graph small because every fresh Agent pays that read and attention cost; preserve specialized facts by routing them on demand rather than deleting them.
 - Add one bounded Context search because manifest triggers are cheap but natural-language recall is imperfect. Searching only the small durable Context surface adds low fixed cost and reduces the direct trigger-miss path without introducing retrieval infrastructure.
 - Keep ordinary planning and architecture judgment inside the platform Goal. Persist only durable project facts and use project-native executable checks for objective boundaries.
+- Make architecture work externally observable through one task-local deliberation checkpoint, but do not persist private reasoning or create an architecture-plan authority. Risk changes depth, not whether the checkpoint occurs.
 - Keep Long-Task acceptance separate from implementation sequencing: one Contract and one Final Gate provide completion authority without a scheduler, second plan or worker state.
 - Use the first Authority Lock as a one-time user model-choice boundary. The locked Contract and Final Gate make lower-cost execution a viable user choice, while Harness still owns no model routing and adds no repeated pause or state.
 - Keep retrieval guidance outside active delivery authority because it changes how a future Agent finds facts, not the meaning of the Context files already selected for the current delivery. Selected ownership, role/dependency structure and file contents remain fail-closed.
 
-## Default Workflow And Architecture Quality
+## Shared Workflow And Architecture Quality
 
-- Default execution uses manifest routing plus bounded Context search, one `Context Delta: none|required`, a conditional Design Authority Check for material production UI, platform-internal planning, precise implementation, project-owned verification, Contract Conformance and Context drift checking.
+- Every implementation delivery uses one shared architecture-quality obligation. Before implementation it surfaces a concise repository-bound `Architecture Deliberation`; after project verification it performs one `Architecture Conformance` on the current candidate snapshot.
+- Default execution uses manifest routing plus bounded Context search, the shared deliberation, one `Context Delta: none|required`, a conditional Design Authority Check for material production UI, platform-internal planning, precise implementation, project-owned verification, Contract Conformance including architecture closure and a separately named Context drift check.
 - The UI check first performs UI Authority Closure over affected stable surface/control/target keys, then reads relevant screen/surface Context, `DESIGN.md`, one authored token source/generation direction and selected versioned design references. Exact targets may support fidelity claims, constraints prove only their declared scope, and inspiration never becomes an implicit reproduction target. Missing authority routes to a Context update, task-local explicit design authoring/delegation or a genuine decision before production styling; local style fixes and explicit prototypes stay lightweight.
-- A risk-triggered architecture gate applies when work creates or changes a durable module/capability, public API/schema/data/persistence, state/source of truth, ownership/dependency direction, cross-area boundary, migration/security/recovery behavior or reusable abstraction.
-- The gate resolves owner, unique source of truth, dependency direction, interface/state/lifecycle, failure/retry/recovery/compatibility, forbidden shortcuts and the project-owned executable check that protects the boundary.
-- Durable results update owning Context; local implementation choices remain task-local. Small fixes do not pay architecture-ceremony cost.
+- Architecture Deliberation always identifies the concrete owner/current extension point and debt disposition. Its depth rises when work creates or changes a durable module/capability, public API/schema/data/persistence, state/source of truth, ownership/dependency direction, cross-area boundary, migration/security/recovery behavior or reusable abstraction.
+- Material deliberation resolves owner, unique source of truth, dependency direction, interface/state/lifecycle, failure/retry/recovery/compatibility, selected and rejected alternatives, a plausible future-change challenge, forbidden shortcuts, touched technical debt and the project-owned executable check that protects the boundary. Small fixes record a concrete preservation finding rather than paying full ceremony or skipping the checkpoint.
+- Durable results update owning Context; local conclusions remain task-local. Scope, owner, Context or selected-design changes stale the deliberation before implementation continues.
+- Default Contract Conformance is the broad internal implementation-alignment review and contains the architecture closure. Context drift remains explicit because it checks the reverse direction from implementation/new decisions back to durable Context.
 - Harness may route project-owned architecture checks but must not become a language-generic dependency analyzer. Repositories use their native lint/AST/architecture tools.
 - Modularity checks report physical and semantic risk, including the highest-risk function location, without changing project thresholds or creating lifecycle state.
 
@@ -74,18 +77,20 @@ This is the minimum durable architecture map for the Harness source repository. 
 
 ## Contract And Architecture Closure
 
+- Default and Long-Task execution share one architecture obligation but use mutually exclusive post-implementation carriers. Default embeds Architecture Conformance in Contract Conformance; Long-Task uses only Final Gate. A changed candidate snapshot invalidates closure and requires the owning carrier again.
 - Stable architecture requirements are represented through existing Source-backed technical obligations, global constraints or forbidden shortcuts, owner/path envelopes, Bindings and project-owned executable Checks.
 - Functional behavior and architecture structure are separate claims when either can pass without the other. Both must have falsifiable proof when both are required.
 - Unsupported architecture preference, inferred product semantics or an unverifiable “good design” claim must not become false authority. Resolve it as durable Context, task-local judgment or `decision_required`.
 - A material UI request with only an unconfigured starter, style prose or inspiration cannot use the implementation itself as its own target. A design authored under explicit delegation must be selected and frozen as Source before fidelity implementation or comparison begins.
 - Scope/path escape, duplicate authority, bypass of an owning service/facade, wrong dependency direction or second source of truth blocks only when the Contract or controlling Context declares the invariant and a reliable check can observe it.
+- New or worsened debt blocks conformance unless a project-owned bounded exception identifies owner, rationale, tracking and removal condition. Unrelated legacy debt is not pulled into scope automatically, but debt touched, relied on or worsened by the delivery cannot remain hidden.
 
 ## Constraints And Tradeoffs
 
 - Minimal default Context trades automatic reading of every specialized rule for lower recurring attention cost; manifest routing plus bounded search reduces recall risk without loading the whole Context graph.
-- Keyword search cannot understand every synonym or indirect dependency, so it supplements rather than replaces semantic reasoning, Architecture Context Hit and final Conformance.
+- Keyword search cannot understand every synonym or indirect dependency, so it supplements rather than replaces semantic reasoning, Architecture Deliberation and final Conformance.
 - Retrieval-only manifest edits may preserve active Authority and scoped Progress, but they never preserve a Final Receipt across a changed Git tree; Final Gate still runs against the final committed snapshot.
-- Architecture enforcement is limited to declared, falsifiable project invariants. Subjective design quality remains engineering review rather than false machine proof.
+- Architecture enforcement is limited to declared, falsifiable project invariants. The visible checkpoint proves occurrence, not private cognition or universal future-proofing; subjective design quality remains engineering review rather than false machine proof.
 - Runtime evidence is likewise project-owned: Harness can require current-execution semantics, a Source-authored bounded target/runtime-family/root profile, evidence to the furthest independently failing declared boundary, causal Counterfactuals when carrier presence can diverge from capability, and frozen runner/verifier identity. It cannot infer which targets the product requires or independently attest that a trusted project oracle exercises the intended target.
 - The first successful Compile creates Authority Lock and immutable initial base. Later protected changes cannot be silently adopted; candidate diagnosis leaves the old Authority active and cannot create a second Draft authority, state plane or acceptance path.
 - The execution-model checkpoint is one additive compile signal and Agent pause; no model switch, route, tier scheduler, acknowledgement file or repeated checkpoint exists.
@@ -104,7 +109,7 @@ This is the minimum durable architecture map for the Harness source repository. 
 - Long-Task CLI tests must prove first Compile emits `execution_model_checkpoint.required: true`, later Compile emits `false`, and Skill/reference/package copies preserve the same one-time/no-state semantics.
 - Preflight remains read-only and Compile remains the fail-closed activation boundary. Added references, repair hints, occurrence counts and repair-order metadata may improve repair but cannot change acceptance.
 - Revision tests must prove the three-way classifier, exact summary/hash binding, scope-only candidate execution with zero durable-state mutation, red-candidate non-execution, stable pending projection in status/resume, approval invalidation after edits and full evidence invalidation after adoption.
-- Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone reruns the complete long-task authority on one current snapshot.
+- Project-native architecture checks and `check-modularity` protect declared structural boundaries; Final Gate alone carries Long-Task Architecture Conformance and reruns the complete authority on one current snapshot.
 - Managed source/package/generated copies must remain byte-aligned through source sync and package parity checks.
 - Guidance parity tests prove that a proxy, tracked status report or historical artifact cannot be the sole proof of a target-runtime Claim; rolling reruns remain coalesced through existing input freshness, and only the bounded required-target/runtime-family/root profile plus exact terminal target/Stage projections are added—never open-ended `platform_impact`, per-platform Progress or a per-Outcome rebuild rule.
 - Trusted publication binds the tested tarball SHA-256, dispatch source commit and a CRLF/LF-stable lockfile identity across the job boundary. Node/npm versions remain build provenance, not a requirement that the later publisher process use byte-identical tools.
@@ -114,5 +119,5 @@ This is the minimum durable architecture map for the Harness source repository. 
 - A structurally complete Contract cannot discover undeclared requirements.
 - Bounded keyword search can still miss synonyms or indirect semantics; real Agent routing evidence is required to quantify residual recall risk.
 - Same-user files, installed package code and Git metadata are trusted drift boundaries, not hostile-host security isolation.
-- Architecture quality beyond declared and observable invariants still depends on engineering judgment and review.
+- Architecture quality beyond declared and observable invariants, and requirements never declared or foreseeably challenged, still depends on engineering judgment and review.
 - Public docs, managed source, package assets and generated workspace copies can drift unless parity checks remain enforced.

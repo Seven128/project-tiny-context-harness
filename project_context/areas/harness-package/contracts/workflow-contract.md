@@ -8,6 +8,14 @@ read_policy: on-demand
 
 This contract defines the lightweight default workflow and the explicit Single-Goal Long-Task Workflow boundary. It controls authority and order of thought, not a required plan file or scheduler.
 
+## Shared Architecture Quality Obligation
+
+Every implementation delivery completes one `Architecture Deliberation` before its first implementation edit. The checkpoint is externally observable and repository-bound rather than hidden reasoning: it identifies the affected capability and owners, current extension point and unique source of truth, dependency direction and interface/state/lifecycle boundaries, failure/recovery/compatibility concerns, selected design and material rejected alternatives, one plausible future-change challenge, touched technical debt and its disposition, forbidden shortcuts, and project-owned architecture checks. Depth is risk-proportional. A small semantics-preserving change may record that existing architecture remains valid, but it still names the concrete owner/extension point and why the change creates no new or worsened debt. A material scope, owner, Context or design change makes the checkpoint stale and requires refinement before implementation continues.
+
+After implementation and project-owned verification, one `Architecture Conformance` closure checks the current candidate snapshot against those conclusions and every controlling architecture invariant. It checks scope/path escape, owner or dependency-direction violations, service/facade bypass, duplicate authority or a second source of truth, undeclared API/schema/state/persistence change, forbidden shortcuts, required project-native checks and new or worsened debt. A correction returns to implementation and verification; any later candidate change invalidates the closure. Default work carries this closure inside Contract Conformance. Long-Task work carries it only through declared Technical/Global authority and executable Checks in Final Gate. The two carriers are mutually exclusive for one candidate snapshot.
+
+The obligation makes the performance of architecture work visible; it does not prove private reasoning or promise an architecture that anticipates every unknowable future requirement. It creates no required architecture artifact, second `Context Delta`, Contract, Authority, Gate, state machine, scheduler or language-generic analyzer.
+
 ## Default Workflow
 
 When no active long-task binding or explicit `/long-task-workflow` invocation applies:
@@ -16,10 +24,11 @@ When no active long-task binding or explicit `/long-task-workflow` invocation ap
 2. Before deciding `Context Delta`, run one bounded text search over `project_context/**` using a small set of high-signal terms from the task, including explicit area/module names and relevant API/schema/state/security/verification/deployment terms. Merge matching Context with manifest candidates and read only relevant files.
 3. For product-surface or information-placement work, perform the lightweight positioning check for information ownership/layout and role placement before narrowing to code.
 4. For material production UI, perform UI Authority Closure and the conditional Design Authority Check below before the first implementation edit.
-5. Decide exactly one `Context Delta: none|required`; update owning Context or `DESIGN.md` first when required.
-6. Use platform-internal planning with no required `plan.md` to keep goal, boundaries, controlling Context, likely implementation surfaces and verification clear.
-7. Implement, run project-owned verification in proportion to risk, perform Contract Conformance and check Context drift.
-8. Hand off implementation, verification, Context status and blockers without a result artifact.
+5. Perform the shared `Architecture Deliberation` and surface its concise repository-bound conclusions before the first implementation edit.
+6. Decide exactly one `Context Delta: none|required`; update owning Context or `DESIGN.md` first when required.
+7. Use platform-internal planning with no required `plan.md` to keep goal, boundaries, controlling Context, likely implementation surfaces and verification clear.
+8. Implement, run project-owned verification in proportion to risk, perform Contract Conformance including `Architecture Conformance`, and then check Context drift.
+9. Hand off implementation, verification, architecture conformance, Context status and blockers without a result artifact.
 
 The bounded search supplements manifest routing and Agent semantic judgment. It creates no persistent index, cache, search state, Context registry or second authority. The default path requires no `plan.md`, Task Contract, mapping table, matrix, verdict, evidence ledger or implementation-summary file. Existing `plan.md` files remain ordinary user files; other existing artifacts likewise have no Harness authority.
 
@@ -28,7 +37,7 @@ The bounded search supplements manifest routing and Agent semantic judgment. It 
 - Context owns durable intent; code owns current implementation; tests/CI/smoke/browser/human observation own product evidence.
 - `Context Delta: required` covers durable product capability, surface responsibility, ownership, architecture/interface/schema/data/state/recovery/dependency/security or repeatable verification/deployment changes. Local semantics-preserving fixes are `none`.
 - For every material external source constraint, internally classify it as covered by Context, requiring a Context update, task-local, explicitly out of scope or requiring a genuine user decision. This judgment creates no table.
-- Final Conformance checks that controlling Context reached the owning modules/surfaces/interfaces/state machines and verification paths and that no forbidden shortcut or duplicate authority was used.
+- Final Conformance checks that controlling Context reached the owning modules/surfaces/interfaces/state machines and verification paths and that no forbidden shortcut or duplicate authority was used. Context drift remains separately named because it asks the reverse question: whether implementation or a newly selected decision changed durable truth that Context does not yet record.
 
 ## Product Surface Responsibility
 
@@ -86,7 +95,7 @@ An explicit user request may raise risk to strict. Neither Skill nor execution m
 
 The workflow is:
 
-`initial/revised proposal + selected design resources -> integrated Source inventory/synthesis/refinement -> relevant Context -> one Contract Draft -> target/stage/Outcome/Control/repository binding -> Preflight -> Compile / Authority Lock -> one-time model choice -> Rolling Frontier -> targeted repair -> protected revision when needed -> clean candidate commit -> source-recompiled one-snapshot Final Gate -> qualified machine result -> Stop/close -> native Goal veto review -> external confirmations -> Context drift check`
+`initial/revised proposal + selected design resources -> integrated Source inventory/synthesis/refinement -> relevant Context -> Architecture Deliberation -> one Contract Draft -> target/stage/Outcome/Control/repository binding -> Preflight -> Compile / Authority Lock -> one-time model choice -> Rolling Frontier -> targeted repair -> protected revision when needed -> clean candidate commit -> source-recompiled one-snapshot Final Gate including Architecture Conformance -> qualified machine result -> Stop/close -> native Goal veto review -> external confirmations -> Context drift check`
 
 Legacy Source Plans and external design resources remain ordinary Source, not a Contract Draft. Source-quality authoring now occurs inside `long-task-workflow`; the Contract Draft remains the one Contract rather than an artifact chain. The lifecycle still has exactly one Contract and Final Gate.
 
@@ -128,7 +137,7 @@ Capacity, file length, implementation layers, module count, parallelism and Agen
 - The Harness does not promise drift-free intermediate model behavior. Rolling implementation may diverge; Compile, scope/risk escalation, targeted findings, Final Gate and Stop must detect observable drift, block acceptance, identify the owning Outcome/Claim/Check or boundary and direct repair.
 - Machine acceptance means the final current-snapshot artifact has no remaining observable drift relative to the declared Contract and relevant Context. It does not extend to omitted or non-falsifiable requirements, hostile-host tampering or external CI/deployment/human confirmation.
 - Targeted verify is scoped repair evidence only. Only the source-recompiled Final Gate may accept after rechecking the complete Contract on one current snapshot.
-- Add or retain a workflow mechanism only when review identifies its distinct false-completion/drift or total-cost path, invariant, proof, overlap, deletion risk, Authoring/Runtime/State/Recovery/maintenance cost, net benefit, fail-closed behavior and second-Authority/plan/scheduler risk. The model-choice checkpoint is admitted as a one-time execution-cost mechanism enabled by locked acceptance, not as proof.
+- Every Long-Task change preserves the controlling purpose and accounts for total cost by including the cost of introducing the change in its ROI judgment. Mechanism semantics, invariant, authority/proof-boundary or runtime-behavior changes modify the owning mechanism and verification; other changes stay at their owning point. Add or retain a workflow mechanism only when review identifies its distinct false-completion/drift or total-cost path, invariant, proof, overlap, deletion risk, Authoring/Runtime/State/Recovery/maintenance cost, materially positive ROI, fail-closed behavior and second-Authority/plan/scheduler risk. Use data when available; without it, require user/owner discussion, rigorous causal reasoning and bounded validation. At comparable cost optimize purpose fulfillment; at comparable effect optimize implementation and operating cost. The model-choice checkpoint is admitted as a one-time execution-cost mechanism enabled by locked acceptance, not as proof.
 
 ## Compile, Verification And Completion
 
@@ -138,6 +147,7 @@ Capacity, file length, implementation layers, module count, parallelism and Agen
 - Targeted verify may run one Check, one Outcome or all requested repair checks. It rechecks active task/revision/compiled/worktree identity before writing derived current-snapshot status and is never accepted authority.
 - During rolling execution, run an applicable target-runtime Check once at the first runnable boundary and rerun it before dependent work grows after accumulated changes to its declared runtime-affecting inputs or Binding carriers. Coalesce related edits and use the cheapest reliable Check; do not require a full environment rebuild per Outcome or per edit.
 - Final Gate creates one current snapshot and reruns all global and Outcome Checks, including the distinct read-only conformance Check when weak observability combines with multiple stages or required runtime families, then rechecks active identity before acceptance. Human, CI, deployment and product confirmations never contribute machine proof. A target-blocking confirmation yields `blocked_external`; non-blocking confirmations yield `machine_accepted_external_pending` after all machine Checks pass.
+- Final Gate is also the sole Long-Task carrier for the shared `Architecture Conformance`: every material architecture conclusion must already be represented by Source-backed obligations/constraints/forbidden shortcuts, owners/paths/Bindings and project-owned executable Checks. Do not run a separate default Contract Conformance closure before or after it. A changed snapshot, Contract or controlling Context requires the existing Final Gate freshness path again.
 - Reporting follows existing verifier state: `progress_passing` is targeted repair evidence, `progress_stale` is not a current pass, and `final_workflow_status: null` means the Goal is unfinished. The workflow status is accompanied by the declared target profile, `target_state` (`implementation_complete`, `target_profile_usable`, `production_release_ready`, `not_accepted` or `blocked_external`) and derived stage results (`passed`, `failed`, `blocked_external` or `blocked_dependency`); these are receipt/status qualifications, not another persistent completion state machine.
 - `final-gate`, `status`, `resume`, `stop-check`, the Stop Hook and `close` preserve the same accepted workflow qualification. Stop/close may CAS-clear an accepted machine Authority; pending external delivery remains named in their output, `closed` means only machine Authority cleanup, and no confirmation tracker or Receipt is created.
 - Compile/revision, Final Gate, Stop and close JSON expose their effect and scope: revision adoption has `delivery_completed_by_this_event: false`, accepted terminal commands identify `acceptance_scope: declared_machine_authority` and `native_goal_effect: none`, and cleanup identifies `closed_scope: machine_authority`; none mutates the platform-native Goal.
@@ -153,14 +163,17 @@ Capacity, file length, implementation layers, module count, parallelism and Agen
 
 ## Contract Conformance
 
-Before handoff:
+Contract Conformance is the default path's internal implementation-alignment review, not a `delivery-contract.yaml`, independent verifier or additional Gate. Before handoff:
 
 - fix implementation misses;
 - update missing durable facts;
 - account for every material source constraint;
 - confirm controlling Context reached the correct owners and verification;
+- perform `Architecture Conformance` on the current candidate snapshot, including the deliberated owner/source-of-truth/dependency/lifecycle boundaries, future-change extension point, debt disposition and declared project-native checks;
 - confirm no forbidden shortcut, duplicate workflow artifact, stale authority or risk downgrade;
 - confirm implementation, docs, Skills/assets and Context are aligned.
+
+The following Context drift check remains explicit and directional: Contract Conformance asks whether implementation follows current Source and Context; Context drift asks whether implementation or new decisions made durable Context stale or incomplete. If either check finds a miss, repair the owner, rerun affected project verification and repeat conformance on the new candidate.
 
 ## Non-Goals
 

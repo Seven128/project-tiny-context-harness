@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
-test("architecture and rationale checks stay inside internal planning guidance", () => {
+test("architecture deliberation is visible while routing questions stay internal", () => {
   const sources = [
     read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
     read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
@@ -15,6 +15,8 @@ test("architecture and rationale checks stay inside internal planning guidance",
   ];
 
   for (const content of sources) {
+    assert.match(content, /Architecture Deliberation/);
+    assert.match(content, /Architecture Conformance/);
     assert.match(content, /Architecture Context Hit/);
     assert.match(content, /Decision Rationale Hit: existing\|required\|none|Decision Rationale Hit: <existing \| required \| none>/);
     assert.match(content, /Context Delta: none\|required/);
@@ -30,7 +32,12 @@ test("architecture and rationale checks stay inside internal planning guidance",
   assert.match(developmentSkill, /dependency direction/);
   assert.match(developmentSkill, /verification \/ deployment semantics/);
   assert.match(developmentSkill, /durable rationale \/ tradeoff/);
-  assert.match(developmentSkill, /普通 bug fix.*package\/release.*测试修复.*spike/s);
+  assert.match(
+    developmentSkill,
+    /每个实现需求都执行一次[\s\S]*small code task[\s\S]*保持现有架构[\s\S]*不能用“无需架构考虑”跳过/,
+  );
+  assert.match(developmentSkill, /不输出私有思维链/);
+  assert.match(developmentSkill, /新增或加重技术债默认阻塞交付/);
   assert.match(developmentSkill, /压成一行不能规避/);
   assert.match(developmentSkill, /lifecycle-complete waiver/);
   assert.match(developmentSkill, /不要创建 `plan\.md`、Task Contract 文件或 Markdown 映射表/);
@@ -64,26 +71,39 @@ test("templates keep rationale durable, optional and evidence-free", () => {
   }
 });
 
-test("public docs and spec frame architecture support as Minimal Context, not a process chain", () => {
+test("public docs and spec frame one shared architecture obligation without a process chain", () => {
   const docs = [read("README.md"), read("packages/ty-context/README.md"), read("packages/ty-context/assets/README.md")];
 
   for (const content of docs) {
-    assert.match(content, /Technical architecture support is a Minimal Context capability/);
+    assert.match(content, /Technical architecture support is a shared Workflow obligation/);
+    assert.match(content, /Every implementation delivery visibly completes `Architecture Deliberation`/);
+    assert.match(content, /Architecture Conformance/);
+    assert.match(content, /Final Gate be the sole closure owner|sole Long-Task Architecture Conformance carrier/);
     assert.match(content, /Architecture Context Hit/);
     assert.match(content, /Decision Rationale Hit: existing\|required\|none/);
-    assert.match(content, /No Task Contract.*fixed `plan\.md`/s);
-    assert.match(content, /does not prove product quality|still does not prove product quality|不证明产品质量/);
-    assert.match(content, /Do not invent rationale/);
+    assert.match(content, /no Task Contract.*fixed `plan\.md`/si);
+    assert.match(
+      content,
+      /does not expose private chain-of-thought, guarantee the best design or anticipate every unknowable future request/,
+    );
+    assert.match(content, /Store stable reasons, rejected alternatives or tradeoffs/);
     assert.match(content, /smallest durable Context surface/);
+    assert.match(
+      content,
+      /(?:does not become|rather than becoming) a language-generic architecture analyzer or (?:add an|adding) architecture artifact\/state/,
+    );
     assert.doesNotMatch(content, /Architecture Delta|Rationale Delta/);
   }
 
   const spec = read("PROJECT_SPEC.md");
-  assert.match(spec, /Architecture Context Hit.*internal high-risk routing question/s);
-  assert.match(spec, /Decision Rationale Hit.*internal `existing\|required\|none` coverage question/s);
-  assert.match(spec, /not a durable fact, role, validator or artifact/);
+  assert.match(spec, /Every implementation delivery has one shared architecture-quality obligation/);
+  assert.match(spec, /Architecture Context Hit.*internal routing question/s);
+  assert.match(spec, /Decision Rationale Hit: existing\|required\|none.*internal routing question/s);
+  assert.match(spec, /not durable facts, roles, validators or artifacts/);
   assert.match(spec, /never creates a rationale delta or required file/);
   assert.match(spec, /Context Delta.*only durable-fact decision point/s);
+  assert.match(spec, /two workflow entries are execution carriers, not nested quality workflows/);
+  assert.match(spec, /No architecture plan, matrix, ADR, new Contract field, second Authority, Gate, scheduler, persistent state/);
 });
 
 function read(relativePath) {

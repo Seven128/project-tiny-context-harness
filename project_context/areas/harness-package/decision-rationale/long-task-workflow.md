@@ -10,13 +10,15 @@ Single-Goal Long-Task Workflow exists to prevent false completion inside one com
 
 Source-quality authoring, Contract Draft authoring, Preflight repair, formal Compile, one model-choice checkpoint, rolling implementation, verification and Final Gate remain one `long-task-workflow` lifecycle. `source-plan-authoring` is now only a compatibility pointer.
 
+The shared Architecture Deliberation occurs during Source/Contract authoring before formal Compile and implementation. Long-Task Final Gate is the sole post-implementation Architecture Conformance carrier; no default-workflow closure is nested around it.
+
 ## Controlling Objective
 
 When Source is complete and fine-grained enough to cover every declared requirement and AC, and each item has reliable executable proof that the executing Agent cannot weaken by itself, the workflow must prevent every unsatisfied item from being accepted or reported complete.
 
 Intermediate implementation may drift, fail or require rework. The workflow does not guarantee model success or a drift-free path. It constrains acceptance: compare Source Authority, Contract, relevant Context and the current artifact; block unsatisfied items; localize failures through Source Item, Outcome, Claim, Assertion, Check, Proof Surface, Binding and owner boundary; direct repair; and revalidate the complete final snapshot. Summary prose, progress, historical tests, Receipts and command exit alone never substitute for proof.
 
-The efficiency target is the lowest practical total workflow cost that preserves this interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, maintenance and test cost, or equal cost with stronger independent drift prevention. Stop stacking mechanisms when marginal protection no longer exceeds their cost; when the evidence boundary is uncertain, fail safe rather than silently accept.
+The efficiency target is the lowest practical total workflow cost that preserves this interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, maintenance and test cost, or equal cost with stronger independent drift prevention. Stop stacking mechanisms when independent protection no longer materially exceeds total cost; merely positive but marginal ROI is insufficient. When the evidence boundary is uncertain, fail safe rather than silently accept.
 
 ## Why Contract Draft Exists
 
@@ -118,6 +120,14 @@ Draft Outcomes make rolling work cheaper to reason about, but they do not create
 
 Final Gate rechecks all Global and Outcome Checks on one current snapshot. This prevents local passes, stale passes or historically compatible results from being aggregated into completion. There is always one selected delivery, one Contract Authority and one Final Gate.
 
+## Why Architecture Quality Reuses The Final Gate
+
+Long-Task shares the same architecture-quality obligation as default work: one visible repository-bound Architecture Deliberation before implementation and one current-candidate Architecture Conformance after project verification. The deliberation is not a promise of universal future-proofing; it makes owner/source-of-truth/dependency/lifecycle/alternative/future-change/debt/check conclusions observable and routes durable results to Context.
+
+Material, falsifiable conclusions already fit the Contract's Technical/Global authority: Source-backed obligations, constraints and forbidden shortcuts, owner/path envelopes, Bindings and project-owned executable Checks. Final Gate already recompiles that authority and reruns every Check on one current snapshot. Adding a second architecture Gate, field, Receipt or default Contract Conformance pass would duplicate ownership and runtime cost without closing an independent false-completion path.
+
+The invariant is therefore single-carrier: before Authority Lock, architecture conclusions that matter to acceptance are declared through existing fields; after implementation, only Final Gate may accept them. A changed candidate or authority invalidates the Gate and reruns the existing freshness path. Subjective quality remains engineering review, while undeclared or unforeseeable requirements remain outside machine proof.
+
 ## Semantic-Drift Closure Index
 
 The anti-semantic-drift design is indexed by the following stable mechanism keys. They are sections of the one Contract and the one Evidence Kernel, not additional plans, authorities, receipts or workflow state.
@@ -129,10 +139,10 @@ The anti-semantic-drift design is indexed by the following stable mechanism keys
 - `LT-PATH`: every Outcome declares whether success and degradation paths are required, and every Check declares its journey role. A degradation, recovery or unavailable result cannot prove the Outcome Result Claim or substitute for a required success Check.
 - `LT-EXTERNAL`: external confirmations declare a kind, impacted Claim refs and whether they block the selected target. Functional prerequisites must block it; production-only gates do not block a lower target. Reclassification or impact removal is protected Authority change.
 - `LT-ADEQUACY`: the existing read-only Preflight/Compile kernel checks stage closure, target/runner compatibility, scenario/evidence completeness, success/degradation separation, external impacts and risk-proportional conformance coverage before Authority Lock. There is no new lifecycle Gate or reusable adequacy receipt.
-- `LT-CONFORMANCE`: an independent read-only Global conformance Check is required only when weak observability combines with multiple stages or multiple required product runtime families. It uses a distinct Raw Execution, starts from a declared root product target and participates in the existing Final Gate; a simple single-stage/single-family delivery keeps the cheaper existing sensitivity path. This is veto evidence, not a second acceptance authority.
+- `LT-CONFORMANCE`: an independent read-only Global product-conformance Check is required only when weak observability combines with multiple stages or multiple required product runtime families. It uses a distinct Raw Execution, starts from a declared root product target and participates in the existing Final Gate; a simple single-stage/single-family delivery keeps the cheaper existing sensitivity path. It is distinct from the shared Architecture Conformance obligation and is veto evidence, not a second acceptance authority.
 - `LT-REVISION`: removal or weakening of target, stage, path, scenario, evidence capability, external impact or conformance coverage is protected. A mechanically monotonic proof addition may auto-adopt, but every adopted revision returns to rolling implementation and invalidates affected evidence.
 - `LT-TERMINAL`: terminal projections keep the existing workflow status vocabulary and additionally name the accepted target profile, target state and derived stage results. This removes ambiguous `machine_accepted` meaning without adding a second completion state machine.
-- `LT-ROI`: admit a mechanism whenever its expected independent drift-prevention benefit is greater than its total Authoring, Runtime, State, Recovery, maintenance and test cost. The threshold is positive net value, not unusually high ROI; prefer one cohesive implementation when staged partial mechanisms would leave seams or cost more overall.
+- `LT-ROI`: admit a mechanism only when its expected independent drift-prevention benefit materially exceeds its total Authoring, Runtime, State, Recovery, maintenance and test cost. ROI must be positive and not marginal; prefer one cohesive implementation when staged partial mechanisms would leave seams or cost more overall.
 
 The evidence envelope stores bounded hashes, identifiers, changed-field names and artifact references rather than unrestricted raw payloads. Capability-specific observers remain project-owned and frozen as verifier authority; the Harness validates their declared structure, current execution, target binding and cross-record invariants but does not claim hostile-verifier attestation.
 
@@ -146,7 +156,11 @@ This closes two distinct paths: late discovery that multiplies rework, and false
 
 ## Mechanism Admission And Cost Boundary
 
-A mechanism is admitted or retained when it closes a concrete and otherwise insufficiently covered false-completion or delivery-drift path, establishes a testable invariant, fails closed and has expected independent drift-prevention value greater than its total Authoring, Runtime, State, Recovery, maintenance and test cost. The required ROI is positive, not exceptional. Prefer a cohesive one-time change when partial mechanisms would preserve semantic seams or create more aggregate migration and maintenance cost.
+A Long-Task change begins with the controlling design purpose and accounts for total cost by explicitly including the cost of introducing the change in its ROI judgment. A change to mechanism semantics, invariants, authority/proof boundaries or runtime behavior modifies the mechanism and its verification; a change that does not affect a mechanism stays at its owning point instead of being promoted into one.
+
+A mechanism is admitted or retained when it closes a concrete and otherwise insufficiently covered false-completion or delivery-drift path, establishes a testable invariant, fails closed and has expected independent drift-prevention value that materially exceeds its total Authoring, Runtime, State, Recovery, maintenance and test cost. ROI must be positive and not marginal. Prefer measured data, benchmarks or operational evidence. When none exists, discuss the decision with the user or project owner; rigorous causal reasoning plus simple, bounded validation is sufficient. The Long-Task Workflow itself began from that logic-and-basic-validation standard rather than mature longitudinal data. Unsupported intuition alone is not sufficient.
+
+With the design purpose fixed and ROI materially positive, prefer stronger purpose fulfillment when total cost is comparable, or lower implementation and operating cost when purpose fulfillment is comparable. Prefer a cohesive one-time change when partial mechanisms would preserve semantic seams or create more aggregate migration and maintenance cost.
 
 Review must identify the path, invariant, proof, overlap with existing mechanisms, the risk reopened by deletion, total cost, net benefit, fail-closed behavior and whether the proposal creates a second Authority, second plan or scheduling plane. This review is a design and code-review principle, not a matrix file, Receipt or runtime Registry.
 
@@ -175,6 +189,7 @@ When a rolling blocker motivates revision, implementation difficulty alone canno
 - **Live target-runtime Check ownership** prevents a proxy pass or tracked self-report from proving a Claim that can fail independently in the target; the earliest owning Outcome executes the target in the current Check run and binds runtime-affecting inputs through existing fields.
 - **Coalesced rolling runtime verification** reduces late-rework cost by using that same non-accepting Check at the first runnable boundary and after accumulated relevant input changes, without a per-Outcome rebuild rule, scheduler or new state.
 - **Same-snapshot Final Gate** prevents historical pass aggregation and stale evidence reuse.
+- **Shared Architecture Deliberation plus Final-Gate-only Architecture Conformance** makes architecture work observable before implementation and binds every declared invariant to the same final snapshot without a second Gate, field or state. Default Contract Conformance is not run on the Long-Task route.
 - **Stop/close rerun the Live Final Gate** prevents post-Gate Source, Context, Contract, verifier or code drift from being accepted.
 - **Machine/native terminal scope isolation** makes Final Gate, Stop and close identify declared machine Authority, leaves native Goal mutation with the host and uses a veto-only Goal-to-Source conformance review before platform completion.
 - **Scope escape and risk escalation** prevent work outside the declared boundary from passing under the old scope or proof level.

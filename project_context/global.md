@@ -4,6 +4,7 @@
 
 - Maintain `project-tiny-context-harness`, the npm package and `ty-context` CLI behind Project Tiny Context Harness.
 - Keep three cooperating capabilities small and distinct: **Minimal Context** preserves durable project facts, **Workflow Contract** defines the lightweight default engineering loop, and the explicitly enabled **Long-Task Workflow** adds one complete Contract authority plus current-snapshot machine completion for work that needs durable recovery.
+- Apply one shared architecture-quality obligation to every implementation delivery: an externally observable `Architecture Deliberation` before implementation and one current-candidate `Architecture Conformance` after project verification. Default work carries closure inside Contract Conformance; Long-Task carries it only inside Final Gate.
 - Preventing false completion inside declared authority is the Long-Task Workflow's controlling objective. Intermediate implementation may drift or fail; only fresh evidence for every declared Plan Item/Claim and AC on the complete current final snapshot may accept. Otherwise the task remains explicitly unfinished or `machine_accepted_external_pending` when only named external confirmation remains.
 - Preserve that protection at the lowest practical total Authoring, Runtime, State, Recovery, maintenance and test cost. Retain a mechanism only when it closes a distinct false-completion/delivery-drift path or enables a material total-cost reduction without weakening acceptance, and its non-substitutable benefit materially exceeds its total cost.
 
@@ -30,12 +31,13 @@
 
 - Keep one primary owner for each durable fact, use the smallest near-universal Context set, and combine cheap manifest routing with a bounded search fallback so trigger wording is not the only discovery path.
 - Prefer existing Context, Contract and project-verification mechanisms over new artifacts or state. Add a mechanism only when it closes a distinct failure path or delivers a material net cost reduction.
+- Make architecture consideration observable and repository-bound without claiming hidden-reasoning access or universal future-proofing. Depth is risk-proportional, but a small task records a concrete preservation result rather than skipping; objective invariants use project-native checks.
 - Keep acceptance fail-closed: efficiency may reduce authoring, model or recovery cost but never substitutes historical evidence, prose or Agent judgment for current-snapshot proof.
 - When a declared result can pass on a proxy surface while failing in its target runtime, require a project-owned Check that exercises that target during the current Check execution. A tracked report, screenshot, binary or prior run is review material, not live runtime proof.
 
 ## Non-goals / Boundaries
 
-- The default Workflow Contract reads minimum relevant Context through manifest routing plus bounded Context search, conditionally resolves Design Authority readiness for material production UI, uses platform-internal planning, implements, runs project-owned verification, performs Contract Conformance and checks Context drift. It requires no `plan.md`, matrix, verdict, evidence ledger or result artifact.
+- The default Workflow Contract reads minimum relevant Context through manifest routing plus bounded Context search, conditionally resolves Design Authority readiness for material production UI, performs `Architecture Deliberation`, decides one Context Delta, uses platform-internal planning, implements, runs project-owned verification, performs Contract Conformance including `Architecture Conformance`, and separately checks Context drift. It requires no `plan.md`, matrix, verdict, evidence ledger or result artifact.
 - Product Surface Contract work uses `context_surface_contract` with existing `contract`, area/subdomain and verification roles. It must not add a new product-surface Context role; durable surface responsibility remains project-owned Context.
 - A Product Surface Contract owns cross-surface/main-versus-drilldown responsibility. An on-demand Screen Contract may own durable per-screen hierarchy, regions, navigation, variants and control interaction semantics. Neither duplicates visual tokens or target pixels from `DESIGN.md`/authored targets, and local UI fixes do not require a Screen Contract.
 - The active long-task design is **Single-Goal Rolling Delivery V2**: one user-selected delivery, one complete Contract authority, one native Goal, one selected workspace, one user model-choice checkpoint after first Authority Lock, dependency-ready rolling implementation, targeted verifier repair evidence and one source-recompiled same-snapshot Live Final Gate.
@@ -68,7 +70,7 @@
 
 ## Current State
 
-- Package version `0.7.4` defines the public `long-task-delivery-v2` path, explicit `long-task` profile, package-owned Stop Hook, stateless Authority Revision diagnosis, revision-to-rolling return and declared-machine/native-Goal terminal boundary.
+- Package version `0.7.9` adds the shared observable Architecture Deliberation/Conformance obligation while preserving the public `long-task-delivery-v2` path, explicit `long-task` profile, package-owned Stop Hook, stateless Authority Revision diagnosis, revision-to-rolling return and declared-machine/native-Goal terminal boundary.
 - Managed source lives under `.codex/ty-context-managed/**`; packaged assets live under `packages/ty-context/assets/**`; `packages/ty-context/source-mappings.yaml` is the copy authority.
 - Root `AGENTS.md` is a startup router and hard-boundary surface. Skills own role procedures, `PROJECT_SPEC.md` owns the full stable design explanation, role Context owns durable facts, README owns human usage, and tests own machine proof.
 - `ty-context doctor` reports the deterministic default Context read footprint, excessive/byte-identical default content and `DESIGN.md` authority status without creating a new validation gate.
@@ -96,6 +98,7 @@ Keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`,
   - [workflow contract](areas/harness-package/contracts/workflow-contract.md)
   - [package-managed surfaces](areas/harness-package/contracts/package-managed-surfaces.md)
   - [Minimal Context rationale](areas/harness-package/decision-rationale/minimal-context.md)
+  - [Architecture quality rationale](areas/harness-package/decision-rationale/architecture-quality.md)
   - [Long-Task Workflow rationale](areas/harness-package/decision-rationale/long-task-workflow.md)
   - [implementation index](areas/harness-package/implementation-index.md)
   - [verification](areas/harness-package/verification.md)

@@ -40,11 +40,11 @@ Global non-goals, constraints and forbidden shortcuts remain Global authority an
 - `task.target_profile` declares `required_state` plus a non-empty, duplicate-free `required_target_refs`. Each ref resolves to a `product` execution target with one bounded runtime family and root entrypoint. Every Stage Gate and every `critical_user_path` Outcome provides root `target_runtime` proof for every required ref; optional support/observer targets never substitute.
 - Use `implementation_complete` only when code-level implementation is the selected target, `target_profile_usable` when the declared required targets must be usable, and `production_release_ready` only when release gates are part of the selected target. These are terminal target qualifications, not Outcome progress states.
 
-## Architecture Closure
+## Architecture Deliberation And Closure
 
-Architecture protection is risk-triggered and project-specific. Use it when the delivery declares module ownership, unique source of truth, dependency direction, API/schema/data boundary, state lifecycle, persistence/recovery, security boundary, compatibility/migration or a forbidden bypass.
+Architecture Deliberation occurs once for every implementation delivery before formal Compile and the first implementation edit; risk changes depth, not occurrence. Surface concise conclusions and repository evidence rather than private chain-of-thought. A preservation result still names the concrete owner/extension point and explains why durable boundaries and debt do not worsen. Material work covers module ownership, unique source of truth, dependency direction, API/schema/data boundary, state lifecycle, persistence/recovery, security boundary, compatibility/migration, selected and rejected alternatives, one plausible future-change challenge, touched technical debt and forbidden bypasses.
 
-Represent the invariant with existing Contract fields:
+Represent every material falsifiable invariant with existing Contract fields:
 
 1. a Source-backed technical obligation, global constraint or forbidden shortcut;
 2. owner Context and expected/support/forbidden paths;
@@ -52,7 +52,9 @@ Represent the invariant with existing Contract fields:
 4. a project-owned executable architecture check, such as the repository's lint, AST, dependency or contract test;
 5. a separate Assertion when functional behavior could pass while the architecture invariant fails.
 
-Do not encode subjective “clean architecture” or generic quality prose as machine authority. If no reliable observation can falsify it, keep it as durable Context/review judgment or return `decision_required`. Harness routes the repository's architecture check; it does not become a language-generic dependency analyzer.
+New or worsened debt is unacceptable unless a project-owned bounded exception identifies owner, rationale, tracking and removal/expiry condition. Unrelated legacy debt does not automatically expand delivery scope, but debt touched, relied on or worsened by the implementation cannot remain hidden. Material changes to scope, owner, Context, dependency direction, selected design or debt disposition refresh the deliberation and, after Authority Lock, use protected revision.
+
+Do not encode subjective “clean architecture” or generic quality prose as machine authority. If no reliable observation can falsify it, keep it as durable Context/review judgment or return `decision_required`. Harness routes the repository's architecture check; it does not become a language-generic dependency analyzer. Final Gate is the only Long-Task Architecture Conformance carrier and reruns these declared Checks on its current snapshot; do not add a default-workflow closure, architecture field, second Gate or state.
 
 ## Proxy And Target Runtime Independence
 

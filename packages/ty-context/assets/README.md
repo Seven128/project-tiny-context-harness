@@ -67,7 +67,7 @@ Coding agents need two different kinds of help:
 - durable facts that survive sessions without loading the whole repository;
 - trustworthy completion checks when a task spans many edits or context compactions.
 
-Tiny Context keeps those concerns narrow. `project_context/**` records durable ownership, architecture, contracts and repeatable verification. The default Workflow Contract combines manifest routing with one bounded Context search before `Context Delta`. The explicit Long-Task Workflow adds one machine-checked Delivery Contract, a one-time post-Authority-Lock model choice, rolling repair verification, a same-snapshot Final Gate and Stop freshness.
+Tiny Context keeps those concerns narrow. `project_context/**` records durable ownership, architecture, contracts and repeatable verification. Both implementation routes share one visible, risk-proportional Architecture Deliberation before implementation and one current-candidate Architecture Conformance after project verification. The default Workflow Contract combines manifest routing with one bounded Context search before `Context Delta`; the explicit Long-Task Workflow adds one machine-checked Delivery Contract, a one-time post-Authority-Lock model choice, rolling repair verification, a same-snapshot Final Gate and Stop freshness.
 
 It does not launch or switch models, spawn agents, create branches or worktrees, merge, push, open pull requests, deploy, or claim to replace project tests and human acceptance.
 
@@ -146,7 +146,7 @@ The smoke packs the local workspace, installs it into a disposable repo and vali
 
 ```sh
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.8.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.9.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -193,11 +193,12 @@ Ordinary tasks stay lightweight:
 
 1. read core/default Context and collect manifest candidates;
 2. run one bounded Context search over `project_context/**` and read only relevant matches;
-3. decide `Context Delta: none|required`;
-4. update owning Context first when durable semantics change;
+3. surface one concise, repository-bound Architecture Deliberation;
+4. decide `Context Delta: none|required` and update the owning Context first when durable semantics change;
 5. use the platform's internal plan;
 6. implement and run project-owned verification;
-7. perform Contract Conformance and Context drift checks.
+7. perform Contract Conformance, including Architecture Conformance on the current candidate;
+8. perform the separate Context drift check and hand off.
 
 The default workflow creates no required `plan.md`, matrix, verdict, evidence ledger, persistent Context-search index or second execution plan. Task length, file count and complexity never auto-enable long-task state.
 
@@ -205,9 +206,13 @@ Plan Validator commands no longer exist; existing plan, matrix or verdict files 
 
 ### Architecture And Modularity Guidance
 
-Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. The architecture gate is risk-triggered for durable module/capability boundaries, public API/schema/data or persistence, source-of-truth/state ownership, dependency direction, cross-area work, migration/security/recovery and reusable abstractions. It resolves owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, forbidden shortcuts and the project-owned executable check that protects the boundary. Small fixes do not pay this ceremony.
+Technical architecture support is a shared Workflow obligation. Every implementation delivery visibly completes `Architecture Deliberation` before its first implementation edit. Risk changes depth, not occurrence. A small change names the concrete owner/current extension point, confirms durable boundaries remain unchanged and explains why it adds or worsens no debt. Material work additionally covers the unique source of truth, dependency and interface/state/lifecycle boundaries, failure/recovery/compatibility, selected and rejected alternatives, one plausible future change and its extension point, touched technical debt, forbidden shortcuts and project-owned executable checks. `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` remain internal routing questions; no Task Contract or fixed `plan.md` is required.
 
-Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality. Harness may route repository-native lint/AST/dependency/contract checks, but it does not become a language-generic architecture analyzer.
+After implementation and project verification, `Architecture Conformance` checks the current candidate for scope/path escape, owner or dependency-direction violations, service/facade bypass, duplicate authority or a second source of truth, undeclared API/schema/state/persistence change, missing architecture checks and new or worsened debt. A changed candidate invalidates the result. Default work embeds this closure in Contract Conformance; Long-Task work encodes material invariants with existing obligations/constraints/forbidden shortcuts, owners/paths/Bindings and executable Checks and lets Final Gate be the sole closure owner. The two closures never both run for one candidate.
+
+Contract Conformance asks whether current Source and Context reached implementation and verification; the separately named Context drift check asks whether implementation or a new decision made durable Context stale. New or worsened debt blocks handoff unless the project has an explicit bounded exception with owner, rationale, tracking and a removal condition. Unrelated legacy debt does not automatically expand task scope, but debt touched, relied on or worsened by the change cannot remain hidden.
+
+The visible checkpoint proves that architecture consideration occurred; it does not expose private chain-of-thought, guarantee the best design or anticipate every unknowable future request. Store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface. Harness may route repository-native lint/AST/dependency/contract checks, but it does not become a language-generic architecture analyzer or add an architecture artifact/state.
 
 `ty-context check-modularity` audits selected handwritten source and identifies the highest-risk function and line for statement/branch findings. `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`.
 
@@ -282,7 +287,7 @@ The first successful Compile creates Authority Lock and returns `execution_model
 
 Later revisions are classified into three paths. Formally monotonic evidence strengthening and other proven mechanical-safe changes auto-adopt. A candidate whose only protected reasons are owner, expected-change or allowed-support expansion may be exercised through `diagnose-revision` using existing active Check identities whose runner and verifier are unchanged; safe monotonic strengthening may coexist, and the results remain transient repair diagnostics rather than Progress or acceptance. Product/Source/Acceptance semantic changes, proof weakening, verifier-content or runner changes, and risk increases are preview-only and require the exact revision identity; risk downgrade remains rejected outright. A rolling blocker is not itself an External Confirmation or permission to remove machine-verifiable scope. A real scope change first becomes marked Source. Diagnosis never changes the active Authority or writes pending/approval state, cache, Progress or Receipt, so related edits can accumulate in the same `delivery-contract.yaml` before one `compile --revise` approval request. The pending decision contains a concise hash-bound summary with exact changed semantic fields, Source/Product Claim reductions, proof reductions and external-confirmation keys and is projected by `status`/`resume`. Adoption reports `delivery_completed_by_this_event: false`, invalidates affected evidence and returns to rolling implementation or repair; the complete Final Gate remains mandatory.
 
-The package-managed Long-Task Skill uses progressive disclosure: its main `SKILL.md` keeps the objective, boundaries and phase routing; one-level references are read only for Contract authoring, evidence design or authority lifecycle. This reduces routine instruction load without moving any rule into a second authority. When Source or controlling Context declares an architecture invariant, the Contract uses existing technical obligations/global constraints/forbidden shortcuts, owner/path/Binding boundaries and a project-owned executable Check. Functional acceptance cannot substitute when the architecture invariant can fail independently.
+The package-managed Long-Task Skill uses progressive disclosure: its main `SKILL.md` keeps the objective, boundaries and phase routing; one-level references are read only for Contract authoring, evidence design or authority lifecycle. This reduces routine instruction load without moving any rule into a second authority. It performs the shared Architecture Deliberation during Source/Contract authoring. When Source or controlling Context declares an architecture invariant, the Contract uses existing technical obligations/global constraints/forbidden shortcuts, owner/path/Binding boundaries and a project-owned executable Check. Functional acceptance cannot substitute when the architecture invariant can fail independently, and Final Gate is the sole Long-Task Architecture Conformance carrier.
 
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes split independently observable, decidable, vertical and target-verifiable results so the current Goal can keep a smaller dependency-ready working set, target verification, localize failures, resume findings and invalidate stale local results. `depends_on` expresses acceptance readiness. Every Outcome belongs to one ordered Stage; its Stage gate transitively depends on the other Outcomes in that Stage, and later Stages depend on earlier gates. The Rolling Frontier and Stage status are derived from ordinary Outcome Progress and are temporary. An Outcome is not a Worker, scheduler task, queue or parallelism unit, and a Stage owns no Receipt or second Gate. Outcome decomposes execution and diagnosis, not completion authority: targeted passes never replace the one complete Final Gate on the current final snapshot.
 
@@ -518,7 +523,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.8.tgz` under the preview output directory.
+`npm run preview:pack` produces a local preview named `project-tiny-context-harness-0.7.9.tgz` under the preview output directory.
 
 ## Community And Further Reading
 

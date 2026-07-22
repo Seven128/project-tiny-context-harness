@@ -4,7 +4,15 @@
 
 The Long-Task Workflow exists to prevent false completion inside declared authority. Its acceptable machine result is binary in substance: either fresh evidence on the complete current final snapshot proves every declared Plan Item and AC, or the delivery remains explicitly unfinished or qualified.
 
-Efficiency is subordinate to that objective. The preferred design is the lowest practical total workflow cost that preserves the same false-completion interception, or stronger interception at the same cost. A mechanism is retained only when it closes an independent delivery-drift path or enables a material total-cost reduction without weakening acceptance, fails closed where acceptance is involved and contributes more value than its Authoring, Runtime, State, Recovery, maintenance and test cost.
+Efficiency is subordinate to that objective. The preferred design is the lowest practical total workflow cost that preserves the same false-completion interception, or stronger interception at the same cost. A mechanism is retained only when it closes an independent delivery-drift path or enables a material total-cost reduction without weakening acceptance, fails closed where acceptance is involved and contributes materially more value than its Authoring, Runtime, State, Recovery, maintenance and test cost. Merely positive but marginal ROI is insufficient.
+
+## Change Principle
+
+Every Long-Task change starts from the controlling design purpose and accounts for total cost by explicitly including the cost of introducing the change in the subsequent ROI judgment. Change the mechanism and its verification when mechanism semantics, an invariant, an authority/proof boundary or runtime behavior changes. Otherwise change only the owning point instead of promoting a local correction into a mechanism.
+
+Prefer measured data, benchmarks or operational evidence for the ROI judgment. When none exists, discuss the decision with the user or project owner; rigorous causal reasoning plus simple, bounded validation is sufficient. The Long-Task Workflow itself was admitted on that basis before mature longitudinal data existed. Unsupported intuition alone is insufficient.
+
+Keep the design purpose fixed and require materially positive ROI. At comparable total cost, optimize how effectively the mechanism fulfills its purpose; at comparable purpose fulfillment, optimize implementation and operating cost.
 
 ## Bounded Context Discovery
 

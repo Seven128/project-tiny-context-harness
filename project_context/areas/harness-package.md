@@ -30,7 +30,9 @@
 - Package behavior changes keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, public README and behavior tests aligned.
 - Default UI guidance routes missing/conflicting durable UI meaning to its one Context/`DESIGN.md` owner or `context_uiux_design`, keeps local fixes/prototypes lightweight and requires project-owned rendered/token/interaction/accessibility/target-runtime verification only for the claims actually declared.
 - External design-resource guidance leaves artifact generation to dedicated design capabilities and routes durable adoption/governance to `context_uiux_design`. For an implementation handoff, each material in-scope surface/flow/region/component/control condition maps to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition; this task-local accounting is not a pack, registry or readiness authority. The consuming workflow resolves selection, stable identity, declared coverage and verification binding; no authoring validator can judge aesthetics or create implementation acceptance.
-- Risk-triggered architecture decisions resolve owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, forbidden shortcuts and project-owned verification.
+- Architecture depth is risk-triggered: material decisions resolve owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, alternatives, future-change pressure, forbidden shortcuts and project-owned verification.
+- Every implementation delivery surfaces one risk-proportional `Architecture Deliberation` before implementation. Small work records concrete preservation of the current owner/extension point and no new or worsened debt; material work additionally resolves alternatives, future-change pressure, lifecycle and project-owned architecture checks.
+- Post-implementation `Architecture Conformance` has one owner per candidate snapshot: default Contract Conformance or Long-Task Final Gate. Candidate changes stale the result; no duplicate closure, second authority or architecture state is created.
 - Long-Task architecture invariants use existing obligations/constraints/forbidden shortcuts, path/Binding ownership and executable Checks; no architecture-specific authority layer or generic dependency engine is added.
 - A Claim that can pass on a proxy while failing in its target runtime uses a current-execution Check in the earliest owning Outcome. Existing input freshness drives coalesced rolling feedback, while the one Final Gate reruns the live Check; no platform-impact fields, per-platform state or per-Outcome rebuild mandate is added.
 - Preflight diagnostics may improve repair localization through stable refs, safe repair hints and occurrence counts while remaining read-only.
@@ -58,6 +60,7 @@
 - [Workflow Contract](harness-package/contracts/workflow-contract.md)
 - [Package-Managed Surface Contract](harness-package/contracts/package-managed-surfaces.md)
 - [Minimal Context Rationale](harness-package/decision-rationale/minimal-context.md)
+- [Architecture Quality Rationale](harness-package/decision-rationale/architecture-quality.md)
 - [Long-Task Workflow Rationale](harness-package/decision-rationale/long-task-workflow.md)
 - [Implementation Index](harness-package/implementation-index.md)
 - [Verification](harness-package/verification.md)

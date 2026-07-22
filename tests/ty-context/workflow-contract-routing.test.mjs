@@ -78,6 +78,80 @@ test("default Context routing combines manifest candidates with bounded search",
   assert.match(managed, /selected exact\/constraint target with adequate declared coverage/iu);
 });
 
+test("shared architecture quality is observable, risk-proportional, and single-carrier", async () => {
+  const [
+    managed,
+    rootAgents,
+    packaged,
+    development,
+    authoring,
+    workflow,
+    rationale,
+  ] =
+    await Promise.all([
+      read(".codex/ty-context-managed/agents/AGENTS_CORE.md"),
+      read("AGENTS.md"),
+      read("packages/ty-context/assets/agents/AGENTS_CORE.md"),
+      read(
+        ".codex/ty-context-managed/skills/context_development_engineer/SKILL.md",
+      ),
+      read(".codex/skills/authoring/harness_package_design/SKILL.md"),
+      read(
+        "project_context/areas/harness-package/contracts/workflow-contract.md",
+      ),
+      read(
+        "project_context/areas/harness-package/decision-rationale/architecture-quality.md",
+      ),
+    ]);
+
+  assert.equal(packaged, managed, "package AGENTS Core drift");
+  for (const guidance of [managed, rootAgents, workflow, rationale]) {
+    assert.match(guidance, /Architecture Deliberation/iu);
+    assert.match(guidance, /Architecture Conformance/iu);
+  }
+  for (const guidance of [managed, development, workflow, rationale]) {
+    assert.match(
+      guidance,
+      /externally observable|对用户可见|可见.*流程检查点/iu,
+    );
+    assert.match(guidance, /before the first implementation edit|第一处实现编辑前/iu);
+    assert.match(guidance, /risk-proportional|风险.*深度/iu);
+    assert.match(guidance, /owner|所有者/iu);
+    assert.match(guidance, /extension point/iu);
+    assert.match(guidance, /source of truth/iu);
+    assert.match(guidance, /future-change|future change|未来变化/iu);
+    assert.match(guidance, /technical debt|技术债/iu);
+    assert.match(guidance, /project-owned|项目原生/iu);
+  }
+
+  assert.match(
+    managed,
+    /default path embeds it in Contract Conformance; an active Long-Task embeds it only in Final Gate/iu,
+  );
+  assert.match(managed, /Never schedule both/iu);
+  assert.match(managed, /changed candidate invalidates the closure/iu);
+  assert.match(
+    workflow,
+    /Contract Conformance including `Architecture Conformance`[\s\S]*then check Context drift/iu,
+  );
+  assert.match(
+    rationale,
+    /Contract Conformance primarily checks `Source\/Context -> implementation`[\s\S]*Context drift checks `implementation\/new decision -> durable Context`/iu,
+  );
+  assert.match(
+    rationale,
+    /owner, reason, tracking and a removal\/expiry condition/iu,
+  );
+  assert.match(
+    workflow,
+    /no required architecture artifact, second `Context Delta`, Contract, Authority, Gate, state machine, scheduler or language-generic analyzer/iu,
+  );
+  assert.match(
+    authoring,
+    /decision-rationale\/architecture-quality\.md[\s\S]*每个实现需求[\s\S]*普通 Contract Conformance 与 Long-Task Final Gate[\s\S]*候选变化[\s\S]*Context drift/iu,
+  );
+});
+
 test("CLI and managed guidance route only explicit or active work to long-task", async () => {
   const { stdout } = await exec(process.execPath, [
     path.join(repo, "packages/ty-context/dist/cli.js"),

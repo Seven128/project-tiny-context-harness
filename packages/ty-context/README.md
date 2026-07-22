@@ -144,7 +144,7 @@ npm ci
 npm run smoke:quickstart
 npm run preview:pack
 cd /path/to/your/test-repo
-npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.8.tgz
+npm install -D /path/to/project-tiny-context-harness/tmp/ty-context/source-preview/package/project-tiny-context-harness-0.7.9.tgz
 npx --no-install ty-context init --adopt
 make validate-context
 ```
@@ -165,16 +165,17 @@ Before deciding `Context Delta`, the Agent combines two low-state routes:
 2. run one bounded text search over `project_context/**` with a small set of high-signal task terms, including explicit area/module names and relevant API/schema/state/security/verification/deployment language;
 3. merge the candidates and read only semantically relevant files.
 
-The bounded search supplements rather than replaces Agent semantic judgment. It creates no vector or persistent index, cache, registry, search state or second authority. It can still miss unrelated synonyms or indirect dependencies, so high-risk work retains Architecture Context Hit and final Contract Conformance.
+The bounded search supplements rather than replaces Agent semantic judgment. It creates no vector or persistent index, cache, registry, search state or second authority. It can still miss unrelated synonyms or indirect dependencies, so every implementation delivery still performs Architecture Deliberation and final Conformance.
 
 Ordinary tasks:
 
 1. resolve minimum relevant Context through manifest routing plus bounded Context search;
-2. decide `Context Delta: none|required`;
-3. update durable facts before code when required;
+2. surface one concise, repository-bound Architecture Deliberation;
+3. decide `Context Delta: none|required` and update durable facts before code when required;
 4. use the platform's internal plan;
 5. implement and run project-owned verification;
-6. perform Contract Conformance and Context drift checks.
+6. perform Contract Conformance, including Architecture Conformance on the current candidate;
+7. perform the separate Context drift check and hand off.
 
 The default workflow has no required plan artifact, matrix, verdict, evidence ledger, persistent retrieval index or second plan. Duration, file count and complexity never auto-enable long-task state.
 
@@ -182,9 +183,13 @@ Plan Validator commands no longer exist; existing plan, matrix or verdict files 
 
 ### Architecture And Modularity Guidance
 
-Technical architecture support is a Minimal Context capability. For high-risk work, `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` are internal routing questions inside the platform's internal plan. No Task Contract or fixed `plan.md` is required. The risk-triggered gate covers durable module/capability boundaries, public API/schema/data or persistence, source-of-truth/state ownership, dependency direction, cross-area work, migration/security/recovery and reusable abstractions; it resolves owner, unique source of truth, lifecycle/failure/compatibility, forbidden shortcuts and a project-owned executable architecture check. Small fixes do not pay this ceremony.
+Technical architecture support is a shared Workflow obligation. Every implementation delivery visibly completes `Architecture Deliberation` before its first implementation edit. Risk changes depth, not occurrence. A small change names the concrete owner/current extension point, confirms durable boundaries remain unchanged and explains why it adds or worsens no debt. Material work additionally covers the unique source of truth, dependency and interface/state/lifecycle boundaries, failure/recovery/compatibility, selected and rejected alternatives, one plausible future change and its extension point, touched technical debt, forbidden shortcuts and project-owned executable checks. `Architecture Context Hit`, `Decision Rationale Hit: existing|required|none` and `Modularity Check: none|required|exception` remain internal routing questions; no Task Contract or fixed `plan.md` is required.
 
-Do not invent rationale: store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface, and remember that architecture Context does not prove product quality. Harness routes repository-native checks rather than becoming a language-generic architecture analyzer. Modularity diagnostics identify the highest-risk function and line.
+After implementation and project verification, `Architecture Conformance` checks the current candidate for scope/path escape, owner or dependency-direction violations, service/facade bypass, duplicate authority or a second source of truth, undeclared API/schema/state/persistence change, missing architecture checks and new or worsened debt. A changed candidate invalidates the result. Default work embeds this closure in Contract Conformance; Long-Task work encodes material invariants with existing obligations/constraints/forbidden shortcuts, owners/paths/Bindings and executable Checks and lets Final Gate be the sole closure owner. The two closures never both run for one candidate.
+
+Contract Conformance asks whether current Source and Context reached implementation and verification; the separately named Context drift check asks whether implementation or a new decision made durable Context stale. New or worsened debt blocks handoff unless the project has an explicit bounded exception with owner, rationale, tracking and a removal condition. Unrelated legacy debt does not automatically expand task scope, but debt touched, relied on or worsened by the change cannot remain hidden.
+
+The visible checkpoint proves that architecture consideration occurred; it does not expose private chain-of-thought, guarantee the best design or anticipate every unknowable future request. Store stable reasons, rejected alternatives or tradeoffs only in the smallest durable Context surface. Harness routes repository-native checks rather than becoming a language-generic architecture analyzer or adding architecture artifact/state. Modularity diagnostics identify the highest-risk function and line.
 
 `ty-context check-modularity` audits selected handwritten source. `validate-code-modularity` and `validate-harness` enforce it separately from `validate-context`.
 
@@ -242,7 +247,7 @@ Long-Task now makes raw/revised proposals, selected design resources and mixed a
 
 Before the first successful formal Compile, `delivery-contract.yaml` is one non-authoritative Contract Draft. `/long-task-workflow` revises the same Draft across repository/Context reads and Preflight repairs; a complete Contract need not fit one response. Integrated authoring keeps repository evidence and findings attached to the same object and avoids a second handoff, plan, authority or Receipt. There is no standalone Contract Draft Skill or Authoring State.
 
-The Long-Task Skill keeps objective/boundary/phase routing in its main file and loads one-level Contract-authoring, evidence-design and authority-lifecycle references only when that phase applies. This is instruction packaging only, not a second authority. Declared architecture invariants use existing obligations/constraints/forbidden shortcuts, owner/path/Binding boundaries and project-owned executable Checks; a functional AC cannot substitute for an independently failing architecture claim.
+The Long-Task Skill keeps objective/boundary/phase routing in its main file and loads one-level Contract-authoring, evidence-design and authority-lifecycle references only when that phase applies. This is instruction packaging only, not a second authority. It performs the shared Architecture Deliberation during Source/Contract authoring. Declared architecture invariants use existing obligations/constraints/forbidden shortcuts, owner/path/Binding boundaries and project-owned executable Checks; a functional AC cannot substitute for an independently failing architecture claim. Final Gate is the sole Long-Task Architecture Conformance carrier.
 
 A Draft Outcome is simply an Outcome before Authority Lock. Outcomes decompose independently observable, decidable and target-verifiable results to improve dependency-ready implementation, targeted verification, failure localization, resume and stale-result invalidation. `depends_on` means acceptance readiness and the Rolling Frontier is temporary; an Outcome is not a Worker, scheduler task, queue or parallel unit. Outcome decomposes execution and diagnosis, not completion authority, so one complete current-snapshot Final Gate remains mandatory.
 
@@ -349,7 +354,7 @@ make validate-harness
 
 The modularity gate is `ty-context check-modularity`. Scoped waivers require `owner`, `introduced_at`, `reason`, `tracking_issue` and `expiry_condition`.
 
-The synchronized local preview tarball is named `project-tiny-context-harness-0.7.8.tgz`.
+The synchronized local preview tarball is named `project-tiny-context-harness-0.7.9.tgz`.
 
 ## Community And Further Reading
 

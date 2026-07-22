@@ -5,7 +5,7 @@
 Project Tiny Context Harness is repo-native memory and delivery-drift protection for AI coding agents. Its design is intentionally small:
 
 1. **Minimal Context** preserves durable project facts that code cannot reliably explain: goals/non-goals, ownership, architecture/interface/state boundaries and repeatable verification/deployment paths.
-2. **Workflow Contract** defines the lightweight default loop: core/default Context, manifest routing plus one bounded Context search, one `Context Delta`, a conditional Design Authority Check for material production UI, platform-internal planning, implementation, project verification, Contract Conformance and Context drift checking.
+2. **Workflow Contract** defines the lightweight default loop: core/default Context, manifest routing plus one bounded Context search, one externally observable Architecture Deliberation, one `Context Delta`, a conditional Design Authority Check for material production UI, platform-internal planning, implementation, project verification, Contract Conformance including Architecture Conformance, and a separate Context drift check.
 3. **Long-Task Workflow** turns an ordinary user request or external implementation proposal into one complete Canonical Delivery Contract, then adds verifier-owned current-snapshot acceptance for work that needs pause/compaction/new-session recovery or multiple observable outcomes.
 
 Source-quality authoring belongs inside `long-task-workflow`, not in a separate service boundary. The same Goal inventories raw/revised proposals, selected design resources and mixed attachments; preserves direct meaning; records traceable derived/delegated/evidence-backed choices; expands interactive work to surface/region/control/state/feedback granularity; resolves preference-sensitive research; and makes real Markdown Source self-contained before Contract mapping. This removes an artificial handoff without adding a Source schema, gate, state or second plan. `/source-plan-authoring` remains only as a retired compatibility pointer, while existing Source Plans remain valid ordinary Source.
@@ -28,6 +28,18 @@ The Long-Task Workflow V2 product equation is:
 
 The controlling objective, trusted-result boundary, Draft lifecycle, upstream Source boundary and mechanism-admission rule below govern every later Long-Task section. Existing implementation convenience, historical progress or local wording cannot weaken them.
 
+## Architecture Quality Assurance
+
+Every implementation delivery has one shared architecture-quality obligation. Before the first implementation edit, the Agent surfaces an externally observable, repository-bound `Architecture Deliberation`; after implementation and project-owned verification, one `Architecture Conformance` closure checks the current candidate snapshot. The mechanism guarantees that architecture consideration occurred in a reviewable form. It does not expose private chain-of-thought, prove subjective design excellence, discover every undeclared requirement or promise an architecture for every unknowable future request.
+
+Occurrence is universal and depth is risk-proportional. A small semantics-preserving change names the current owner and extension point, confirms durable boundaries remain unchanged and explains why it creates no new or worsened debt. Material work additionally resolves the unique source of truth, dependency direction, interface/state/persistence/runtime lifecycle, failure/retry/recovery/compatibility, selected and rejected alternatives, one plausible adjacent change and its extension point, touched technical debt, forbidden shortcuts and project-owned executable checks. A material scope, owner, controlling-Context or selected-design change stales the deliberation before implementation continues.
+
+The post-implementation closure checks scope/path escape, wrong ownership or dependency direction, service/facade bypass, duplicate authority or a second source of truth, undeclared API/schema/data/state/persistence/recovery changes, forbidden shortcuts, required architecture checks and new or worsened debt. A finding returns to implementation and affected verification. A later candidate change invalidates closure and requires rechecking on the new snapshot.
+
+The two workflow entries are execution carriers, not nested quality workflows. Default work performs Architecture Conformance as a required part of its broad internal Contract Conformance. An active Long-Task encodes material architecture invariants through existing Source-backed Technical Obligations, Global Constraints/Forbidden Shortcuts, owners/paths/Bindings and project-owned Checks, then lets Final Gate be the sole architecture-conformance owner. Running a separate default closure would duplicate cost and ownership without closing another drift path.
+
+Contract Conformance primarily asks whether current Source and Context reached the implementation and verification paths. The separately named Context drift check asks whether implementation or a newly selected decision changed durable truth that Context does not yet record. No architecture plan, matrix, ADR, new Contract field, second Authority, Gate, scheduler, persistent state or language-generic analyzer is introduced. The detailed purpose, debt policy, update invariants and evidence limits are indexed in `project_context/areas/harness-package/decision-rationale/architecture-quality.md`.
+
 ## Long-Task Workflow Controlling Objective
 
 The highest Long-Task objective is to prevent false completion inside declared authority. This objective applies when the delivery Source is complete and fine-grained enough to cover every declared requirement and acceptance criterion, and each item has reliable, executable acceptance evidence that the executing Agent cannot weaken by itself. Under that prerequisite, no declared Plan Item or AC may be accepted or reported as complete until it is actually satisfied.
@@ -43,7 +55,7 @@ The workflow does not promise that implementation stays on course at every inter
 
 Current-snapshot evidence outranks implementation narrative and historical results. If any declared item is unsatisfied, unverifiable or no longer backed by fresh evidence, the workflow must keep the task unfinished rather than soften the completion wording. This guarantee covers only declared and verifiable authority; it cannot prove that the user never omitted a real requirement.
 
-The efficiency objective is the lowest practical total workflow cost that preserves this false-completion interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, model, maintenance and test cost, or equal cost with stronger independent protection. Admit a mechanism when its expected independent benefit is greater than its total cost; unusually high ROI is not required. Prefer one cohesive implementation when partial changes would leave semantic seams or cost more through repeated migration and maintenance. Efficiency never authorizes uncertain acceptance: when the evidence boundary is unclear, the workflow still fails closed.
+The efficiency objective is the lowest practical total workflow cost that preserves this false-completion interception strength. Prefer equal protection with lower Authoring, Runtime, State, Recovery, model, maintenance and test cost, or equal cost with stronger independent protection. Admit a mechanism only when its expected independent benefit materially exceeds its total cost; a merely positive but marginal ROI is insufficient. Prefer one cohesive implementation when partial changes would leave semantic seams or cost more through repeated migration and maintenance. Efficiency never authorizes uncertain acceptance: when the evidence boundary is unclear, the workflow still fails closed.
 
 ## Authority Scope And Trusted Results
 
@@ -138,6 +150,8 @@ Integrated Source-quality authoring and Contract Draft authoring both remain ins
 
 ## Mechanism Admission Rule
 
+Every Long-Task change starts from the controlling design purpose and accounts for total cost by explicitly including the cost of introducing the change in the subsequent ROI judgment. If the change alters mechanism semantics, an invariant, an authority/proof boundary or runtime behavior, change the mechanism and its verification. Otherwise change only the owning point; do not turn a local correction into a new mechanism.
+
 Every proposed or retained Long-Task mechanism must answer:
 
 1. Which concrete false-completion or delivery-drift path does it close?
@@ -146,9 +160,13 @@ Every proposed or retained Long-Task mechanism must answer:
 4. Does another mechanism already cover the same risk?
 5. Which exact false-completion path would reopen if it were removed?
 6. What Authoring, Runtime, State, Recovery and maintenance cost does it add?
-7. Does its independent drift-prevention benefit still exceed that cost?
+7. Does its independent drift-prevention benefit materially exceed that cost rather than only barely clear it?
 8. Does it fail closed?
 9. Does it create a second Authority, second plan or scheduling plane?
+
+Expected ROI must be positive and not too low: prefer measured data, benchmarks or operational evidence. When none exists, discuss the decision with the user or project owner; a rigorous causal argument plus simple, bounded validation is sufficient. The Long-Task Workflow itself was admitted before mature longitudinal data existed because its logic and basic validation were sound. Unsupported intuition alone is insufficient.
+
+Keep the design purpose fixed while optimizing. When total cost is comparable, prefer the change that fulfills the mechanism purpose more effectively; when purpose fulfillment is comparable, prefer the change with lower implementation and operating cost.
 
 Retain an acceptance mechanism only when it provides clear, non-substitutable drift-prevention value. A non-authority workflow affordance may additionally be retained when existing fail-closed protection makes a material total-cost reduction possible and the affordance adds no acceptance bypass, second Authority, second plan, scheduler or persistent control state. The first-lock execution-model choice uses this second rule. This remains a specification and code-review principle, not a new mechanism matrix, Receipt or runtime Registry.
 
@@ -164,9 +182,9 @@ Use the default Workflow Contract when work is local, reversible, directly testa
 
 Default Context discovery reads the core/default set, collects manifest area/role/trigger candidates and then performs one bounded text search over `project_context/**` before `Context Delta`. The search uses a small set of high-signal task terms, reads only relevant matches and creates no vector/persistent index, cache, registry or search state. Keyword matching supplements semantic judgment and final Conformance rather than replacing them.
 
-`Architecture Context Hit` is an internal high-risk routing question. `Decision Rationale Hit` is an internal `existing|required|none` coverage question. They are not a durable fact, role, validator or artifact, and the check never creates a rationale delta or required file. `Context Delta` remains the only durable-fact decision point.
+`Architecture Context Hit` and `Decision Rationale Hit: existing|required|none` remain internal routing questions. They are not durable facts, roles, validators or artifacts, and the checkpoint never creates a rationale delta or required file. `Context Delta` remains the only durable-fact decision point.
 
-The architecture gate is risk-triggered rather than universal. It applies to new durable modules/capabilities, public API/schema/data/persistence, source-of-truth or state ownership, dependency direction, cross-area boundaries, migration/security/recovery/compatibility and reusable abstractions. It resolves owner, unique source of truth, dependency direction, interface/state lifecycle, failure/retry/recovery/compatibility, forbidden shortcuts and a project-owned executable architecture check. Small local fixes do not pay this cost. Harness may route repository-native lint/AST/dependency/contract checks but does not become a language-generic architecture analyzer.
+Architecture Deliberation is universal while its depth is risk-triggered. New durable modules/capabilities, public API/schema/data/persistence, source-of-truth or state ownership, dependency direction, cross-area boundaries, migration/security/recovery/compatibility and reusable abstractions require the material analysis. Small local fixes record a concrete preservation conclusion instead of paying full ceremony or skipping. Harness may route repository-native lint/AST/dependency/contract checks but does not become a language-generic architecture analyzer.
 
 Product Surface Contract work uses `context_surface_contract` and the existing `contract`, area/subdomain and verification roles. It must not add a new product-surface role; Source-to-Context judgment and Contract Conformance remain internal workflow checks.
 
