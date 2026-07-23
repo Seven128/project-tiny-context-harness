@@ -148,10 +148,10 @@ export async function resumeDeliveryTask(
   if (active.workdir !== path.resolve(workdir))
     throw new Error("active_task_workdir_mismatch");
   const compiled = active.authority_snapshot;
-  const [status, git] = await Promise.all([
-    readDeliveryStatusForAuthority(active),
-    currentGitState(compiled.repository_root),
-  ]);
+  // Status capture runs git write-tree; finish it before git status can refresh
+  // the same repository index inside currentGitState.
+  const status = await readDeliveryStatusForAuthority(active);
+  const git = await currentGitState(compiled.repository_root);
   return {
     schema_version: "long-task-resume-v2",
     task: {

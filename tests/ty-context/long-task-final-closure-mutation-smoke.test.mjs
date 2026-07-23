@@ -18,7 +18,7 @@ import {
   writeSource,
 } from "./long-task-final-closure-mutation-fixtures.mjs";
 
-test("controlled closure mutation smoke rejects false authority and stale proof", async () => {
+test("[critical:final-gate-mutation-rejection] controlled closure mutation smoke rejects false authority and stale proof", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   const fakeBin = await createFakePlaywrightBin();
   const env = withPath(fakeBin);

@@ -83,14 +83,14 @@
 - `npm run test:affected`: fail-safe affected test selection.
 - `npm run test:long-task:trust`: bounded high-impact Long-Task Trust Boundary regression after a candidate diff is frozen.
 - `npm test --workspace project-tiny-context-harness`: complete package and Long-Task release-regression suites.
-- Canonical tier-size/hotspot review budgets, deterministic `dist` freshness, immutable fixture-seed isolation, exhaustive per-file diagnostics and controlled Ubuntu CI wall-time ceilings reduce cost and block silent regression without trimming complete-suite discovery; local timing remains diagnostic only.
+- Canonical tier-size/hotspot budgets, 14 stable critical-semantic sentinel IDs, deterministic `dist` freshness, immutable fixture-seed isolation, exhaustive per-file plus top-10 slow-file diagnostics and the environment-bound `github-ubuntu-v1` CI budget profile reduce cost and block semantic/cost regression without trimming complete-suite discovery; local timing remains diagnostic only.
 - `npm run test:long-task-performance --workspace project-tiny-context-harness`: large-repository runtime budgets.
 - `node packages/ty-context/dist/cli.js package check-source`: managed source/package parity.
 - `git diff --check`: patch hygiene.
 
 ## Next Safe Action
 
-Keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, English/Chinese README and behavior tests aligned. Use affected/focused loops while editing, ignore only untracked `.work_products/**` from inferred local discovery while reporting it, then run exactly one highest selected aggregate on the frozen candidate: Trust when it is the highest required tier, or complete without a preceding Trust run when complete routing applies.
+Keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, English/Chinese README and behavior tests aligned. Use affected/focused loops while editing, ignore only untracked `.work_products/**` from inferred local discovery while reporting it, then run exactly one highest selected aggregate on the frozen candidate: Trust when it is the highest required tier, or complete without a preceding Trust run when complete routing applies. A stronger replacement for a critical invariant updates its existing policy record/tag/rationale in review; ordinary tests remain outside that small registry.
 
 ## Context Index
 

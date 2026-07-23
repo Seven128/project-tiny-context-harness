@@ -23,7 +23,7 @@ import {
 
 const exec = promisify(execFile);
 
-test("Live authority ignores forged receipts and compiled cache, then clears binding atomically", async () => {
+test("[critical:forged-evidence-rejection] Live authority ignores forged receipts and compiled cache, then clears binding atomically", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
     await runCli(fixture.root, ["enable", "long-task"]);

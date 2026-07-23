@@ -10,7 +10,7 @@ import {
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
-test("semantic or proof changes are previewed but never candidate-executed", async () => {
+test("[critical:protected-revision-classification] semantic or proof changes are previewed but never candidate-executed", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
     await runCli(fixture.root, ["enable", "long-task"]);

@@ -23,7 +23,7 @@ const cli = fileURLToPath(
   new URL("../../packages/ty-context/dist/cli.js", import.meta.url),
 );
 
-test("controlled real V2 Smoke proves only the current Live Final Gate can finish", async () => {
+test("[critical:live-final-gate-only] controlled real V2 Smoke proves only the current Live Final Gate can finish", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
     await writeFile(

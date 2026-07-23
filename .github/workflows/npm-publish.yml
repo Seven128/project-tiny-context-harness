@@ -61,8 +61,19 @@ jobs:
 
       - name: Complete package tests
         env:
-          TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: '{"default":120000,"long-task-trust":240000,"long-task":600000}'
+          TY_CONTEXT_TEST_TIMING_DIR: .artifacts/test-timing/publish
+          TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE: github-ubuntu-v1
         run: npm test --workspace project-tiny-context-harness
+
+      - name: Upload package test timing
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: package-test-timing-publish-${{ github.run_id }}
+          path: .artifacts/test-timing/publish/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+          overwrite: true
 
       - name: Check release version surfaces
         run: npm run release:check-version

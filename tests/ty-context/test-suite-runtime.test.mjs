@@ -20,10 +20,12 @@ import {
 } from "../../tools/package_build_fingerprint.mjs";
 import { selectAffectedTests } from "../../tools/affected_test_selection.mjs";
 import {
+  CRITICAL_TEST_SENTINELS,
   LONG_TASK_EXCLUSIVE_TEST_FILES,
   LONG_TASK_ISOLATED_TEST_FILES,
   LONG_TASK_PURE_TEST_FILES,
   classifyLongTaskTestFile,
+  criticalSentinelsForSuite,
   planLongTaskIsolationLanes,
 } from "../../tools/test_suite_policy.mjs";
 import {
@@ -187,6 +189,15 @@ test("Long-Task isolation lanes are explicit, exhaustive, and fail unknown files
   assert.equal(LONG_TASK_PURE_TEST_FILES.length, 11);
   assert.equal(LONG_TASK_ISOLATED_TEST_FILES.length, 39);
   assert.equal(LONG_TASK_EXCLUSIVE_TEST_FILES.length, 10);
+  for (const restoredFile of [
+    "long-task-authority-progress-retry.test.mjs",
+    "long-task-state-resume.test.mjs",
+    "long-task-authority-revision-diagnosis.test.mjs",
+    "long-task-finding-context.test.mjs",
+  ]) {
+    assert.equal(LONG_TASK_ISOLATED_TEST_FILES.includes(restoredFile), true);
+    assert.equal(LONG_TASK_EXCLUSIVE_TEST_FILES.includes(restoredFile), false);
+  }
   assert.equal(
     classifyLongTaskTestFile("long-task-delivery-compiler.test.mjs"),
     "exclusive",
@@ -244,6 +255,138 @@ test("file timing diagnostics retain one terminal record for every selected file
   );
   assert.equal(report.files[1].tests[0].failure_message, "fixture failed");
   assert.equal(report.execution_error, "fixture runner startup failed");
+  assert.deepEqual(report.slowest_files, [
+    {
+      file: "alpha.test.mjs",
+      duration_ms: 12,
+      status: "passed",
+      test_count: 2,
+    },
+    {
+      file: "beta.test.mjs",
+      duration_ms: 5,
+      status: "failed",
+      test_count: 1,
+    },
+  ]);
+});
+
+test("[critical:critical-policy-continuity] critical sentinel policy rejects semantic replacement while permitting reviewed evolution", () => {
+  const required = criticalSentinelsForSuite("default");
+  assert.throws(
+    () => criticalSentinelsForSuite("future-unreviewed-suite"),
+    /Unsupported package test suite/u,
+  );
+  const sentinel = required.find(
+    (entry) => entry.id === "critical-policy-continuity",
+  );
+  assert.ok(sentinel);
+  assert.equal(new Set(CRITICAL_TEST_SENTINELS.map((entry) => entry.id)).size, 14);
+  const expectedFile = path.join(
+    repositoryRoot,
+    "tests",
+    "ty-context",
+    sentinel.file,
+  );
+  const otherFile = path.join(
+    repositoryRoot,
+    "tests",
+    "ty-context",
+    "ordinary.test.mjs",
+  );
+  const report = (events, selectedFiles = [expectedFile]) =>
+    buildFileTimingReport({
+      suite: "default",
+      selectedFiles,
+      wallTimeMs: 10,
+      execution: { mode: "serial", isolated_concurrency: 1 },
+      requiredCriticalSentinels: [sentinel],
+      events,
+    });
+
+  const baseline = report([
+    event(
+      "test:pass",
+      expectedFile,
+      `[critical:${sentinel.id}] baseline semantic guard`,
+      5,
+    ),
+    event("test:pass", expectedFile, "ordinary baseline", 2),
+  ]);
+  assert.equal(baseline.critical_sentinel_coverage.status, "passed");
+
+  const countPreservingReplacement = report([
+    event("test:pass", expectedFile, "equal-count replacement", 5),
+    event("test:pass", expectedFile, "ordinary baseline", 2),
+  ]);
+  assert.equal(countPreservingReplacement.test_count, baseline.test_count);
+  assert.equal(countPreservingReplacement.test_status, "failed");
+  assert.deepEqual(
+    countPreservingReplacement.critical_sentinel_coverage.missing_ids,
+    [sentinel.id],
+  );
+
+  const legitimateEvolution = report([
+    event(
+      "test:pass",
+      expectedFile,
+      `[critical:${sentinel.id}] renamed stronger semantic guard`,
+      5,
+    ),
+    event("test:pass", expectedFile, "renamed ordinary case", 2),
+    event("test:pass", expectedFile, "new ordinary case", 1),
+  ]);
+  assert.equal(legitimateEvolution.critical_sentinel_coverage.status, "passed");
+
+  const duplicate = report([
+    event("test:pass", expectedFile, `[critical:${sentinel.id}] first`, 2),
+    event("test:pass", expectedFile, `[critical:${sentinel.id}] second`, 2),
+  ]);
+  assert.deepEqual(duplicate.critical_sentinel_coverage.duplicate_ids, [
+    sentinel.id,
+  ]);
+
+  const misplaced = report(
+    [
+      event("test:pass", expectedFile, "ordinary case", 1),
+      event("test:pass", otherFile, `[critical:${sentinel.id}] moved`, 2),
+    ],
+    [expectedFile, otherFile],
+  );
+  assert.deepEqual(misplaced.critical_sentinel_coverage.misplaced_ids, [
+    sentinel.id,
+  ]);
+
+  const nonPassing = report([
+    event("test:fail", expectedFile, `[critical:${sentinel.id}] broken`, 2),
+  ]);
+  assert.deepEqual(nonPassing.critical_sentinel_coverage.non_passing_ids, [
+    sentinel.id,
+  ]);
+
+  const unexpected = report([
+    event("test:pass", expectedFile, `[critical:${sentinel.id}] valid`, 2),
+    event("test:pass", expectedFile, "[critical:unreviewed-invariant] surprise", 1),
+  ]);
+  assert.deepEqual(unexpected.critical_sentinel_coverage.unexpected_ids, [
+    "unreviewed-invariant",
+  ]);
+});
+
+test("final ROI verifier preserves the package pretest build in clean snapshots", async () => {
+  const verifierSource = await readFile(
+    path.join(
+      repositoryRoot,
+      "tools",
+      "verify_test_suite_antidegradation_delivery.mjs",
+    ),
+    "utf8",
+  );
+  assert.match(
+    verifierSource,
+    /npmCommandSpec\(\[\s*"test",\s*"--workspace",\s*"project-tiny-context-harness",\s*\]\)/u,
+  );
+  assert.doesNotMatch(verifierSource, /"--ignore-scripts"/u);
 });
 
 test("complete affected routing explicitly supersedes a separate Trust aggregate", () => {

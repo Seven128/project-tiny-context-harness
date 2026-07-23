@@ -10,7 +10,7 @@ import {
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
-test("scope-only candidates can be diagnosed without state, batched into one exact approval, and adopted with evidence invalidation", async () => {
+test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagnosed without state, batched into one exact approval, and adopted with evidence invalidation", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await writeFile(

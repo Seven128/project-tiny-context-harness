@@ -80,6 +80,13 @@ modularity:
       reason: Rename-only surface migration touched the existing release version synchronizer, which predates the modularity gate.
       tracking_issue: modularity-backlog
       expiry_condition: Split version source discovery, surface updates and check-mode diff reporting into focused helpers.
+    - path: tools/verify_test_suite_antidegradation_delivery.mjs
+      category: fixture_snapshot
+      owner: harness-maintainers
+      introduced_at: "2026-07-23"
+      reason: The independently authored delivery verifier is frozen as one self-contained Authority snapshot so its semantic, population, cost and single-aggregate oracle cannot acquire implementation-carrier dependencies after Authority Lock.
+      tracking_issue: test-suite-roi-antidegradation-verifier-retirement
+      expiry_condition: Remove this waiver when the delivery verifier is retired; before adding behavior, adopt a protected Authority Revision and split the verifier below the project limits.
 managed_files:
   - path: AGENTS.md
     strategy: merge-block

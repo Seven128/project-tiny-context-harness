@@ -282,7 +282,7 @@ test("Stop Hook preserves external pending as a non-blocking system message", as
   }
 });
 
-test("active record cannot redirect or weaken the current package verifier", async () => {
+test("[critical:verifier-integrity] active record cannot redirect or weaken the current package verifier", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);

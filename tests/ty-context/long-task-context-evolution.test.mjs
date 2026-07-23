@@ -360,7 +360,7 @@ test("explicitly referenced supporting roles remain controlling", async () => {
   }
 });
 
-test("verification Context remains controlling in referenced mode", async () => {
+test("[critical:context-freshness] verification Context remains controlling in referenced mode", async () => {
   const fixture = await createDeliveryFixture();
   const verificationContext = "project_context/areas/main/verification.md";
   try {

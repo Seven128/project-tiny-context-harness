@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { activeRecordPath } from "../../packages/ty-context/dist/lib/long-task-state.js";
@@ -71,6 +72,52 @@ test("fresh external pending qualification reaches status and resume", async () 
     assert.deepEqual(resume.stages, { first: "ready" });
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("resume finishes workspace write-tree before current Git status", async () => {
+  const fixture = await createDeliveryFixture();
+  const traceRoot = await mkdtemp(
+    path.join(os.tmpdir(), "ty-context-resume-git-order-"),
+  );
+  const traceFile = path.join(traceRoot, "events.jsonl");
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await runCli(
+      fixture.root,
+      ["long-task", "resume", fixture.workdir],
+      {
+        env: { ...process.env, GIT_TRACE2_EVENT: traceFile },
+      },
+    );
+    const events = (await readFile(traceFile, "utf8"))
+      .trim()
+      .split(/\r?\n/u)
+      .map((line) => JSON.parse(line));
+    const writeStart = events.find(
+      (event) => event.event === "start" && event.argv?.at(1) === "write-tree",
+    );
+    const writeExit = events.find(
+      (event) => event.event === "exit" && event.sid === writeStart?.sid,
+    );
+    const statusStarts = events.filter(
+      (event) => event.event === "start" && event.argv?.at(1) === "status",
+    );
+    assert.ok(writeStart, "resume Git trace must contain write-tree");
+    assert.ok(writeExit, "resume Git trace must contain the write-tree exit");
+    assert.ok(statusStarts.length > 0, "resume Git trace must contain status");
+    for (const statusStart of statusStarts)
+      assert.ok(
+        statusStart.time >= writeExit.time,
+        `git status started before write-tree exited: ${JSON.stringify({
+          status_start: statusStart.time,
+          write_exit: writeExit.time,
+        })}`,
+      );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+    await rm(traceRoot, { recursive: true, force: true });
   }
 });
 
@@ -214,7 +261,7 @@ test("ordinary machine acceptance emits no external warning and close stays qual
   }
 });
 
-test("failed Live Gates do not report success or clear Active Authority", async () => {
+test("[critical:qualified-close-safety] failed Live Gates do not report success or clear Active Authority", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
   try {
     await runCli(fixture.root, ["enable", "long-task"]);

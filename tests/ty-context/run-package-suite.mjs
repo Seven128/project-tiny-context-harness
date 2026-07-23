@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   LONG_TASK_TRUST_TEST_FILES,
+  criticalSentinelsForSuite,
   planLongTaskIsolationLanes,
   resolveLongTaskIsolatedConcurrency,
   resolveTestTimingOutput,
@@ -44,6 +45,7 @@ const availableNames = (await readdir(testRoot))
   .sort();
 const names = selectNames(availableNames, suite);
 const files = names.map((name) => path.join(testRoot, name));
+const requiredCriticalSentinels = criticalSentinelsForSuite(suite);
 const wallTimeBudgetMs = resolveSuiteWallTimeBudgetMs(suite);
 const forwardedOptions = process.argv.slice(3);
 
@@ -125,6 +127,7 @@ const timing = buildFileTimingReport({
   wallTimeMs,
   execution,
   events,
+  requiredCriticalSentinels,
   testStatus: completionFailed ? "failed" : "passed",
   wallTimeBudgetMs,
   wallTimeBudgetStatus: budgetStatus,
@@ -134,6 +137,10 @@ if (timing.missing_file_count > 0 && timing.test_status === "passed") {
   timing.test_status = "failed";
   timing.status = "failed";
 }
+if (timing.critical_sentinel_coverage.status !== "passed")
+  console.error(
+    `${suite} package suite failed critical semantic continuity: ${JSON.stringify(timing.critical_sentinel_coverage)}. Review the stable sentinel mapping when a stronger equivalent test intentionally replaces an invariant.`,
+  );
 console.log(`\n${JSON.stringify(timing)}`);
 
 const timingOutput = resolveTestTimingOutput(repositoryRoot, suite);

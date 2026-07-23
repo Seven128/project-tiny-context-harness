@@ -13,7 +13,7 @@ const ZERO = "0".repeat(64);
 const ONE = "1".repeat(64);
 const TWO = "2".repeat(64);
 
-test("required target refs prevent a passing Web/process route from substituting for Native", () => {
+test("[critical:target-runtime-non-substitution] required target refs prevent a passing Web/process route from substituting for Native", () => {
   const contract = deliveryContract();
   contract.task.execution_targets.push({
     key: "fixture-native",

@@ -16,6 +16,7 @@ export function buildFileTimingReport({
   wallTimeMs,
   execution,
   events,
+  requiredCriticalSentinels = [],
   testStatus = null,
   wallTimeBudgetMs = null,
   wallTimeBudgetStatus = "not_configured",
@@ -57,13 +58,21 @@ export function buildFileTimingReport({
   const files = selected.map((file) => finalizeFile(stateByFile.get(fileKey(file))));
   const counts = countStatuses(files.flatMap((entry) => entry.tests));
   const missingFileCount = files.filter((entry) => entry.status === "missing").length;
-  const observedStatus =
+  const criticalSentinelCoverage = buildCriticalSentinelCoverage(
+    files,
+    requiredCriticalSentinels,
+  );
+  const executionStatus =
     testStatus ??
     (files.some((entry) => entry.status === "failed" || entry.status === "cancelled")
       ? "failed"
       : missingFileCount > 0
         ? "failed"
         : "passed");
+  const observedStatus =
+    executionStatus === "passed" && criticalSentinelCoverage.status !== "passed"
+      ? "failed"
+      : executionStatus;
   const status =
     observedStatus === "passed" && wallTimeBudgetStatus === "exceeded"
       ? "budget_exceeded"
@@ -87,6 +96,20 @@ export function buildFileTimingReport({
     execution,
     result_cache_used: false,
     unknown_files_parallelized: execution.unknown_files_parallelized === true,
+    critical_sentinel_coverage: criticalSentinelCoverage,
+    slowest_files: [...files]
+      .sort(
+        (left, right) =>
+          right.duration_ms - left.duration_ms ||
+          left.file.localeCompare(right.file),
+      )
+      .slice(0, 10)
+      .map(({ file, duration_ms, status: fileStatus, test_count }) => ({
+        file,
+        duration_ms,
+        status: fileStatus,
+        test_count,
+      })),
     test_identities: files.flatMap((entry) =>
       entry.tests.map(
         (record, index) =>
@@ -95,6 +118,65 @@ export function buildFileTimingReport({
     ),
     files,
   };
+}
+
+function buildCriticalSentinelCoverage(files, requiredSentinels) {
+  const required = new Map(
+    requiredSentinels.map((entry) => [entry.id, entry]),
+  );
+  const occurrences = new Map();
+  for (const file of files) {
+    for (const record of file.tests) {
+      for (const id of criticalTags(record.name)) {
+        const records = occurrences.get(id) ?? [];
+        records.push({ file: file.file, status: record.status });
+        occurrences.set(id, records);
+      }
+    }
+  }
+
+  const requiredIds = [...required.keys()].sort();
+  const observedIds = [...occurrences.keys()].sort();
+  const missingIds = requiredIds.filter((id) => !occurrences.has(id));
+  const unexpectedIds = observedIds.filter((id) => !required.has(id));
+  const duplicateIds = observedIds.filter(
+    (id) => (occurrences.get(id)?.length ?? 0) !== 1,
+  );
+  const misplacedIds = requiredIds.filter((id) =>
+    (occurrences.get(id) ?? []).some(
+      (record) => record.file !== required.get(id).file,
+    ),
+  );
+  const nonPassingIds = observedIds.filter((id) =>
+    (occurrences.get(id) ?? []).some((record) => record.status !== "passed"),
+  );
+  const status =
+    missingIds.length === 0 &&
+    unexpectedIds.length === 0 &&
+    duplicateIds.length === 0 &&
+    misplacedIds.length === 0 &&
+    nonPassingIds.length === 0
+      ? "passed"
+      : "failed";
+  return {
+    status,
+    required_count: requiredIds.length,
+    required_ids: requiredIds,
+    observed_ids: observedIds,
+    missing_ids: missingIds,
+    unexpected_ids: unexpectedIds,
+    duplicate_ids: duplicateIds,
+    misplaced_ids: misplacedIds,
+    non_passing_ids: nonPassingIds,
+  };
+}
+
+function criticalTags(name) {
+  return [
+    ...String(name).matchAll(
+      /\[critical:([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\]/gu,
+    ),
+  ].map((match) => match[1]);
 }
 
 function serializeEvent(event) {

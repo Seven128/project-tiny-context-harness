@@ -31,7 +31,7 @@ const exec = promisify(execFile);
 const repository = fileURLToPath(new URL("../..", import.meta.url));
 const cli = path.join(repository, "packages/ty-context/dist/cli.js");
 
-test("compiled cache deletion cannot reset previous authority or initial task base", async () => {
+test("[critical:authority-lock-continuity] compiled cache deletion cannot reset previous authority or initial task base", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);

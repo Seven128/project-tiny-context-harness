@@ -9,7 +9,7 @@ const repoRoot = path.resolve(
   "../..",
 );
 
-test("package CI separates the Trust tier from complete release regression", () => {
+test("[critical:ci-diagnostic-routing] package CI separates Trust feedback from complete regression and preserves same-run diagnostics", () => {
   const packageWorkflow = read(".github/workflows/package.yml");
   const packageJson = JSON.parse(read("packages/ty-context/package.json"));
   const pullRequestJob = section(packageWorkflow, "pull-request", "main");
@@ -24,7 +24,10 @@ test("package CI separates the Trust tier from complete release regression", () 
   assert.match(packageWorkflow, /make validate-harness/);
   assert.match(pullRequestJob, /Trust boundary package tests/);
   assert.match(pullRequestJob, /TY_CONTEXT_TEST_TIMING_DIR/);
-  assert.match(pullRequestJob, /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/);
+  assert.match(
+    pullRequestJob,
+    /TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE:\s*github-ubuntu-v1/,
+  );
   assert.match(
     pullRequestJob,
     /npm run test:trust:built --workspace project-tiny-context-harness --ignore-scripts/,
@@ -38,7 +41,11 @@ test("package CI separates the Trust tier from complete release regression", () 
     /Complete package tests[\s\S]*npm test --workspace project-tiny-context-harness --ignore-scripts/,
   );
   assert.match(mainJob, /TY_CONTEXT_TEST_TIMING_DIR/);
-  assert.match(mainJob, /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/);
+  assert.match(
+    mainJob,
+    /TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE:\s*github-ubuntu-v1/,
+  );
+  assert.doesNotMatch(packageWorkflow, /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/);
   assert.match(packageWorkflow, /set -o pipefail/);
   assert.match(packageWorkflow, /tee package-test\.log/);
   assert.match(packageWorkflow, /Upload package test diagnostics/);
@@ -104,6 +111,9 @@ test("package CI separates the Trust tier from complete release regression", () 
   assert.match(suiteReporter, /test-suite-timing-v2/);
   assert.match(suiteRunner, /resolveTestTimingOutput\(repositoryRoot, suite\)/);
   assert.match(suiteRunner, /resolveSuiteWallTimeBudgetMs\(suite\)/);
+  assert.match(suiteRunner, /criticalSentinelsForSuite\(suite\)/);
+  assert.match(suiteReporter, /critical_sentinel_coverage/);
+  assert.match(suiteReporter, /slowest_files/);
   assert.match(suiteRunner, /wall_time_budget_status/);
   assert.match(suiteRunner, /CI[\s\S]*--test-reporter=dot/);
 });
@@ -126,8 +136,14 @@ test("publish, tarball, and consumer gates retain complete release boundaries", 
   );
   assert.match(
     publishWorkflow,
-    /Complete package tests[\s\S]*TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/,
+    /Complete package tests[\s\S]*TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE:\s*github-ubuntu-v1/,
   );
+  assert.match(
+    publishWorkflow,
+    /Complete package tests[\s\S]*TY_CONTEXT_TEST_TIMING_DIR:\s*\.artifacts\/test-timing\/publish/,
+  );
+  assert.match(publishWorkflow, /Upload package test timing/);
+  assert.doesNotMatch(publishWorkflow, /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/);
   assert.doesNotMatch(publishWorkflow, /npm run test:long-task-workflow/);
   assert.match(publishWorkflow, /release:check-version/);
   assert.match(publishWorkflow, /package check-source/);

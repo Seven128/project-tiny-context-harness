@@ -1,7 +1,7 @@
 # Test Suite ROI Redesign
 
-Status: **Implemented — initial rollout**
-Implementation status: **Routing, Trust Gate, CI split, build freshness, fixture reuse, reviewed isolation lanes, timing, tests, and Context are active**
+Status: **Implemented — rollout plus anti-degradation closure**
+Implementation status: **Routing, Trust Gate, CI split, build freshness, fixture reuse, reviewed isolation lanes, semantic sentinels, named CI budgets, same-run slow-file diagnostics, tests, and Context are active**
 Owning area: `harness-package`
 Context entry: `project_context/areas/harness-package/verification.md`
 
@@ -9,16 +9,17 @@ The initial rollout was implemented on 2026-07-20. It changes package-developmen
 
 ## Current Implementation
 
-- `tools/test_suite_policy.mjs` is the canonical executable list for focused and Trust Boundary coverage and for the fail-closed Long-Task isolation classes.
+- `tools/test_suite_policy.mjs` is the canonical executable owner for focused/Trust coverage, 14 stable critical-semantic sentinel IDs, the named controlled-CI budget profile and fail-closed Long-Task isolation classes. The Trust file list is derived from the same sentinel records rather than duplicated.
 - `tools/affected_change_discovery.mjs` separates explicit paths, dirty local work, clean local commits, explicit bases, and CI bases; dirty local work is never unioned with an inferred historical branch diff.
 - `npm run test:long-task:trust` builds once and runs the canonical Long-Task Trust Boundary Gate; package-level `test:trust:built` runs the complete default suite plus that gate for PR CI.
 - `npm test` remains the complete default plus complete Long-Task release regression used by `main` and publish; a complete affected plan explicitly supersedes a separate Trust run.
 - `--no-build` reuse first verifies a deterministic input/output fingerprint written only by the current package build, so stale `dist` fails before test execution.
-- Every package-suite run emits per-file `test-suite-timing-v2`; Package CI uploads the JSON files as 14-day diagnostic artifacts. They are never acceptance state or historical-result cache.
+- Every package-suite run emits per-file `test-suite-timing-v2`, exact critical-sentinel coverage and a deterministic current-run top-10 slow-file summary from the same event stream. Package and publish CI upload the JSON files as 14-day diagnostic artifacts without rerunning tests. They are never acceptance state or historical-result cache.
 - Long-Task suites prepare immutable default/external Git seeds once, then copy each fixture into a unique repository with independent Git state and cleanup.
-- The reviewed pure/isolated lane defaults to concurrency two; the exclusive and every unknown file remain serial, and `TY_CONTEXT_LONG_TASK_ISOLATED_CONCURRENCY=1` is the mechanical rollback.
+- The reviewed 11-pure/39-isolated lane defaults to concurrency two; the 10 exclusive files and every unknown file remain serial, and `TY_CONTEXT_LONG_TASK_ISOLATED_CONCURRENCY=1` is the mechanical rollback. Four files were temporarily moved to exclusive after load-amplified `index.lock` failures, but a later single-file-concurrency-one reproduction and Git Trace2 identified an internal `resume` race between workspace `write-tree` and current `git status`; repairing that owner boundary plus a six-file shared-seed probe restores the four temporary demotions instead of masking the product defect with a growing serial tail.
 - Inferred local discovery omits and reports only untracked `.work_products/**` scratch; tracked files and explicit `--path` values remain fail-safe inputs.
-- Canonical Trust/focused/hotspot review budgets block silent feedback-tier growth, while complete-suite auto-discovery remains exhaustive. Controlled Ubuntu CI may additionally supply generous per-suite wall-time ceilings; local timing remains diagnostic.
+- Canonical Trust/focused/hotspot review budgets block silent feedback-tier growth, while complete-suite auto-discovery remains exhaustive. Controlled Ubuntu CI selects the repository-reviewed `github-ubuntu-v1` profile (120/240/600 seconds for default/Trust/Long-Task); the profile refuses unknown names or a non-GitHub/Linux environment, while local timing remains diagnostic.
+- Eleven critical Long-Task/Trust invariants and three default-suite policy/CI invariants carry stable `[critical:<id>]` tags. Each required ID must appear exactly once, in its reviewed file, and pass. Deletion, equal-count replacement, duplication, misplacement, an unreviewed ID or non-passing sentinel fails the existing suite; ordinary test renames/additions remain free, and an intentional stronger replacement updates the one mapping, tag and rationale in review rather than freezing all test names.
 - Two fresh Windows Trust Gate runs passed 32 tests across 9 files in 205.681 and 207.986 seconds after a current build. The complete default tier passed 173 tests across 41 files in 113.199 seconds, so the measured PR-equivalent default-plus-Trust path is approximately 321.185 seconds (5 minutes 21 seconds) without another build. These are rollout observations, not yet a multi-sample median or p95 claim.
 - One bounded Windows A/B on 2026-07-23 exercised 33 identities across six representative Authority/Final-Gate files: serial took 206.276 seconds and two concurrency-two runs took 147.228 and 128.054 seconds. Identities, terminal outcomes, seed state and workspace state were equal and no fixture root leaked; this is rollout evidence, not a formal cross-environment benchmark.
 - Coverage deletion and the 20-change/30-day overlap review remain deliberately deferred until timing and mutation evidence justify them.
@@ -36,6 +37,7 @@ The initial rollout was implemented on 2026-07-20. It changes package-developmen
 | `TS-RERUN` | Repair-loop and full-suite rerun policy |
 | `TS-RELEASE-HANDOFF` | One-test/one-pack release artifact handoff and retry boundary |
 | `TS-OPTIMIZE` | Safe runtime optimization rules |
+| `TS-ANTIDEGRADATION` | Critical semantic continuity and controlled cost governance |
 | `TS-MIGRATION` | Phased implementation and affected files |
 | `TS-METRICS` | ROI measurements and review thresholds |
 | `TS-AC` | Acceptance criteria and rollback |
@@ -219,7 +221,7 @@ A source change after a green aggregate gate invalidates that result, but the re
 
 Static source tests must assert repository membership rather than the absence of legitimate ignored runtime state. In particular, `.codex/hooks.json` may exist after Long-Task is enabled; the invariant is that it remains ignored and untracked, while Hook installation and shape are covered by isolated fixture tests.
 
-Workspace snapshot and fingerprint capture must finish the single index-writing `git write-tree` before starting parallel read-only Git discovery. Git Trace2 coverage owns this ordering so bounded file-level concurrency cannot turn one fixture's internal fingerprint collection into an `index.lock` race.
+Workspace snapshot and fingerprint capture must finish the single index-writing `git write-tree` before starting its parallel read-only Git discovery. `resume` must additionally finish that complete status snapshot before starting `currentGitState`, whose `git status` may refresh the same index. Git Trace2 coverage owns both ordering boundaries so bounded file-level concurrency cannot expose a same-repository `index.lock` race.
 
 ## `TS-RELEASE-HANDOFF` — One Verified Artifact
 
@@ -244,6 +246,21 @@ Optimization must preserve independent false-completion interception.
 5. Reuse setup only inside a sequential scenario whose state transitions are themselves under test. Do not share mutable fixtures merely to save time.
 6. Remove or merge a case only when an invariant-coverage comparison and mutation sentinel prove that another case intercepts the same failure path.
 
+## `TS-ANTIDEGRADATION` — Semantic Continuity And Cost Governance
+
+The self-contained delivery Source and provenance inventory are in `docs/test-suite-roi-antidegradation.md`; that Source includes the prior Goal/Receipt history, user requirements, screenshot dispositions, architecture choice, failure evidence, acceptance design and authorized Git delivery. This stable design section records only the implemented mechanism.
+
+- Fourteen repository-owned records bind a stable semantic ID to one existing test file, required suite(s) and a review rationale. Eleven records derive the Trust file set and three cover default-suite policy/CI continuity; there is no second Trust list or all-test-name manifest.
+- A test title carries `[critical:<id>]`. The existing file reporter observes real terminal events and requires each suite's IDs exactly once, in the reviewed file, with passing status. It reports missing, unexpected, duplicate, misplaced and non-passing IDs, and folds any violation into the existing aggregate result.
+- Count preservation is not semantic preservation: replacing a tagged test with an ordinary test fails even when file/test counts stay equal. A legitimate stronger equivalent changes the existing test and keeps its ID, or deliberately updates the one policy record/tag/rationale in review. Ordinary untagged test rename/addition has no registry cost.
+- The same current-run report sorts every selected file by descending duration (filename tie-break) and retains the first ten `{file,duration_ms,status,test_count}` records. CI uploads those already-produced reports; it does not run a timing suite, retain historical green state or establish a performance authority.
+- `github-ubuntu-v1` centralizes the existing 120/240/600-second catastrophic ceilings and binds them to `GITHUB_ACTIONS=true` plus `RUNNER_OS=Linux`. Unknown profiles and environment mismatch fail closed; no profile means local diagnostic timing with no cross-machine budget claim. The former inline JSON configuration is retired.
+- A failed aggregate exposed `long-task-authority-progress-retry.test.mjs` contending on Git `index.lock`; its immediate serial 7/7 rerun showed behavioral correctness and initially produced 11/38/11. Later clean-snapshot Final Gates exposed the same failure class in `long-task-state-resume.test.mjs` and safe-lane failures in `long-task-authority-revision-diagnosis.test.mjs` plus `long-task-finding-context.test.mjs`; their targeted serial reruns passed, a shared-seed concurrent probe reproduced the latter's `index.lock`, and the temporary classes became 11/35/14. A subsequent Gate then failed `long-task-global-evidence-sensitivity.test.mjs` and `long-task-qualified-completion.test.mjs`; the latter reproduced with file concurrency one. Git Trace2 proved `resumeDeliveryTask` started `currentGitState`'s `git status` before the workspace snapshot's `write-tree` exited in the same repository. The owner repair and six-file probe therefore restore the four temporary demotions and the reviewed 11/39/10 classes; retrying or deleting Git locks remains forbidden.
+
+The mechanism protects the existing complete-suite purpose and adds no result cache, historical timing baseline, persistent scheduler, second Authority or separate final invocation. Its runtime overhead is bounded to parsing existing test names and sorting the current file report; the expensive aggregate count remains unchanged.
+
+The independent delivery verifier is an Authority-locked, self-contained oracle rather than a runtime implementation owner. Its scoped `fixture_snapshot` modularity waiver records owner, introduction date, reason, tracking identity and a hard lifecycle condition: retire the waiver with the verifier, and do not add behavior without an approved verifier split below project limits. This explicit exception avoids silently weakening the modularity gate or rewriting frozen proof after Authority Lock.
+
 ## `TS-PHASE4-SOURCE` — Runtime ROI Delivery Source
 
 This section is the single real Source for the current Phase 4 delivery. It was synthesized under the user's explicit instruction to open one Goal, index every relevant detail, preserve the suite's design purpose, and optimize execution cost without materially reducing test effectiveness.
@@ -260,7 +277,7 @@ Input inventory and disposition:
 - `OBS-WINDOWS-2026-07-22`: one uncontrolled but directly relevant Windows observation from the immediately preceding delivery: Trust 42/42 in about 671.5 seconds, default 44 files in about 128.3 seconds, Long-Task 60 files/281 tests in about 2,282.9 seconds, and the complete command in about 2,416.4 seconds. At least one separate Trust run was redundant before complete coverage; a stale `dist` run and lost timeout output also created avoidable cost. This is an operational baseline for this delivery, not a formal median or p95 benchmark.
 - `REPO-STATIC-2026-07-23`: the current tree contains 44 default files, 60 Long-Task files and 11 Trust files. The original sorted 60-file Long-Task name set has SHA-256 `2588af5d3ebd640de78a295aa39482aaac6d5ece34958b3260d8f295b40daa37`. A bounded static scan found 380 obvious CLI/process call sites, 164 `createDeliveryFixture()` call sites and 370 explicit filesystem-mutation call sites. The shared fixture currently pays five Git subprocesses per creation (`init`, two `config`, `add`, `commit`), approximately 820 Git subprocesses before test-specific CLI work.
 - `REPO-ROUTING-2026-07-23`: `run_affected_tests.mjs` already chooses one highest tier per plan. The regression is therefore not missing selection power; it is ambiguous guidance/manual invocation, unsafe `--no-build`, aggregate-only timing, and repeated fixture setup. The correct owner-level change is to expose aggregate dominance and make the canonical route unambiguous, not to add a second final-test workflow.
-- `REPO-ISOLATION-2026-07-23`: a conservative static review initially identified 11 pure/static candidates, 41 isolated-temp-repository candidates and 8 exclusive-review candidates. The first complete safe-lane execution exposed cross-file interference in `long-task-delivery-compiler.test.mjs`; a later frozen Final Gate exposed a Windows `EBUSY` cleanup failure in the child-process-bearing `long-task-playwright-trust-boundary.test.mjs`, after both files had passed outside that concurrent lane. Fail-closed reclassification therefore yields 11 pure/static, 39 isolated-temp-repository and 10 exclusive-review files. A subsequent Gate exposed an internal `git write-tree`/read-only discovery `index.lock` race; that owner-level fingerprint ordering was repaired without widening the exclusive lane. Hook/profile, environment, distribution, verifier migration, Git-race, Playwright/child-process lifecycle, the two reclassified cases and every unknown/new file remain serial until stronger behavioral isolation proof exists.
+- `REPO-ISOLATION-2026-07-23`: a conservative static review initially identified 11 pure/static candidates, 41 isolated-temp-repository candidates and 8 exclusive-review candidates. Complete safe-lane executions exposed genuine cross-file interference in `long-task-delivery-compiler.test.mjs` and a Windows `EBUSY` cleanup failure in `long-task-playwright-trust-boundary.test.mjs`; both remain exclusive. Later `index.lock` failures across six `resume`-using files were load-amplified evidence of one same-repository coordinator defect: Trace2 showed `currentGitState`'s `git status` starting before the status snapshot's `write-tree` exited, and one failure reproduced with file concurrency one. After serializing that owner boundary and passing the six-file shared-seed concurrency-two probe, fail-closed classification returns to 11 pure/static, 39 isolated-temp-repository and 10 exclusive-review files. Hook/profile, environment, distribution, verifier migration, genuine Git-race, Playwright/child-process lifecycle and every unknown/new file remain serial; the runner never retries or deletes Git locks.
 - `WORKSPACE-2026-07-23`: execution stays in the currently selected `C:/Dev/worktrees/project-tiny-context-harness/development` workspace on its existing `codex/development` branch with inherited uncommitted changes. This delivery creates no branch, worktree, worker, subagent scheduler or parallel mutation plane.
 
 Authoring mode is synthesis. The user fixed the material preference envelope: preserve false-completion interception and test effectiveness first, then minimize recurring execution cost; a measured or causally proven material saving is preferred over a marginal optimization. No external research, payment, deployment, publication, destructive mutation or human approval is required.
@@ -383,7 +400,15 @@ The fresh Windows default and two Trust Gate measurements are recorded above. Mu
 - keep complete-suite discovery exhaustive and retain serial execution as the mechanical rollback;
 - apply generous per-suite wall-time ceilings only when a controlled Ubuntu workflow opts in, preserving local diagnostics and all coverage.
 
-### Phase 4 — Optimize Runtime (implemented; full-population Final Gate measurement pending)
+### Phase 3c — Prevent Semantic And Diagnostic Regression (implemented)
+
+- bind the small critical-invariant set to stable reviewed IDs and real passing test events without freezing ordinary test names;
+- fail the existing aggregate on missing, replaced, duplicated, misplaced, unexpected or non-passing critical IDs;
+- derive Trust membership from the same records, centralize controlled Ubuntu ceilings in one named profile and reject runner mismatch;
+- emit deterministic current-run top-10 slow-file attribution and upload the same reports from PR, main and publish jobs without another test command;
+- move disproven concurrent files to exclusive immediately; retain targeted serial success as repair evidence rather than evidence of isolation.
+
+### Phase 4 — Optimize Runtime (implemented; current-snapshot acceptance remains owned by the delivery Final Gate)
 
 - verify current package build identity before any `--no-build` reuse;
 - emit exhaustive per-file timing without caching historical results;

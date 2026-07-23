@@ -10,6 +10,7 @@ import {
   selectAffectedTests,
 } from "../../tools/affected_test_selection.mjs";
 import {
+  CONTROLLED_TEST_SUITE_BUDGET_PROFILES,
   assertHotspotTestFanoutBudget,
   assertReviewedTestList,
   resolveSuiteWallTimeBudgetMs,
@@ -456,11 +457,16 @@ test("reviewed tier and hotspot budgets fail closed without limiting complete di
   );
 });
 
-test("suite wall-time budgets are opt-in, suite-complete, and fail closed", () => {
+test("[critical:controlled-budget-profile] suite wall-time budgets are named, environment-bound, and fail closed", () => {
   const environment = {
-    TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON:
-      '{"default":120000,"long-task-trust":240000,"long-task":600000}',
+    TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE: "github-ubuntu-v1",
+    GITHUB_ACTIONS: "true",
+    RUNNER_OS: "Linux",
   };
+  assert.equal(
+    CONTROLLED_TEST_SUITE_BUDGET_PROFILES["github-ubuntu-v1"].reviewed_on,
+    "2026-07-23",
+  );
   assert.equal(resolveSuiteWallTimeBudgetMs("default", environment), 120000);
   assert.equal(
     resolveSuiteWallTimeBudgetMs("long-task-trust", environment),
@@ -472,15 +478,28 @@ test("suite wall-time budgets are opt-in, suite-complete, and fail closed", () =
   assert.equal(suiteWallTimeBudgetStatus(120001, 120000), "exceeded");
   assert.equal(suiteWallTimeBudgetStatus(1, null), "not_configured");
   assert.throws(
-    () => resolveSuiteWallTimeBudgetMs("long-task", {
-      TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: '{"default":120000}',
-    }),
-    /positive integer budget for long-task/u,
+    () =>
+      resolveSuiteWallTimeBudgetMs("default", {
+        ...environment,
+        TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE: "unknown-profile",
+      }),
+    /Unknown TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE/u,
   );
   assert.throws(
-    () => resolveSuiteWallTimeBudgetMs("default", {
-      TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: "not-json",
-    }),
-    /Invalid TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON/u,
+    () =>
+      resolveSuiteWallTimeBudgetMs("default", {
+        ...environment,
+        RUNNER_OS: "Windows",
+      }),
+    /requires RUNNER_OS=Linux/u,
+  );
+  assert.throws(
+    () =>
+      resolveSuiteWallTimeBudgetMs("default", {
+        ...environment,
+        TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON:
+          '{"default":120000,"long-task-trust":240000,"long-task":600000}',
+      }),
+    /TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON is retired/u,
   );
 });

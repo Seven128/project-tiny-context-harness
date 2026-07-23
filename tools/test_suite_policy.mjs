@@ -1,6 +1,11 @@
 import path from "node:path";
 
 export const TEST_ROOT = "tests/ty-context";
+const SUPPORTED_TEST_SUITES = new Set([
+  "default",
+  "long-task",
+  "long-task-trust",
+]);
 
 export const TEST_TIER_REVIEW_BUDGETS = Object.freeze({
   long_task_trust: Object.freeze({
@@ -29,18 +34,101 @@ export const TEST_TIER_REVIEW_BUDGETS = Object.freeze({
   }),
 });
 
+export const CRITICAL_TEST_SENTINELS = Object.freeze([
+  criticalSentinel(
+    "authority-lock-continuity",
+    "long-task-active-authority-continuity.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that deleting derived cache cannot reset the first compiled Authority Lock or its immutable task base.",
+  ),
+  criticalSentinel(
+    "forged-evidence-rejection",
+    "long-task-authority-adversarial.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that forged receipts and compiled cache cannot replace the current live acceptance authority.",
+  ),
+  criticalSentinel(
+    "protected-revision-classification",
+    "long-task-authority-revision-classification.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that semantic or proof weakening remains a protected revision requiring exact approval before execution.",
+  ),
+  criticalSentinel(
+    "revision-diagnosis-isolation",
+    "long-task-authority-revision-diagnosis.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that revision diagnosis cannot mutate progress, pending approval state, or acceptance authority.",
+  ),
+  criticalSentinel(
+    "context-freshness",
+    "long-task-context-evolution.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that explicitly referenced verification Context stays controlling and stale evidence fails closed.",
+  ),
+  criticalSentinel(
+    "final-gate-mutation-rejection",
+    "long-task-final-closure-mutation-smoke.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that controlled candidate mutation invalidates stale proof and cannot create false Final Gate acceptance.",
+  ),
+  criticalSentinel(
+    "verifier-integrity",
+    "long-task-profile-hook.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that an active record cannot redirect, replace, or weaken the package-owned current verifier.",
+  ),
+  criticalSentinel(
+    "qualified-close-safety",
+    "long-task-qualified-completion.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that failed live gates neither report qualified success nor clear the current Active Authority.",
+  ),
+  criticalSentinel(
+    "target-runtime-non-substitution",
+    "long-task-semantic-drift-closure.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that evidence from a different runtime target cannot substitute for the Contract-required target.",
+  ),
+  criticalSentinel(
+    "terminal-state-current-evidence",
+    "long-task-semantic-drift-lifecycle.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that Stage frontier and terminal target state derive only from current evidence and the live Final Gate.",
+  ),
+  criticalSentinel(
+    "live-final-gate-only",
+    "long-task-workflow-black-box.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves through the real black-box lifecycle that only the current Live Final Gate can finish delivery.",
+  ),
+  criticalSentinel(
+    "critical-policy-continuity",
+    "test-suite-runtime.test.mjs",
+    ["default"],
+    "Proves that count-preserving replacement, duplication, misplacement, and failure of critical sentinels fail closed.",
+  ),
+  criticalSentinel(
+    "controlled-budget-profile",
+    "affected-test-selection.test.mjs",
+    ["default"],
+    "Proves that controlled wall-time budgets are named, suite-complete, environment-bound, and locally opt-in.",
+  ),
+  criticalSentinel(
+    "ci-diagnostic-routing",
+    "workflow-test-entrypoints.test.mjs",
+    ["default"],
+    "Proves that real CI uses the reviewed profile and uploads same-run timing evidence without another test invocation.",
+  ),
+]);
+
+assertCriticalTestSentinels();
+
 export const LONG_TASK_TRUST_TEST_FILES = Object.freeze([
-  "long-task-active-authority-continuity.test.mjs",
-  "long-task-authority-adversarial.test.mjs",
-  "long-task-authority-revision-classification.test.mjs",
-  "long-task-authority-revision-diagnosis.test.mjs",
-  "long-task-context-evolution.test.mjs",
-  "long-task-final-closure-mutation-smoke.test.mjs",
-  "long-task-profile-hook.test.mjs",
-  "long-task-qualified-completion.test.mjs",
-  "long-task-semantic-drift-closure.test.mjs",
-  "long-task-semantic-drift-lifecycle.test.mjs",
-  "long-task-workflow-black-box.test.mjs",
+  ...new Set(
+    CRITICAL_TEST_SENTINELS.filter((entry) =>
+      entry.required_suites.includes("long-task-trust"),
+    ).map((entry) => entry.file),
+  ),
 ]);
 
 export const LONG_TASK_TRUST_TESTS = Object.freeze(
@@ -167,6 +255,23 @@ export const LONG_TASK_EXCLUSIVE_TEST_FILES = Object.freeze([
 ]);
 
 export const LONG_TASK_DEFAULT_ISOLATED_CONCURRENCY = 2;
+
+export const CONTROLLED_TEST_SUITE_BUDGET_PROFILES = Object.freeze({
+  "github-ubuntu-v1": Object.freeze({
+    expected_environment: Object.freeze({
+      GITHUB_ACTIONS: "true",
+      RUNNER_OS: "Linux",
+    }),
+    budgets_ms: Object.freeze({
+      default: 120_000,
+      "long-task-trust": 240_000,
+      "long-task": 600_000,
+    }),
+    reviewed_on: "2026-07-23",
+    rationale:
+      "Catastrophic regression ceilings for the repository's pinned GitHub-hosted Ubuntu package jobs; local and differently hosted runs remain diagnostic because wall time is not cross-machine evidence.",
+  }),
+});
 
 const longTaskPureFiles = new Set(LONG_TASK_PURE_TEST_FILES);
 const longTaskIsolatedFiles = new Set(LONG_TASK_ISOLATED_TEST_FILES);
@@ -296,26 +401,39 @@ export function resolveSuiteWallTimeBudgetMs(
   suite,
   environment = process.env,
 ) {
-  const raw = environment.TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON;
-  if (!raw) return null;
-  let budgets;
-  try {
-    budgets = JSON.parse(raw);
-  } catch (error) {
+  if (environment.TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON)
     throw new Error(
-      `Invalid TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON: ${error instanceof Error ? error.message : String(error)}`,
+      "TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON is retired; select a repository-reviewed TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE instead.",
     );
+  const profileName = environment.TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE;
+  if (!profileName) return null;
+  const profile = CONTROLLED_TEST_SUITE_BUDGET_PROFILES[profileName];
+  if (!profile)
+    throw new Error(
+      `Unknown TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE: ${profileName}.`,
+    );
+  for (const [key, expected] of Object.entries(profile.expected_environment)) {
+    if (environment[key] !== expected)
+      throw new Error(
+        `TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE ${profileName} requires ${key}=${expected}; received ${environment[key] ?? "<unset>"}.`,
+      );
   }
-  if (!budgets || typeof budgets !== "object" || Array.isArray(budgets))
-    throw new Error(
-      "TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON must be a JSON object keyed by suite.",
-    );
-  const value = budgets[suite];
+  const value = profile.budgets_ms[suite];
   if (!Number.isSafeInteger(value) || value <= 0)
     throw new Error(
-      `TY_CONTEXT_TEST_SUITE_BUDGETS_MS_JSON must provide a positive integer budget for ${suite}.`,
+      `TY_CONTEXT_TEST_SUITE_BUDGET_PROFILE ${profileName} must provide a positive integer budget for ${suite}.`,
     );
   return value;
+}
+
+export function criticalSentinelsForSuite(suite) {
+  if (!SUPPORTED_TEST_SUITES.has(suite))
+    throw new Error(`Unsupported package test suite: ${suite}.`);
+  return Object.freeze(
+    CRITICAL_TEST_SENTINELS.filter((entry) =>
+      entry.required_suites.includes(suite),
+    ),
+  );
 }
 
 export function suiteWallTimeBudgetStatus(wallTimeMs, budgetMs) {
@@ -351,4 +469,46 @@ function assertIsolationPolicy() {
     throw new Error(
       "Long-Task isolation policy changed from the reviewed 11/39/10 population; review the new file explicitly instead of parallelizing it by default.",
     );
+}
+
+function criticalSentinel(id, file, requiredSuites, rationale) {
+  return Object.freeze({
+    id,
+    file,
+    required_suites: Object.freeze([...requiredSuites]),
+    rationale,
+  });
+}
+
+function assertCriticalTestSentinels() {
+  const ids = new Set();
+  for (const entry of CRITICAL_TEST_SENTINELS) {
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(entry.id))
+      throw new Error(`Invalid critical test sentinel id: ${entry.id}.`);
+    if (ids.has(entry.id))
+      throw new Error(`Duplicate critical test sentinel id: ${entry.id}.`);
+    ids.add(entry.id);
+    if (path.basename(entry.file) !== entry.file || !entry.file.endsWith(".test.mjs"))
+      throw new Error(`Invalid critical test sentinel file: ${entry.file}.`);
+    if (
+      entry.required_suites.length === 0 ||
+      new Set(entry.required_suites).size !== entry.required_suites.length ||
+      entry.required_suites.some((suite) => !SUPPORTED_TEST_SUITES.has(suite))
+    )
+      throw new Error(`Invalid suite placement for critical sentinel ${entry.id}.`);
+    const isLongTaskFile = entry.file.startsWith("long-task-");
+    if (
+      (entry.required_suites.includes("default") && isLongTaskFile) ||
+      (entry.required_suites.some((suite) => suite.startsWith("long-task")) &&
+        !isLongTaskFile)
+    )
+      throw new Error(`Critical sentinel ${entry.id} is assigned to the wrong suite family.`);
+    if (
+      entry.required_suites.includes("long-task-trust") &&
+      !entry.required_suites.includes("long-task")
+    )
+      throw new Error(`Trust sentinel ${entry.id} must also run in the complete Long-Task suite.`);
+    if (typeof entry.rationale !== "string" || entry.rationale.length <= 40)
+      throw new Error(`Critical sentinel ${entry.id} requires a review rationale.`);
+  }
 }
