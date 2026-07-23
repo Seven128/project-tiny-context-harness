@@ -33,11 +33,48 @@ export function validateRuntimeEvidenceRecord(
       return artifactHashes[record.artifact_path] === record.artifact_sha256
         ? null
         : "artifact_hash_mismatch";
+    case "design_conformance":
+      return validateDesignConformance(check, record, artifactHashes);
     case "target_runtime":
       return validateTargetRuntime(check, record);
     case "input_variation":
       return validateInputVariation(record);
   }
+}
+
+function validateDesignConformance(
+  check: CompiledCheckV2,
+  record: Extract<
+    EvidenceCapabilityRecordV2,
+    { capability: "design_conformance" }
+  >,
+  artifactHashes: Record<string, string>,
+): string | null {
+  const target = (check.design_conformance_targets ?? []).find(
+    (item) =>
+      item.key === record.design_target_ref &&
+      item.conformance_assertion_ref === record.assertion_key,
+  );
+  if (!target) return "design_target_unknown";
+  if (
+    target.target_ref !== record.target_ref ||
+    target.target_ref !== check.execution_target.target_ref
+  )
+    return "target_mismatch";
+  if (
+    !same([...target.condition_keys].sort(), [...record.condition_keys].sort())
+  )
+    return "design_conditions_mismatch";
+  if (
+    target.actual_artifact_path !== record.actual_artifact_path ||
+    target.comparison_artifact_path !== record.comparison_artifact_path
+  )
+    return "design_artifact_path_mismatch";
+  if (!artifactHashes[record.actual_artifact_path])
+    return "actual_artifact_missing";
+  if (!artifactHashes[record.comparison_artifact_path])
+    return "comparison_artifact_missing";
+  return null;
 }
 
 function validateInteractionTrace(

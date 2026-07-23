@@ -40,6 +40,8 @@ export function rawExecutionInputProjection(
   projection.evidence_adapter = check.evidence_adapter;
   projection.execution_target_definition = check.execution_target_definition;
   projection.known_execution_targets = check.known_execution_targets;
+  projection.design_conformance_targets =
+    check.design_conformance_targets ?? [];
   for (const field of Object.keys(CHECK_EXECUTION_INPUT_POLICY) as Array<
     keyof DeliveryCheckV2
   >) {

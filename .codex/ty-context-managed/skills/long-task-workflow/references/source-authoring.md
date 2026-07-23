@@ -74,6 +74,8 @@ For each in-scope surface, record purpose, entry/exit/navigation, regions/overla
 
 Do not invent controls for a non-interface delivery. A coarse frame or configured design system does not supply unshown states. Selected design resources and product/technical Source remain parallel: visuals cannot invent business/data/permission/algorithmic rules.
 
+For every selected exact/constraint target, preserve the declared platform/viewport/mode/state/content conditions and identify which surface and Control keys it governs. Separately record any design-resource acceptance blocker supplied by the Source. File identity, hashes, provider/export success, registry membership and resource counts are integrity facts only; they do not state that a production owner, real-user journey or rendered interaction conforms.
+
 ## Acceptance and risk
 
 Each AC has exactly one Given/When/Then scenario, names the REQ/CTRL/OBL/NCOMP meaning it accepts and introduces no undeclared product semantics. Keep representative/sample/framework checks distinct from full-population claims and partial delivery distinct from completion.
@@ -93,6 +95,7 @@ Before Preflight/Compile confirm:
 7. Non-goals, forbidden shortcuts, risks and recovery are concrete.
 8. No unsupported number, threshold, metric or external claim appears.
 9. Selected design resources retain stable identity and exact declared coverage; candidates remain non-authoritative.
-10. The Source is self-contained enough to own every mapped Draft semantic and names every still-required external artifact.
+10. Every material UI surface/control can be mapped to a production target/owner, real-user entry journey and acceptance route, while every declared design blocker has an explicit machine or target-blocking external-confirmation disposition. Removing one from scope requires an explicit Source revision; Contract prose cannot waive it.
+11. The Source is self-contained enough to own every mapped Draft semantic and names every still-required external artifact.
 
 Complete non-rendering `ty-source-item:start/end` markers in the real Markdown Source without rewriting direct text, and finish the corresponding Contract mapping in the same loop. Neither markers nor this audit delay opening the Draft; all are fail-closed convergence requirements before Preflight/Compile.

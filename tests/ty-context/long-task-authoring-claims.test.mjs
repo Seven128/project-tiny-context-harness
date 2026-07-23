@@ -6,6 +6,7 @@ import YAML from "yaml";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import {
+  addProductionControlBinding,
   createDeliveryFixture,
   deliveryContract,
   writeContract,
@@ -30,10 +31,11 @@ test("Requirement Claims require coverage on an allowed proof surface", () => {
   );
 });
 
-test("Control location is an independent ui_browser Claim", () => {
-  const uncovered = deliveryContract();
-  uncovered.outcomes[0].product.controls.push({
+test("Control Claims require a production target binding and target-local proof", () => {
+  const legacy = deliveryContract();
+  legacy.outcomes[0].product.controls.push({
     key: "submit",
+    surface: "settings",
     location: "settings footer",
     trigger: "",
     input: "",
@@ -43,14 +45,39 @@ test("Control location is an independent ui_browser Claim", () => {
     failure_state: "",
     feedback: "",
   });
+  delete legacy.outcomes[0].product.surface_bindings;
   assert.throws(
-    () => parse(uncovered),
-    /product_claim_uncovered:first\.control\.submit\.location/u,
+    () => parse(legacy),
+    /long_task_delivery_v2_semantic_drift_migration_required:outcomes\[0\]\.product\.surface_bindings/u,
   );
 
-  const covered = deliveryContract();
-  covered.outcomes[0].product.controls.push({
+  const uncovered = deliveryContract();
+  uncovered.outcomes[0].product.controls.push({
     key: "submit",
+    surface: "settings",
+    location: "settings footer",
+    trigger: "activate",
+    input: "",
+    loading_state: "",
+    empty_state: "",
+    success_state: "",
+    failure_state: "",
+    feedback: "",
+  });
+  addProductionControlBinding(uncovered, {
+    controlKey: "submit",
+    surfaceRef: "settings",
+    rootClaimRef: "control.submit.location",
+  });
+  assert.throws(
+    () => parse(uncovered),
+    /ui_surface_binding_root_control_proof_missing:first:submit-fixture-app:submit:control\.submit\.trigger/u,
+  );
+
+  const proxy = deliveryContract();
+  proxy.outcomes[0].product.controls.push({
+    key: "submit",
+    surface: "settings",
     location: "settings footer",
     trigger: "click",
     input: "",
@@ -60,35 +87,45 @@ test("Control location is an independent ui_browser Claim", () => {
     failure_state: "",
     feedback: "",
   });
-  const uiCheck = structuredClone(covered.outcomes[0].acceptance.checks[0]);
-  covered.task.execution_targets.push({
+  proxy.task.execution_targets.push({
     key: "fixture-browser",
     description: "The browser support surface.",
     role: "support",
     runtime_family: "browser",
     root_entrypoint: "/",
   });
-  uiCheck.key = "submit-ui";
-  uiCheck.journey_roles = ["success"];
-  uiCheck.execution_target = {
-    target_ref: "fixture-browser",
-    entrypoint: "root",
-  };
-  uiCheck.proof_surface = "ui_browser";
-  uiCheck.runner.type = "playwright_test";
-  uiCheck.runner.target = "tests/ui.spec.ts";
-  uiCheck.positive_assertions = [
-    {
-      key: "submit-location",
-      criterion: "Submit is in the settings footer.",
-      claims: ["control.submit.location", "control.submit.trigger"],
-      observation: "playwright.case.submit-location.passed",
-      evidence_capabilities: ["interaction_trace"],
-      operator: "equals",
-      expected: true,
-    },
-  ];
-  covered.outcomes[0].acceptance.checks.push(uiCheck);
+  addProductionControlBinding(proxy, {
+    controlKey: "submit",
+    surfaceRef: "settings",
+    targetRef: "fixture-browser",
+    rootClaimRef: "control.submit.location",
+  });
+  assert.throws(
+    () => parse(proxy),
+    /ui_surface_binding_product_target_required:first:submit-fixture-browser:fixture-browser/u,
+  );
+
+  const covered = deliveryContract();
+  covered.outcomes[0].product.controls.push({
+    key: "submit",
+    surface: "settings",
+    location: "settings footer",
+    trigger: "click",
+    input: "",
+    loading_state: "",
+    empty_state: "",
+    success_state: "",
+    failure_state: "",
+    feedback: "",
+  });
+  addProductionControlBinding(covered, {
+    controlKey: "submit",
+    surfaceRef: "settings",
+    rootClaimRef: "control.submit.location",
+  });
+  covered.outcomes[0].acceptance.checks[0].positive_assertions[0].claims.push(
+    "control.submit.trigger",
+  );
   assert.doesNotThrow(() => parse(covered));
 });
 

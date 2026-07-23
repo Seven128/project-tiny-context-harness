@@ -10,6 +10,7 @@ import { enrichFinding } from "../../packages/ty-context/dist/lib/long-task-find
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import { parseSourceItems } from "../../packages/ty-context/dist/lib/long-task-source-item-parser.js";
 import {
+  addProductionControlBinding,
   createDeliveryFixture,
   deliveryContract,
   writeContract,
@@ -846,6 +847,7 @@ async function addControlProof(fixture, failureState) {
   const outcome = fixture.contract.outcomes[0];
   outcome.product.controls.push({
     key: "save",
+    surface: "fixture-main",
     location: "Settings form",
     trigger: "",
     input: "",
@@ -855,54 +857,13 @@ async function addControlProof(fixture, failureState) {
     failure_state: failureState,
     feedback: "",
   });
-  await writeFile(
-    path.join(fixture.root, "tests", "ui.spec.ts"),
-    "export {};\n",
-  );
-  const check = structuredClone(outcome.acceptance.checks[0]);
-  fixture.contract.task.execution_targets.push({
-    key: "fixture-browser",
-    description: "The browser support surface.",
-    role: "support",
-    runtime_family: "browser",
-    root_entrypoint: "/",
+  addProductionControlBinding(fixture.contract, {
+    controlKey: "save",
+    rootClaimRef: "control.save.location",
   });
-  check.key = "ui-check";
-  check.journey_roles = ["success"];
-  check.execution_target = {
-    target_ref: "fixture-browser",
-    entrypoint: "root",
-  };
-  check.proof_surface = "ui_browser";
-  check.runner.type = "playwright_test";
-  check.runner.target = "tests/ui.spec.ts";
-  check.runner.argv = [];
-  check.runner.effect = "test_sandbox";
-  check.runner.idempotent = false;
-  check.verification_inputs = ["tests/ui.spec.ts"];
-  check.artifact_globs = [];
-  check.positive_assertions = [
-    {
-      key: "save-location",
-      criterion: "The save control appears in the Settings form.",
-      claims: ["control.save.location"],
-      observation: "playwright.case.save-location.passed",
-      evidence_capabilities: ["interaction_trace"],
-      operator: "equals",
-      expected: true,
-    },
-    {
-      key: "save-failure",
-      criterion: "The failure state preserves user input.",
-      claims: ["control.save.failure"],
-      observation: "playwright.case.save-failure.passed",
-      evidence_capabilities: ["interaction_trace"],
-      operator: "equals",
-      expected: true,
-    },
-  ];
-  check.negative_assertions = [];
-  outcome.acceptance.checks.push(check);
+  outcome.acceptance.checks[0].positive_assertions[0].claims.push(
+    "control.save.failure",
+  );
 }
 
 function addGlobalConstraintProof(contract, key, statement) {

@@ -275,6 +275,7 @@ export function deliveryContract(options = {}) {
       ],
       owner_surfaces: [],
       controls: [],
+      surface_bindings: [],
       non_completing_outcomes: [],
     },
     technical: {
@@ -406,6 +407,58 @@ export function deliveryContract(options = {}) {
       ? [outcome("first", "first"), outcome("second", "second", ["first"])]
       : [outcome("first", "first")],
   };
+}
+
+export function addProductionControlBinding(
+  contract,
+  {
+    outcomeKey = "first",
+    controlKey,
+    surfaceRef = "fixture-main",
+    targetRef = "fixture-app",
+    rootCheckRef = `${outcomeKey}-check`,
+    entryActionRef = "read-outcome",
+    rootClaimRef = null,
+    designTargets = [],
+    acceptanceBlockers = [],
+  },
+) {
+  const outcome = contract.outcomes.find((item) => item.key === outcomeKey);
+  if (!outcome) throw new Error(`fixture_outcome_unknown:${outcomeKey}`);
+  if (!outcome.product.owner_surfaces.includes(surfaceRef))
+    outcome.product.owner_surfaces.push(surfaceRef);
+  const carrierRef = `state-${outcomeKey}`;
+  outcome.product.surface_bindings.push({
+    key: `${controlKey}-${targetRef}`,
+    surface_ref: surfaceRef,
+    target_ref: targetRef,
+    control_refs: [controlKey],
+    route_binding_ref: carrierRef,
+    component_binding_refs: [carrierRef],
+    root_journey_check_ref: rootCheckRef,
+    entry_action_ref: entryActionRef,
+    design_targets: designTargets,
+    acceptance_blockers: acceptanceBlockers,
+  });
+  if (rootClaimRef) {
+    const check = outcome.acceptance.checks.find(
+      (item) => item.key === rootCheckRef,
+    );
+    if (!check) throw new Error(`fixture_check_unknown:${rootCheckRef}`);
+    const assertion = check.positive_assertions[0];
+    const control = outcome.product.controls.find(
+      (item) => item.key === controlKey,
+    );
+    const rootClaims = [
+      ...(control?.surface ? [`control.${controlKey}.surface`] : []),
+      rootClaimRef,
+    ];
+    for (const claim of rootClaims)
+      if (!assertion.claims.includes(claim)) assertion.claims.push(claim);
+    if (!assertion.evidence_capabilities.includes("interaction_trace"))
+      assertion.evidence_capabilities.push("interaction_trace");
+  }
+  return outcome.product.surface_bindings.at(-1);
 }
 
 function addDefaultSensitivityControls(contract) {

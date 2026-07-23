@@ -47,9 +47,7 @@ export function generateClaims(outcome: DeliveryOutcomeV2): ProductClaimV2[] {
     for (const [field, value] of fields)
       if (value.trim())
         claims.push(
-          claim(outcome.key, `control.${control.key}.${field}`, "control", [
-            "ui_browser",
-          ]),
+          claim(outcome.key, `control.${control.key}.${field}`, "control"),
         );
   }
   for (const item of outcome.product.non_completing_outcomes)
@@ -112,8 +110,6 @@ export function validateProofSurface(
   proof: ClaimProofV2,
   outcomeKey: string,
 ): void {
-  if (claim.kind === "control" && proof.proof_surface !== "ui_browser")
-    fail("ui_claim_requires_ui_browser", `${outcomeKey}:${claim.local_key}`);
   if (
     (claim.kind === "non_completing" || claim.kind === "forbidden_shortcut") &&
     proof.polarity !== "negative" &&

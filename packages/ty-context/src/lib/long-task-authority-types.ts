@@ -4,6 +4,7 @@ import type {
   ExecutionTargetV2,
   TargetProfileV2,
 } from "./long-task-semantic-contract-types.js";
+import type { DeliverySurfaceBindingV2 } from "./long-task-ui-surface-types.js";
 import type { CompiledSourceItemV2 } from "./long-task-source-authority-types.js";
 import type { WorkspaceManifestV2 } from "./long-task-workspace-runtime-types.js";
 
@@ -62,6 +63,7 @@ export interface ProductSemanticProjectionV2 {
       feedback: string;
       accessibility: string;
     }>;
+    surface_bindings: DeliverySurfaceBindingV2[];
     non_completing_outcomes: Array<{ key: string; statement: string }>;
   }>;
 }

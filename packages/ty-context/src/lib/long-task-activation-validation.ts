@@ -13,6 +13,7 @@ import {
 } from "./long-task-delivery-preflight.js";
 import type {
   CompiledCheckV2,
+  CompiledDesignTargetV2,
   CompiledOutcomeV2,
   CompiledSourceItemV2,
   ContextAuthoritySnapshotV2,
@@ -149,6 +150,7 @@ export async function validateContractForActivation(options: {
           workspace,
           executionTarget,
           contract.task.execution_targets,
+          [],
         ),
       null,
       check.key,
@@ -174,6 +176,7 @@ export async function validateContractForActivation(options: {
             workspace,
             executionTarget,
             contract.task.execution_targets,
+            designTargetsForCheck(outcome, check.key),
           ),
         outcome.key,
         check.key,
@@ -247,6 +250,22 @@ export async function validateContractForActivation(options: {
     global_checks: globalChecks,
     outcomes,
   };
+}
+
+function designTargetsForCheck(
+  outcome: DeliveryContractV2["outcomes"][number],
+  checkKey: string,
+): CompiledDesignTargetV2[] {
+  return (outcome.product.surface_bindings ?? []).flatMap((binding) =>
+    binding.design_targets
+      .filter((target) => target.conformance_check_ref === checkKey)
+      .map((target) => ({
+        ...target,
+        surface_binding_ref: binding.key,
+        surface_ref: binding.surface_ref,
+        target_ref: binding.target_ref,
+      })),
+  );
 }
 
 async function attempt<T>(

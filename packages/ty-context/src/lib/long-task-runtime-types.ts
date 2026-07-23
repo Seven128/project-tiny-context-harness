@@ -9,6 +9,7 @@ import type {
   EvidenceCapabilityV2,
   ExecutionTargetV2,
 } from "./long-task-semantic-contract-types.js";
+import type { CompiledDesignTargetV2 } from "./long-task-ui-surface-types.js";
 import type {
   AuthorityHashesV2,
   ContextAuthoritySnapshotV2,
@@ -45,6 +46,7 @@ export interface CompiledCheckV2 extends Omit<DeliveryCheckV2, "runner"> {
   raw_execution_identity: string;
   execution_target_definition: ExecutionTargetV2;
   known_execution_targets: ExecutionTargetV2[];
+  design_conformance_targets: CompiledDesignTargetV2[];
 }
 
 export interface ProductClaimV2 {

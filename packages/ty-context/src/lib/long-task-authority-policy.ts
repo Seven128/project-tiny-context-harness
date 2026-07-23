@@ -16,6 +16,11 @@ import type {
   CounterfactualControlV2,
   GlobalCounterfactualControlV2,
 } from "./long-task-counterfactual-types.js";
+import type {
+  DeliveryDesignAcceptanceBlockerV2,
+  DeliveryDesignTargetV2,
+  DeliverySurfaceBindingV2,
+} from "./long-task-ui-surface-types.js";
 
 export type AuthorityFieldPolicy =
   | "identity"
@@ -95,6 +100,7 @@ const OUTCOME_PRODUCT_AUTHORITY_POLICY = {
   requirements: "semantic_user_review",
   owner_surfaces: "semantic_user_review",
   controls: "semantic_user_review",
+  surface_bindings: "semantic_user_review",
   non_completing_outcomes: "semantic_user_review",
 } satisfies Record<keyof OutcomeProductV2, AuthorityFieldPolicy>;
 
@@ -135,6 +141,41 @@ const CONTROL_AUTHORITY_POLICY = {
   feedback: "semantic_user_review",
   accessibility: "semantic_user_review",
 } satisfies Record<keyof DeliveryControlV2, AuthorityFieldPolicy>;
+
+const SURFACE_BINDING_AUTHORITY_POLICY = {
+  key: "identity",
+  surface_ref: "semantic_user_review",
+  target_ref: "semantic_user_review",
+  control_refs: "semantic_user_review",
+  route_binding_ref: "semantic_user_review",
+  component_binding_refs: "semantic_user_review",
+  root_journey_check_ref: "proof_additive",
+  entry_action_ref: "proof_additive",
+  design_targets: "semantic_user_review",
+  acceptance_blockers: "semantic_user_review",
+} satisfies Record<keyof DeliverySurfaceBindingV2, AuthorityFieldPolicy>;
+
+const DESIGN_TARGET_AUTHORITY_POLICY = {
+  key: "identity",
+  interpretation: "semantic_user_review",
+  source_paths: "scope",
+  condition_keys: "semantic_user_review",
+  claim_refs: "proof_additive",
+  conformance_check_ref: "proof_additive",
+  conformance_assertion_ref: "proof_additive",
+  actual_artifact_path: "output_requirement",
+  comparison_artifact_path: "output_requirement",
+} satisfies Record<keyof DeliveryDesignTargetV2, AuthorityFieldPolicy>;
+
+const DESIGN_BLOCKER_AUTHORITY_POLICY = {
+  key: "identity",
+  status: "semantic_user_review",
+  refs: "semantic_user_review",
+  rationale: "semantic_user_review",
+} satisfies Record<
+  keyof DeliveryDesignAcceptanceBlockerV2,
+  AuthorityFieldPolicy
+>;
 
 const OUTCOME_TECHNICAL_AUTHORITY_POLICY = {
   obligations: "semantic_user_review",
@@ -247,6 +288,9 @@ export const AUTHORITY_FIELD_POLICY_REGISTRIES = {
   requirement: REQUIREMENT_AUTHORITY_POLICY,
   owner: OWNER_AUTHORITY_POLICY,
   control: CONTROL_AUTHORITY_POLICY,
+  surface_binding: SURFACE_BINDING_AUTHORITY_POLICY,
+  design_target: DESIGN_TARGET_AUTHORITY_POLICY,
+  design_blocker: DESIGN_BLOCKER_AUTHORITY_POLICY,
   outcome_technical: OUTCOME_TECHNICAL_AUTHORITY_POLICY,
   obligation: OBLIGATION_AUTHORITY_POLICY,
   binding: BINDING_AUTHORITY_POLICY,

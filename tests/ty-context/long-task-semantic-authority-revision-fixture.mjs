@@ -7,13 +7,15 @@ export function prepareSemanticAuthority(contract) {
   const outcome = contract.outcomes[0];
   contract.task.execution_targets.push({
     key: "fixture-browser",
-    description: "The browser support surface.",
-    role: "support",
+    description: "The browser product surface.",
+    role: "product",
     runtime_family: "browser",
     root_entrypoint: "/",
   });
+  contract.task.target_profile.required_target_refs.push("fixture-browser");
   outcome.product.controls.push({
     key: "submit",
+    surface: "fixture-main",
     location: "footer",
     trigger: "",
     input: "",
@@ -47,7 +49,7 @@ export function prepareSemanticAuthority(contract) {
   outcome.acceptance.checks.push({
     ...structuredClone(outcome.acceptance.checks[0]),
     key: "submit-ui",
-    journey_roles: ["success"],
+    journey_roles: ["success", "stage_gate"],
     execution_target: {
       target_ref: "fixture-browser",
       entrypoint: "root",
@@ -63,6 +65,8 @@ export function prepareSemanticAuthority(contract) {
         key: "submit-states",
         criterion: "The submit control is placed correctly and reports terminal states.",
         claims: [
+          "result",
+          "control.submit.surface",
           "control.submit.location",
           "control.submit.validation",
           "control.submit.success",
@@ -71,12 +75,33 @@ export function prepareSemanticAuthority(contract) {
           "control.submit.accessibility",
         ],
         observation: "playwright.case.submit-states.passed",
-        evidence_capabilities: ["interaction_trace"],
+        evidence_capabilities: ["interaction_trace", "target_runtime"],
         operator: "equals",
         expected: true,
       },
     ],
     negative_assertions: [],
+  });
+  outcome.product.owner_surfaces.push("fixture-main");
+  outcome.product.surface_bindings.push({
+    key: "submit-fixture-browser",
+    surface_ref: "fixture-main",
+    target_ref: "fixture-browser",
+    control_refs: ["submit"],
+    route_binding_ref: "state-first",
+    component_binding_refs: ["state-first"],
+    root_journey_check_ref: "submit-ui",
+    entry_action_ref: "read-outcome",
+    design_targets: [],
+    acceptance_blockers: [
+      {
+        key: "submit-accessibility-proof",
+        status: "machine_claim",
+        refs: ["control.submit.accessibility"],
+        rationale:
+          "The target-local UI Check resolves the declared accessibility blocker.",
+      },
+    ],
   });
   contract.global.technical.constraints.push({
     key: "stable-runtime",

@@ -5,7 +5,10 @@ import { generateClaims } from "../../packages/ty-context/dist/lib/long-task-cla
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import { parseControls } from "../../packages/ty-context/dist/lib/long-task-product-shape.js";
 import { buildCanonicalSourceTargetIndex } from "../../packages/ty-context/dist/lib/long-task-source-target-index.js";
-import { deliveryContract } from "./long-task-delivery-fixtures.mjs";
+import {
+  addProductionControlBinding,
+  deliveryContract,
+} from "./long-task-delivery-fixtures.mjs";
 
 function parse(contract) {
   return parseDeliveryContractText(YAML.stringify(contract));
@@ -16,6 +19,7 @@ test("result, Control states, non-completing, obligation and shortcut Claims req
   const outcome = contract.outcomes[0];
   outcome.product.controls.push({
     key: "submit",
+    surface: "fixture-main",
     location: "footer",
     trigger: "click",
     input: "content",
@@ -25,7 +29,14 @@ test("result, Control states, non-completing, obligation and shortcut Claims req
     failure_state: "error",
     feedback: "visible",
   });
-  assert.throws(() => parse(contract), /product_claim_uncovered/);
+  addProductionControlBinding(contract, {
+    controlKey: "submit",
+    rootClaimRef: "control.submit.location",
+  });
+  assert.throws(
+    () => parse(contract),
+    /ui_surface_binding_(root_control|target_claim)_proof_missing/,
+  );
 });
 
 test("every non-empty control-level UI field becomes a stable Claim and Source target", () => {
@@ -152,11 +163,12 @@ test("unknown and cross-Outcome Claim refs fail", () => {
   assert.throws(() => parse(cross), /assertion_claim_cross_outcome/);
 });
 
-test("UI Claims require browser proof and obligation surfaces must match", () => {
+test("Control Claims follow their production target and obligation surfaces must match", () => {
   const ui = deliveryContract();
   const outcome = ui.outcomes[0];
   outcome.product.controls.push({
     key: "submit",
+    surface: "fixture-main",
     location: "footer",
     trigger: "click",
     input: "",
@@ -166,10 +178,14 @@ test("UI Claims require browser proof and obligation surfaces must match", () =>
     failure_state: "",
     feedback: "",
   });
+  addProductionControlBinding(ui, {
+    controlKey: "submit",
+    rootClaimRef: "control.submit.trigger",
+  });
   outcome.acceptance.checks[0].positive_assertions[0].claims.push(
-    "control.submit.trigger",
+    "control.submit.location",
   );
-  assert.throws(() => parse(ui), /ui_claim_requires_ui_browser/);
+  assert.doesNotThrow(() => parse(ui));
   const obligation = deliveryContract();
   obligation.outcomes[0].technical.obligations[0].required_proof_surfaces = [
     "api_contract",

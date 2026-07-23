@@ -4,7 +4,7 @@
 ## Plan Metadata
 
 - Plan key: `PLAN-UIAUTH-001`
-- Status: approved for implementation by the user on 2026-07-21
+- Status: approved for implementation by the user on 2026-07-21; evidence-driven production-binding amendment approved on 2026-07-23
 - Goal: close the gap between coarse product/UI intent and control-level implementation, acceptance and testing without adding a second product/design authority or a second Long-Task lifecycle.
 - Applies to: Project Tiny Context Harness package, managed Context/Skills/templates, Long-Task Contract semantics, diagnostics, public documentation and affected test suites.
 - Does not apply to: implementing or redesigning Starward itself. Starward is evidence for the problem and a future consumer/pilot, not a target workspace of this delivery.
@@ -31,8 +31,10 @@ The implementation will not add a generic `design` Context role, a `uiux_deliver
 2. add an on-demand Screen Contract template with control-level semantics;
 3. add a mandatory UI Authority Closure reconciliation step for material UI work;
 4. preserve the Source Plan control vocabulary through the existing Long-Task `controls` projection;
-5. make doctor distinguish project-level visual-system configuration from page-level implementation readiness;
-6. bind the change into managed Skills, public documentation, source sync and focused/full regression coverage.
+5. bind Long-Task Controls by production surface/target to route/component owners, a root-entry real-user journey and target-local proof;
+6. distinguish design-resource integrity, rendered output and selected-target implementation conformance, and project declared design blockers into existing machine/external acceptance;
+7. make doctor distinguish project-level visual-system configuration from page-level implementation readiness;
+8. bind the change into managed Skills, public documentation, source sync and focused/full regression coverage.
 
 <a id="plan-inputs"></a>
 ## Input Inventory And Treatment
@@ -93,6 +95,17 @@ The implementation will not add a generic `design` Context role, a `uiux_deliver
 - Useful evidence: a large Source Plan can contain control detail that is not fully projected into a current Delivery Contract, while a custom `DESIGN.md` can be reported as `configured` without page targets.
 - Boundary: no Starward file, design direction, target, viewport or Contract is modified or promoted by this delivery.
 
+### `IN-PILOT-002` — Starward production-entry false-acceptance audit
+
+- Role: current direct problem evidence supplied by the user and confirmed read-only against the pilot repository.
+- Observed independent failure paths:
+  - the production `MobileShellScreen` remained the real five-tab entry while separately implemented pages were reached by deep links;
+  - native acceptance cold-started the shell but page Outcomes then opened internal routes, so root integration was not what the page tests proved;
+  - the design verifier proved hashes, registries and counts while its accepted inventory still contained declared native-acceptance blockers;
+  - Control Claims were concentrated on a browser support target because the generic Control proof surface was hard-coded to `ui_browser`;
+  - no typed chain connected selected target/condition, production route/component owner, real-user journey, current render/comparison evidence and Final Gate.
+- Treatment: this evidence invalidates the earlier assumption that lossless Control fields plus authoring guidance alone close production UI delivery. It authorizes the narrow production `surface_bindings` and `design_conformance` amendment below, while the Starward product remains out of implementation scope.
+
 <a id="plan-problem"></a>
 ## Problem And False-Completion Paths
 
@@ -115,6 +128,18 @@ Even when Source contains detailed controls, unstable naming or lossy projection
 ### `FAIL-UI-005` — UI checks prove a proxy or only one dimension
 
 A screenshot cannot prove interaction recovery or accessibility; browser output cannot prove a separately failing native target; Context validation cannot prove the UI works. Broad evidence can therefore produce a false-completion path when claims are not separated.
+
+### `FAIL-UI-006` — Detached routes bypass the production entry and owner
+
+A root shell may stay unchanged while page Checks open independently implemented routes. Target-runtime presence and deep-link page behavior can both pass without proving that the user can reach the selected page from the production navigation owner.
+
+### `FAIL-UI-007` — Resource integrity is mislabeled as implementation conformance
+
+Target file hashes, registry membership, counts, cold start and test IDs prove useful integrity/presence facts, but none compares the production render and interaction state with the selected target under declared conditions.
+
+### `FAIL-UI-008` — Declared design blockers do not reach acceptance
+
+A resource may explicitly identify unresolved native interactions as acceptance-blocking while the Contract neither maps them to machine Claims nor to target-blocking External Confirmations. Final Gate can then accept the scope without resolving or narrowing those blockers.
 
 <a id="plan-authority-model"></a>
 ## Design Context Depth Model
@@ -211,11 +236,16 @@ If two controlling owners disagree, authoring fails closed: update the stale own
 ### Long-Task Contract projection
 
 - `REQ-LT-001` — Extend the existing optional Control shape with `surface`, `region`, `control_type`, `label_content`, `user_task`, `visibility`, `availability`, `validation`, `default_value`, `interaction`, `navigation_result`, `recovery`, `permission` and `accessibility`.
-- `REQ-LT-002` — Existing Control fields remain compatible; omitted new fields normalize to empty strings and do not create claims.
+- `REQ-LT-002` — Existing Control field syntax remains compatible; omitted optional fields normalize to empty strings and do not create claims. A V2 Contract that already declares Controls but lacks production `surface_bindings` receives an actionable semantic-migration diagnostic instead of silent acceptance.
 - `REQ-LT-003` — Every non-empty new field becomes a stable Control claim and participates in Source-target indexing, semantic authority projection, revision diffing and field-policy completeness.
-- `REQ-LT-004` — Existing Requirement, Control, Assertion, Check, Stage, Binding, evidence-capability and external-confirmation mechanisms remain the only authority/proof mechanisms.
+- `REQ-LT-004` — Existing Requirement, Control, Assertion, Check, Stage, Binding and external-confirmation lifecycle remains the only authority/proof lifecycle; one narrow typed `design_conformance` capability distinguishes selected-target comparison from render/resource integrity.
 - `REQ-LT-005` — A combined design-and-implementation delivery may express design Outcomes/Stages before a selected target exists, but fidelity implementation is not authorized until the selected target is real marked Source/Context/registry input and a protected revision has adopted it.
 - `REQ-LT-006` — No new `uiux_delivery` block, Claim kind, visual risk level, target-selection state, design Receipt or second Gate is added.
+- `REQ-LT-007` — An Outcome with Controls must aggregate them into Product `surface_bindings` keyed by one declared owner surface and required product target and reference existing Technical route/component Bindings.
+- `REQ-LT-008` — Every bound Control Claim must have proof on that product target with the runtime-appropriate proof surface. The named root-entry success Check must include the declared real entry action and, for every bound Control, prove its navigation result when declared or its interaction/trigger/location fallback with all-of `interaction_trace` and `target_runtime`.
+- `REQ-LT-009` — A selected exact/constraint target must name frozen target inputs, declared condition keys, bound Control Claims, a root-entry conformance Check/Assertion and current actual/comparison artifacts; its Assertion requires `design_conformance`, `interaction_trace` and `target_runtime`.
+- `REQ-LT-010` — Each surface binding explicitly inventories declared design-acceptance blockers and resolves every entry through a target-local machine Claim or a target-blocking External Confirmation whose impacts include the scope. An empty array means none were declared; a known blocker cannot be waived in-band and leaves scope only through explicit revised Source/Contract authority.
+- `REQ-LT-011` — Surface bindings and conformance metadata are protected Product/Acceptance semantics and participate in Authority Revision/fresh Raw Execution without creating per-surface state.
 
 ### Diagnostics
 
@@ -230,6 +260,7 @@ If two controlling owners disagree, authoring fails closed: update the stale own
 - `REQ-VER-002` — Update affected-test routing so new Control runtime hotspots select field/claim/authority regression coverage.
 - `REQ-VER-003` — Build before runtime tests; run source sync twice, package source parity, enabled-profile workspace sync, focused tests, affected tests, Context/Harness validation, Trust coverage and the complete package suite.
 - `REQ-VER-004` — Tests must prove absence of a new Context role/lifecycle and compatibility of old Controls.
+- `REQ-VER-005` — Reuse the existing target-runtime non-substitution Trust sentinel to prove a Starward-shaped support-target/deep-link/resource-integrity Contract fails and a production-bound root journey with valid design-conformance/blocker closure passes.
 
 <a id="plan-control-contract"></a>
 ## Canonical Control Field Semantics
@@ -309,9 +340,9 @@ Given a product requirement that names a screen but omits validation/recovery/ac
 
 Given a Control with every canonical field, when parsed and projected, then each non-empty field has a distinct stable claim/source target and semantic authority field. Accepts `REQ-LT-001`, `REQ-LT-003`.
 
-### `AC-UIAUTH-004` — Legacy Controls stay compatible
+### `AC-UIAUTH-004` — Legacy Control fields stay compatible and unsafe Contracts migrate
 
-Given an existing Control containing only the original fields, when parsed/compiled, then the Contract remains valid, new fields normalize empty and no new empty-field claims appear. Accepts `REQ-LT-002`.
+Given an existing Control containing only the original fields plus a valid production surface binding, when parsed/compiled, then new fields normalize empty and no empty-field claims appear. Given a Control-bearing V2 Contract without that binding, parsing returns a specific migration-required diagnostic rather than accepting proxy proof. Accepts `REQ-LT-002`.
 
 ### `AC-UIAUTH-005` — Protected UI semantics cannot silently drift
 
@@ -345,6 +376,22 @@ Given a semantics-preserving local style fix with sufficient existing authority,
 
 Given the final candidate, when synchronization and verification run, then managed source, generated Skills, package assets, Context, docs and runtime behavior are aligned and all declared suites pass. Accepts `REQ-VER-001` through `REQ-VER-004`.
 
+### `AC-UIAUTH-013` — Support and deep-link pages cannot substitute for production UI
+
+Given Controls proved by a browser support target and native pages opened only through internal/deep links, when Preflight/Compile runs for a required native product target, then it rejects missing target-local Control proof or the missing root-entry bound journey. Accepts `REQ-LT-007`, `REQ-LT-008`, `REQ-VER-005`.
+
+### `AC-UIAUTH-014` — Resource integrity cannot masquerade as conformance
+
+Given correct target hashes/counts and a current screenshot but no selected-target comparison record, when the Check is evaluated, then `visual_render`/presence remains insufficient and `design_conformance` is missing. Given matching compiled target/conditions plus current actual/comparison artifacts, the capability can pass. Accepts `REQ-LT-009`, `REQ-VER-005`.
+
+### `AC-UIAUTH-015` — Declared blockers reach Final Gate
+
+Given a design acceptance blocker preserved in the binding, when its refs are absent, reference a Claim proved only on another target, or name a non-blocking/unrelated confirmation, then activation fails. A valid target-local machine Claim or target-blocking impacted confirmation preserves existing Final Gate behavior. Empty inventory means none declared rather than waiver; removing a previously declared blocker is protected Source/Contract scope revision. Accepts `REQ-LT-010`, `REQ-VER-005`.
+
+### `AC-UIAUTH-016` — UI protection has bounded cost
+
+Given a Contract without Controls, no surface binding or design-conformance work is required. Given many Control fields on one production page, one surface/target binding covers them and only selected exact/constraint targets add conformance evidence. No UI state, Receipt, registry, scheduler or second Gate is created. Accepts `REQ-LT-006`, `REQ-LT-007`, `REQ-LT-011`.
+
 <a id="plan-non-goals"></a>
 ## Non-Goals
 
@@ -365,6 +412,8 @@ Given the final candidate, when synchronization and verification run, then manag
 - `RISK-UIAUTH-004` — Fact: doctor cannot calculate truthful per-surface readiness without project semantics and target coverage. Affects `OUT-UIAUTH-04`. Mitigation: report observable file signals only and state the inference boundary.
 - `RISK-UIAUTH-005` — Fact: adding planned targets to runtime schema could create an implementation bypass. Affects `OUT-UIAUTH-03`. Mitigation: do not add planned-target state; use existing design Outcomes plus protected Source/authority revision.
 - `RISK-UIAUTH-006` — Fact: managed source, package assets and generated workspace copies are separate physical surfaces. Affects `OUT-UIAUTH-05`. Mitigation: build, two sync passes, check-source and profile sync before final tests.
+- `RISK-UIAUTH-007` — Fact: production bindings add authoring/schema surface. Affects `OUT-UIAUTH-03`. Mitigation: aggregate by surface/target, reuse existing Technical Bindings/Checks/Final Gate, require conformance only for selected targets and add no persistent state.
+- `RISK-UIAUTH-008` — Fact: arbitrary external formats cannot be generically inspected for hostile or omitted blockers. Affects `OUT-UIAUTH-03`. Mitigation: Source authoring must preserve explicit blocker facts; the Contract makes their declared disposition fail-closed and documents the undeclared-Source limit.
 
 <a id="plan-decisions"></a>
 ## Delegated Decisions And Unresolved Items
@@ -376,6 +425,8 @@ The user explicitly delegated the complete plan and implementation details. The 
 - `DLG-UIAUTH-003` — Keep doctor advisory and system-level; do not persist/calculate per-surface workflow states.
 - `DLG-UIAUTH-004` — Index this plan from `PROJECT_SPEC.md` and Context navigation while keeping it outside `context.toml` authority registration.
 - `DLG-UIAUTH-005` — Treat package release/version bump as out of scope.
+- `DLG-UIAUTH-006` — Add one grouped Product `surface_bindings` projection and one typed `design_conformance` capability rather than a UI registry/Gate or universal per-Control screenshot matrix.
+- `DLG-UIAUTH-007` — Migrate existing Control-bearing V2 Contracts explicitly because compatibility that preserves the proven false-acceptance path would violate the controlling objective.
 
 There are no unresolved product/technical preferences required to implement this repository-scoped change. No payment, production deployment, public release, destructive mutation, permission grant or sensitive-data transmission is authorized or required.
 
@@ -385,7 +436,7 @@ There are no unresolved product/technical preferences required to implement this
 Run in this order after implementation stabilizes:
 
 1. TypeScript/package build.
-2. Focused static/behavior tests for Surface/Screen guidance, Source Plan alignment, Control claims/authority fields, doctor output and affected-test selection.
+2. Focused static/behavior tests for Surface/Screen guidance, Source Plan alignment, Control/surface-binding claims and authority fields, target/root non-substitution, typed design-conformance evidence, blocker projection, doctor output and affected-test selection.
 3. `package sync-source` twice and prove the second pass is idempotent.
 4. `package check-source` and enabled-profile workspace sync.
 5. `make validate-context` and `make validate-harness`.
@@ -403,6 +454,7 @@ No prose result, Context validation or focused test alone counts as delivery com
 - `IN-EXT-001` -> `FAIL-UI-*`, `DEPTH-*`, target/evidence boundaries and `AC-UIAUTH-006` through `AC-UIAUTH-010`, with the corrections recorded above.
 - `IN-HARNESS-001` -> all `NCOMP-*`, single-owner rules and existing-lifecycle constraints.
 - `IN-IMPL-001` -> `REQ-LT-*`, `REQ-DOC-*`, `REQ-VER-*` and concrete implementation paths.
-- `IN-PILOT-001` -> problem validation only; no project-specific output requirement.
+- `IN-PILOT-001` -> original problem validation only; no project-specific output requirement.
+- `IN-PILOT-002` -> `FAIL-UI-006` through `FAIL-UI-008`, `REQ-LT-007` through `REQ-LT-011`, `REQ-VER-005` and `AC-UIAUTH-013` through `AC-UIAUTH-016`; no Starward product mutation.
 
 Every adopted material input is represented by a requirement, non-goal, risk or explicit boundary above. No supplied attachment is silently treated as exact visual authority.

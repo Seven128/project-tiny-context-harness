@@ -17,6 +17,7 @@ import type {
   KeyedStatementV2,
   TargetProfileV2,
 } from "./long-task-semantic-contract-types.js";
+import type { DeliverySurfaceBindingV2 } from "./long-task-ui-surface-types.js";
 
 export type SourceClaimDispositionV2 =
   | { type: "claim"; refs: string[] }
@@ -215,6 +216,7 @@ export interface DeliveryOutcomeV2 {
     requirements: DeliveryRequirementV2[];
     owner_surfaces: string[];
     controls: DeliveryControlV2[];
+    surface_bindings: DeliverySurfaceBindingV2[];
     non_completing_outcomes: KeyedStatementV2[];
   };
   technical: {

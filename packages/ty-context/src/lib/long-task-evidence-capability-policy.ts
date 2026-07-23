@@ -61,6 +61,11 @@ export function validateEvidenceCapabilityDeclarations(
       )
         issue(report, "visual_render_artifact_required", label);
       if (
+        assertion.evidence_capabilities.includes("design_conformance") &&
+        !check.artifact_globs.length
+      )
+        issue(report, "design_conformance_artifact_required", label);
+      if (
         assertion.evidence_capabilities.includes("interaction_trace") &&
         !check.scenario.when.length
       )
@@ -71,6 +76,7 @@ export function validateEvidenceCapabilityDeclarations(
           (capability) =>
             capability !== "presence" &&
             capability !== "interaction_trace" &&
+            capability !== "design_conformance" &&
             capability !== "target_runtime",
         )
       )

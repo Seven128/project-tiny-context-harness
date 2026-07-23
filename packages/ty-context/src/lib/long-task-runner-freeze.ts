@@ -2,6 +2,7 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import type {
   CompiledCheckV2,
+  CompiledDesignTargetV2,
   DeliveryCheckV2,
   ExecutionTargetV2,
   FrozenRunnerV2,
@@ -33,6 +34,7 @@ export async function freezeDeliveryCheck(
   baseline: WorkspaceManifestV2,
   executionTarget: ExecutionTargetV2,
   knownExecutionTargets: ExecutionTargetV2[],
+  designConformanceTargets: CompiledDesignTargetV2[],
 ): Promise<CompiledCheckV2> {
   const prefix = outcomeKey ? `CHECK.${outcomeKey}` : "CHECK.GLOBAL";
   const expectedOutputs = check.expected_output_paths.map((pattern, index) =>
@@ -97,6 +99,7 @@ export async function freezeDeliveryCheck(
     verification_input_hashes: verificationInputHashes,
     execution_target_definition: executionTarget,
     known_execution_targets: knownExecutionTargets,
+    design_conformance_targets: designConformanceTargets,
   };
   return {
     ...compiled,
