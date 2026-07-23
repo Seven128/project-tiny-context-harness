@@ -1,0 +1,42 @@
+export type DesignTargetInterpretationV2 = "exact_target" | "constraint";
+
+export interface DeliveryDesignTargetV2 {
+  key: string;
+  interpretation: DesignTargetInterpretationV2;
+  source_paths: string[];
+  condition_keys: string[];
+  claim_refs: string[];
+  conformance_check_ref: string;
+  conformance_assertion_ref: string;
+  actual_artifact_path: string;
+  comparison_artifact_path: string;
+}
+
+export type DesignAcceptanceBlockerStatusV2 =
+  "machine_claim" | "external_confirmation";
+
+export interface DeliveryDesignAcceptanceBlockerV2 {
+  key: string;
+  status: DesignAcceptanceBlockerStatusV2;
+  refs: string[];
+  rationale: string;
+}
+
+export interface DeliverySurfaceBindingV2 {
+  key: string;
+  surface_ref: string;
+  target_ref: string;
+  control_refs: string[];
+  route_binding_ref: string;
+  component_binding_refs: string[];
+  root_journey_check_ref: string;
+  entry_action_ref: string;
+  design_targets: DeliveryDesignTargetV2[];
+  acceptance_blockers: DeliveryDesignAcceptanceBlockerV2[];
+}
+
+export interface CompiledDesignTargetV2 extends DeliveryDesignTargetV2 {
+  surface_binding_ref: string;
+  surface_ref: string;
+  target_ref: string;
+}

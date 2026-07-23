@@ -108,6 +108,23 @@ export function extractPlaywrightEvidence(
         session_id: `playwright:${item.id}:${item.project_ids.join(",")}`,
         cold_start: check.execution_target.entrypoint === "root",
       });
+    if (
+      assertion?.evidence_capabilities.includes("design_conformance") &&
+      item.executed
+    ) {
+      for (const target of (check.design_conformance_targets ?? []).filter(
+        (candidate) => candidate.conformance_assertion_ref === assertion.key,
+      ))
+        evidenceRecords.push({
+          assertion_key: assertion.key,
+          capability: "design_conformance",
+          design_target_ref: target.key,
+          target_ref: target.target_ref,
+          condition_keys: target.condition_keys,
+          actual_artifact_path: target.actual_artifact_path,
+          comparison_artifact_path: target.comparison_artifact_path,
+        });
+    }
   }
   return { observations, evidence_records: evidenceRecords, error: null };
 }

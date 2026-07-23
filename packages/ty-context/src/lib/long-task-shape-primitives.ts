@@ -140,6 +140,7 @@ export const EVIDENCE_CAPABILITIES = [
   "external_side_effect",
   "failure_injection",
   "visual_render",
+  "design_conformance",
   "target_runtime",
   "input_variation",
 ] as const satisfies readonly EvidenceCapabilityV2[];

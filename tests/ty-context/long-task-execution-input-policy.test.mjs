@@ -55,6 +55,26 @@ test("all raw execution fields affect identity and per-check evidence does not",
   targetChanged.execution_target.target_ref = "other-target";
   assert.notEqual(computeRawExecutionIdentity(targetChanged), baseIdentity);
 
+  const designTargetChanged = structuredClone(base);
+  designTargetChanged.design_conformance_targets.push({
+    key: "settings-default",
+    interpretation: "exact_target",
+    source_paths: ["design/settings.png"],
+    condition_keys: ["default"],
+    claim_refs: ["control.save.location"],
+    conformance_check_ref: "test",
+    conformance_assertion_ref: "result",
+    actual_artifact_path: "artifacts/settings-actual.png",
+    comparison_artifact_path: "artifacts/settings-diff.json",
+    surface_binding_ref: "settings-native",
+    surface_ref: "settings",
+    target_ref: "process-app",
+  });
+  assert.notEqual(
+    computeRawExecutionIdentity(designTargetChanged),
+    baseIdentity,
+  );
+
   for (const mutate of [
     (check) => check.artifact_globs.push("artifacts/**"),
     (check) =>
@@ -72,6 +92,7 @@ test("all raw execution fields affect identity and per-check evidence does not",
     assert.equal(computeRawExecutionIdentity(candidate), baseIdentity);
   }
   assert.deepEqual(Object.keys(rawExecutionInputProjection(base)).sort(), [
+    "design_conformance_targets",
     "environment_requirements",
     "evidence_adapter",
     "execution_target",
@@ -143,6 +164,7 @@ function compiledCheck() {
         root_entrypoint: "tests/oracle.mjs",
       },
     ],
+    design_conformance_targets: [],
     scenario: {
       given: [{ key: "fixture-loaded", statement: "Load the fixture." }],
       when: [{ key: "read-result", statement: "Read the result." }],

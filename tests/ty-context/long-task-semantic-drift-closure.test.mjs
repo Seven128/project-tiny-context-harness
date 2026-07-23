@@ -7,7 +7,10 @@ import {
   evaluateEvidenceCapabilities,
   validateEvidenceCapabilityDeclarations,
 } from "../../packages/ty-context/dist/lib/long-task-evidence-capability-policy.js";
-import { deliveryContract } from "./long-task-delivery-fixtures.mjs";
+import {
+  addProductionControlBinding,
+  deliveryContract,
+} from "./long-task-delivery-fixtures.mjs";
 
 const ZERO = "0".repeat(64);
 const ONE = "1".repeat(64);
@@ -53,6 +56,264 @@ test("[critical:target-runtime-non-substitution] required target refs prevent a 
     () => parse(wrongAdapter),
     /native_target_runtime_requires_project_binary/u,
   );
+
+  const proxyUi = deliveryContract();
+  proxyUi.task.execution_targets.push(
+    {
+      key: "fixture-native",
+      description: "The required native application root.",
+      role: "product",
+      runtime_family: "native",
+      root_entrypoint: "fixture-native.exe",
+    },
+    {
+      key: "fixture-browser",
+      description: "A detached browser support route.",
+      role: "support",
+      runtime_family: "browser",
+      root_entrypoint: "/map",
+    },
+  );
+  proxyUi.task.target_profile.required_target_refs.push("fixture-native");
+  const proxyOutcome = proxyUi.outcomes[0];
+  proxyOutcome.product.controls.push({
+    key: "map-tab",
+    surface: "mobile-shell",
+    region: "",
+    location: "bottom navigation",
+    control_type: "",
+    label_content: "",
+    user_task: "",
+    visibility: "",
+    availability: "",
+    trigger: "",
+    input: "",
+    validation: "",
+    default_value: "",
+    interaction: "",
+    navigation_result: "open the complete Map page",
+    loading_state: "",
+    empty_state: "",
+    success_state: "",
+    failure_state: "",
+    recovery: "",
+    permission: "",
+    feedback: "",
+    accessibility: "",
+  });
+  const nativeShell = structuredClone(proxyOutcome.acceptance.checks[0]);
+  nativeShell.key = "native-shell";
+  nativeShell.execution_target.target_ref = "fixture-native";
+  nativeShell.runner.type = "project_binary";
+  nativeShell.runner.target = "tests/oracle.mjs";
+  nativeShell.positive_assertions[0].key = "native-shell-map-tab";
+  nativeShell.positive_assertions[0].observation = "result_copy";
+  nativeShell.positive_assertions[0].claims = [
+    "result",
+    "control.map-tab.surface",
+    "control.map-tab.location",
+  ];
+  nativeShell.positive_assertions[0].evidence_capabilities = [
+    "interaction_trace",
+    "target_runtime",
+  ];
+  const detachedMap = structuredClone(proxyOutcome.acceptance.checks[0]);
+  detachedMap.key = "detached-map";
+  detachedMap.journey_roles = ["success"];
+  detachedMap.execution_target = {
+    target_ref: "fixture-browser",
+    entrypoint: "internal",
+  };
+  detachedMap.proof_surface = "ui_browser";
+  detachedMap.runner.type = "playwright_test";
+  detachedMap.runner.target = "tests/oracle.mjs";
+  detachedMap.positive_assertions = [
+    {
+      key: "detached-map-navigation",
+      criterion: "The detached route shows the Map page.",
+      claims: ["control.map-tab.navigation_result"],
+      observation: "playwright.case.detached-map-navigation.passed",
+      evidence_capabilities: ["interaction_trace"],
+      operator: "equals",
+      expected: true,
+    },
+  ];
+  detachedMap.negative_assertions = [];
+  proxyOutcome.acceptance.checks.push(nativeShell, detachedMap);
+  addProductionControlBinding(proxyUi, {
+    controlKey: "map-tab",
+    surfaceRef: "mobile-shell",
+    targetRef: "fixture-native",
+    rootCheckRef: "native-shell",
+    rootClaimRef: null,
+  });
+  const proxyDiagnostics = deliveryContractStructureDiagnostics(proxyUi);
+  assert.ok(
+    proxyDiagnostics.some(
+      (item) =>
+        item.includes("ui_surface_binding_root_control_proof_missing") &&
+        item.includes("control.map-tab.navigation_result"),
+    ),
+    JSON.stringify(proxyDiagnostics),
+  );
+  nativeShell.positive_assertions[0].claims.push(
+    "control.map-tab.navigation_result",
+  );
+  assert.doesNotThrow(() => parse(proxyUi));
+});
+
+test("selected design targets require root-bound comparison evidence and blocker disposition", () => {
+  const contract = deliveryContract();
+  const outcome = contract.outcomes[0];
+  outcome.product.controls.push({
+    key: "map-tab",
+    surface: "mobile-shell",
+    location: "bottom navigation",
+    trigger: "",
+    input: "",
+    loading_state: "",
+    empty_state: "",
+    success_state: "",
+    failure_state: "",
+    feedback: "",
+  });
+  const check = outcome.acceptance.checks[0];
+  check.verification_inputs.push("design/map-target.png");
+  check.artifact_globs = ["artifacts/**"];
+  check.positive_assertions[0].claims.push("control.map-tab.surface");
+  check.positive_assertions[0].evidence_capabilities.push(
+    "visual_render",
+    "design_conformance",
+  );
+  addProductionControlBinding(contract, {
+    controlKey: "map-tab",
+    surfaceRef: "mobile-shell",
+    rootClaimRef: "control.map-tab.location",
+    designTargets: [
+      {
+        key: "map-default",
+        interpretation: "exact_target",
+        source_paths: ["design/map-target.png"],
+        condition_keys: ["phone", "dark", "default"],
+        claim_refs: ["control.map-tab.location"],
+        conformance_check_ref: "first-check",
+        conformance_assertion_ref: "first-result",
+        actual_artifact_path: "artifacts/map-actual.png",
+        comparison_artifact_path: "artifacts/map-diff.json",
+      },
+    ],
+  });
+  assert.doesNotThrow(() => parse(contract));
+
+  const compiled = compiledCheck(contract, check, "first");
+  const assertionKey = check.positive_assertions[0].key;
+  const commonRecords = [
+    {
+      assertion_key: assertionKey,
+      capability: "interaction_trace",
+      target_ref: "fixture-app",
+      given_keys: ["fixture-loaded"],
+      action_keys: ["read-outcome"],
+    },
+    {
+      assertion_key: assertionKey,
+      capability: "target_runtime",
+      target_ref: "fixture-app",
+      root_entrypoint: "tests/oracle.mjs",
+      session_id: "fixture-map-session",
+      cold_start: true,
+    },
+    {
+      assertion_key: assertionKey,
+      capability: "state_delta",
+      before_sha256: ZERO,
+      after_sha256: ONE,
+      changed_fields: ["selected-tab"],
+    },
+    {
+      assertion_key: assertionKey,
+      capability: "visual_render",
+      artifact_path: "artifacts/map-actual.png",
+      artifact_sha256: ONE,
+    },
+  ];
+  const artifacts = {
+    "artifacts/map-actual.png": ONE,
+    "artifacts/map-diff.json": TWO,
+  };
+  const integrityOnly = evaluateEvidenceCapabilities(
+    compiled,
+    commonRecords,
+    artifacts,
+  );
+  assert.equal(integrityOnly.complete[assertionKey], false);
+  assert.ok(
+    integrityOnly.findings.some(
+      (item) =>
+        item.expected === "design_conformance" &&
+        item.actual === "record_missing",
+    ),
+  );
+
+  const conformed = evaluateEvidenceCapabilities(
+    compiled,
+    [
+      ...commonRecords,
+      {
+        assertion_key: assertionKey,
+        capability: "design_conformance",
+        design_target_ref: "map-default",
+        target_ref: "fixture-app",
+        condition_keys: ["dark", "default", "phone"],
+        actual_artifact_path: "artifacts/map-actual.png",
+        comparison_artifact_path: "artifacts/map-diff.json",
+      },
+    ],
+    artifacts,
+  );
+  assert.equal(conformed.complete[assertionKey], true);
+  assert.deepEqual(conformed.findings, []);
+
+  const blockerMissing = structuredClone(contract);
+  blockerMissing.outcomes[0].product.surface_bindings[0].acceptance_blockers = [
+    {
+      key: "native-haptics",
+      status: "machine_claim",
+      refs: [],
+      rationale: "Native haptics remain unresolved.",
+    },
+  ];
+  assert.throws(
+    () => parse(blockerMissing),
+    /ui_design_blocker_ref_required:first:map-tab-fixture-app:native-haptics/u,
+  );
+
+  const nonBlockingConfirmation = structuredClone(contract);
+  nonBlockingConfirmation.global.acceptance.external_confirmations.push({
+    key: "native-haptics-review",
+    description: "A device reviewer confirms native haptics.",
+    owner: "native-reviewer",
+    kind: "field_validation",
+    impact_claims: ["first.control.map-tab.location"],
+    blocks_target: false,
+  });
+  nonBlockingConfirmation.outcomes[0].product.surface_bindings[0].acceptance_blockers =
+    [
+      {
+        key: "native-haptics",
+        status: "external_confirmation",
+        refs: ["native-haptics-review"],
+        rationale: "Native haptics require device review.",
+      },
+    ];
+  assert.throws(
+    () => parse(nonBlockingConfirmation),
+    /ui_design_blocker_confirmation_must_block_target:first:map-tab-fixture-app:native-haptics:native-haptics-review/u,
+  );
+
+  nonBlockingConfirmation.global.acceptance.external_confirmations[0].blocks_target =
+    true;
+  assert.doesNotThrow(() => parse(nonBlockingConfirmation));
 });
 
 test("behavior Claims cannot be proved by presence text and success cannot be replaced by degradation", () => {
@@ -252,6 +513,21 @@ function compiledCheck(
     outcome_key: outcomeKey,
     execution_target_definition: target,
     known_execution_targets: contract.task.execution_targets,
+    design_conformance_targets:
+      contract.outcomes
+        .find((outcome) => outcome.key === outcomeKey)
+        ?.product.surface_bindings.flatMap((binding) =>
+          binding.design_targets
+            .filter(
+              (target) => target.conformance_check_ref === check.key,
+            )
+            .map((target) => ({
+              ...target,
+              surface_binding_ref: binding.key,
+              surface_ref: binding.surface_ref,
+              target_ref: binding.target_ref,
+            })),
+        ) ?? [],
     raw_execution_identity: `raw-${check.key}`,
   };
 }

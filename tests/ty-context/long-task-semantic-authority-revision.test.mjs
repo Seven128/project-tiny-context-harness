@@ -214,6 +214,15 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
         },
       },
       {
+        address:
+          "outcomes.first.surface_bindings.submit-fixture-browser.acceptance_blockers.submit-accessibility-proof",
+        mutate(contract) {
+          contract.outcomes[0].product.surface_bindings[0]
+            .acceptance_blockers[0].rationale =
+            "A changed design acceptance disposition.";
+        },
+      },
+      {
         address: "outcomes.first.non_completing.exit-zero-only",
         mutate(contract) {
           contract.outcomes[0].product.non_completing_outcomes[0].statement =

@@ -14,6 +14,7 @@ import {
   validateExecutionTargets,
   validateExternalConfirmationImpacts,
 } from "./long-task-target-policy.js";
+import { validateUiSurfaceBindings } from "./long-task-ui-surface-policy.js";
 
 export function validateDeliveryContractStructure(
   contract: DeliveryContractV2,
@@ -27,6 +28,7 @@ export function validateDeliveryContractStructure(
     allow_uncovered: true,
   });
   validateSourceClaimMappings(contract, claims);
+  validateUiSurfaceBindings(contract, claims);
   assertCompiledClaimsCovered(claims);
   validateDeliveryStages(contract);
   validateExecutionTargets(contract);
@@ -53,6 +55,7 @@ export function deliveryContractStructureDiagnostics(
   });
   if (claims) {
     validateSourceClaimMappings(contract, claims, report);
+    validateUiSurfaceBindings(contract, claims, report);
     validateExternalConfirmationImpacts(contract, claims, report);
     capture(diagnostics, () => assertCompiledClaimsCovered(claims!));
   }

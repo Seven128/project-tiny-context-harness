@@ -48,6 +48,47 @@ const HOTSPOT_TESTS = new Map([
     ],
   ],
   [
+    "packages/ty-context/src/lib/long-task-ui-surface-types.ts",
+    [
+      "long-task-authority-field-completeness.test.mjs",
+      "long-task-schema-parser-parity.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-ui-surface-shape.ts",
+    [
+      "long-task-authoring-claims.test.mjs",
+      "long-task-schema-parser-parity.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-ui-surface-policy.ts",
+    [
+      "long-task-authoring-claims.test.mjs",
+      "long-task-claim-coverage.test.mjs",
+      "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-ui-surface-validation.ts",
+    [
+      "long-task-authoring-claims.test.mjs",
+      "long-task-claim-coverage.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-ui-design-policy.ts",
+    [
+      "long-task-semantic-authority-revision.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
     "packages/ty-context/src/lib/long-task-claim-definitions.ts",
     [
       "long-task-authoring-claims.test.mjs",
@@ -302,6 +343,13 @@ const HOTSPOT_TESTS = new Map([
     [
       "long-task-assertion-safety.test.mjs",
       "long-task-evidence-kernel.test.mjs",
+      "long-task-semantic-drift-closure.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-playwright-evidence.ts",
+    [
+      "long-task-playwright-ac-evidence.test.mjs",
       "long-task-semantic-drift-closure.test.mjs",
     ],
   ],

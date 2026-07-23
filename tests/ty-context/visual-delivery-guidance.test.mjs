@@ -43,6 +43,9 @@ test("page-level UI authority Source Plan is indexed without becoming Context", 
   assert.match(plan, /^## Canonical Control Field Semantics$/mu);
   assert.match(plan, /REQ-VER-003/);
   assert.match(plan, /AC-UIAUTH-012/);
+  assert.match(plan, /AC-UIAUTH-013/);
+  assert.match(plan, /AC-UIAUTH-014/);
+  assert.match(plan, /AC-UIAUTH-015/);
   assert.match(
     plan,
     /not Context, a Delivery Contract, runtime state or completion proof/iu,
@@ -122,12 +125,20 @@ test("visual design and implementation guidance reaches every managed copy", asy
   assert.match(development, /first confirm Design Authority readiness/iu);
   assert.match(development, /`exact-target`, `constraint` or `inspiration`/iu);
   assert.match(development, /production components and real product routes/iu);
+  assert.match(development, /cold-start real-user entry journey/iu);
+  assert.match(development, /first runnable vertical slice/iu);
+  assert.match(
+    development,
+    /resource integrity[\s\S]*implementation-conformance proof/iu,
+  );
   assert.match(
     development,
     /undeclared raw color, spacing, typography or motion values/iu,
   );
   assert.match(development, /report only the combinations actually checked/iu);
   assert.match(development, /Do not introduce a second visual plan/iu);
+  assert.match(development, /Product `surface_bindings`/u);
+  assert.match(development, /typed `design_conformance`/u);
   assert.match(
     development,
     /region\/location.*type\/label.*validation.*recovery.*accessibility/isu,
@@ -169,9 +180,21 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   );
   assert.match(authoring, /an omitted combination remains unproven/iu);
   assert.match(authoring, /explicit external confirmation/iu);
+  assert.match(authoring, /minimum aggregated Product `surface_bindings`/iu);
   assert.match(
     authoring,
-    /adds no UI-specific Contract block, Claim kind, risk level, lifecycle state/iu,
+    /root journey[\s\S]*`navigation_result`[\s\S]*`interaction_trace`[\s\S]*`target_runtime`/iu,
+  );
+  assert.match(authoring, /typed `design_conformance`/iu);
+  assert.match(
+    authoring,
+    /explicitly inventory every declared design-acceptance blocker/iu,
+  );
+  assert.match(authoring, /There is no in-band not-applicable waiver/iu);
+  assert.match(authoring, /requires explicit revised Source/iu);
+  assert.match(
+    authoring,
+    /creates no `uiux_delivery` authority block, Claim kind, risk level, lifecycle state/iu,
   );
   assert.match(
     authoring,
@@ -198,6 +221,14 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   assert.match(evidence, /^## Visual UI Evidence$/mu);
   assert.match(
     evidence,
+    /`design_resource_integrity` and `design_implementation_conformance` distinct/iu,
+  );
+  assert.match(
+    evidence,
+    /`design_conformance` record[\s\S]*compiled target\/Assertion\/current Check target/iu,
+  );
+  assert.match(
+    evidence,
     /each independently falsifiable AC[\s\S]*\[ac:<assertion-key>\]/iu,
   );
   assert.match(evidence, /baseline[\s\S]*included in `verification_inputs`/iu);
@@ -220,6 +251,10 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   assert.match(
     evidence,
     /one broad screenshot or UI pass cannot prove all Control fields/iu,
+  );
+  assert.match(
+    evidence,
+    /named root-entry journey[\s\S]*required product target root/iu,
   );
   assert.match(
     evidence,
@@ -278,6 +313,14 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(agents, /stable surface\/control\/target key/iu);
   assert.match(
     agents,
+    /production route\/component owner[\s\S]*cold-start real-user entry journey/iu,
+  );
+  assert.match(
+    agents,
+    /Design file hashes, registry membership and counts prove resource integrity only/iu,
+  );
+  assert.match(
+    agents,
     /unconfigured starter, candidate, style-only guidance or inspiration/iu,
   );
   assert.match(
@@ -298,6 +341,9 @@ test("default workflow routes Design Authority readiness without adding a visual
     );
     assert.match(content, /no `uiux_delivery` block/iu);
     assert.match(content, /surface implementation readiness/iu);
+    assert.match(content, /Product `surface_bindings`/u);
+    assert.match(content, /typed `design_conformance`/u);
+    assert.match(content, /first runnable production slice/iu);
     assert.match(
       content,
       /visibility\/availability.*validation\/default.*recovery\/permission.*accessibility/isu,
@@ -308,4 +354,7 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(chineseReadme, /默认 Workflow.*Design Authority Check/u);
   assert.match(chineseReadme, /不新增 `uiux_delivery`/u);
   assert.match(chineseReadme, /UI Authority Closure/u);
+  assert.match(chineseReadme, /Product `surface_bindings`/u);
+  assert.match(chineseReadme, /typed `design_conformance`/u);
+  assert.match(chineseReadme, /首个可运行纵向切片/u);
 });

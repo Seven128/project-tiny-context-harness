@@ -65,6 +65,15 @@ export interface VisualRenderEvidenceV2 extends EvidenceRecordBaseV2 {
   artifact_sha256: string;
 }
 
+export interface DesignConformanceEvidenceV2 extends EvidenceRecordBaseV2 {
+  capability: "design_conformance";
+  design_target_ref: string;
+  target_ref: string;
+  condition_keys: string[];
+  actual_artifact_path: string;
+  comparison_artifact_path: string;
+}
+
 export interface TargetRuntimeEvidenceV2 extends EvidenceRecordBaseV2 {
   capability: "target_runtime";
   target_ref: string;
@@ -88,5 +97,6 @@ export type EvidenceCapabilityRecordV2 =
   | ExternalSideEffectEvidenceV2
   | FailureInjectionEvidenceV2
   | VisualRenderEvidenceV2
+  | DesignConformanceEvidenceV2
   | TargetRuntimeEvidenceV2
   | InputVariationEvidenceV2;

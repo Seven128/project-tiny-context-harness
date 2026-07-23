@@ -183,8 +183,15 @@
         "requirements": { "type": "array", "items": { "$ref": "#/$defs/requirement" }, "default": [] },
         "owner_surfaces": { "$ref": "#/$defs/nonEmptyStrings", "default": [] },
         "controls": { "type": "array", "items": { "$ref": "#/$defs/control" }, "default": [] },
+        "surface_bindings": { "type": "array", "items": { "$ref": "#/$defs/surfaceBinding" }, "default": [] },
         "non_completing_outcomes": { "type": "array", "items": { "$ref": "#/$defs/keyedStatement" }, "default": [] }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["controls"], "properties": { "controls": { "minItems": 1 } } },
+          "then": { "required": ["surface_bindings"], "properties": { "surface_bindings": { "minItems": 1 } } }
+        }
+      ]
     },
     "requirement": {
       "type": "object",
@@ -197,6 +204,50 @@
       "additionalProperties": false,
       "required": ["key", "location"],
       "properties": { "key": { "$ref": "#/$defs/key" }, "surface": { "type": "string", "default": "" }, "region": { "type": "string", "default": "" }, "location": { "$ref": "#/$defs/nonEmpty" }, "control_type": { "type": "string", "default": "" }, "label_content": { "type": "string", "default": "" }, "user_task": { "type": "string", "default": "" }, "visibility": { "type": "string", "default": "" }, "availability": { "type": "string", "default": "" }, "trigger": { "type": "string", "default": "" }, "input": { "type": "string", "default": "" }, "validation": { "type": "string", "default": "" }, "default_value": { "type": "string", "default": "" }, "interaction": { "type": "string", "default": "" }, "navigation_result": { "type": "string", "default": "" }, "loading_state": { "type": "string", "default": "" }, "empty_state": { "type": "string", "default": "" }, "success_state": { "type": "string", "default": "" }, "failure_state": { "type": "string", "default": "" }, "recovery": { "type": "string", "default": "" }, "permission": { "type": "string", "default": "" }, "feedback": { "type": "string", "default": "" }, "accessibility": { "type": "string", "default": "" } }
+    },
+    "surfaceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "surface_ref", "target_ref", "control_refs", "route_binding_ref", "component_binding_refs", "root_journey_check_ref", "entry_action_ref", "design_targets", "acceptance_blockers"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "surface_ref": { "$ref": "#/$defs/nonEmpty" },
+        "target_ref": { "$ref": "#/$defs/key" },
+        "control_refs": { "$ref": "#/$defs/keys" },
+        "route_binding_ref": { "$ref": "#/$defs/key" },
+        "component_binding_refs": { "$ref": "#/$defs/keys" },
+        "root_journey_check_ref": { "$ref": "#/$defs/key" },
+        "entry_action_ref": { "$ref": "#/$defs/key" },
+        "design_targets": { "type": "array", "items": { "$ref": "#/$defs/designTarget" } },
+        "acceptance_blockers": { "type": "array", "items": { "$ref": "#/$defs/designAcceptanceBlocker" } }
+      }
+    },
+    "designTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "interpretation", "source_paths", "condition_keys", "claim_refs", "conformance_check_ref", "conformance_assertion_ref", "actual_artifact_path", "comparison_artifact_path"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "interpretation": { "enum": ["exact_target", "constraint"] },
+        "source_paths": { "$ref": "#/$defs/nonEmptyStrings" },
+        "condition_keys": { "$ref": "#/$defs/keys" },
+        "claim_refs": { "$ref": "#/$defs/nonEmptyStrings" },
+        "conformance_check_ref": { "$ref": "#/$defs/key" },
+        "conformance_assertion_ref": { "$ref": "#/$defs/key" },
+        "actual_artifact_path": { "$ref": "#/$defs/nonEmpty" },
+        "comparison_artifact_path": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "designAcceptanceBlocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "status", "refs", "rationale"],
+      "properties": {
+        "key": { "$ref": "#/$defs/key" },
+        "status": { "enum": ["machine_claim", "external_confirmation"] },
+        "refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "rationale": { "$ref": "#/$defs/nonEmpty" }
+      }
     },
     "technical": {
       "type": "object",
@@ -321,7 +372,7 @@
         "when": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/keyedStatement" } }
       }
     },
-    "evidenceCapability": { "enum": ["presence", "interaction_trace", "state_delta", "cross_surface_consistency", "durable_readback", "boundary_invocation", "external_side_effect", "failure_injection", "visual_render", "target_runtime", "input_variation"] },
+    "evidenceCapability": { "enum": ["presence", "interaction_trace", "state_delta", "cross_surface_consistency", "durable_readback", "boundary_invocation", "external_side_effect", "failure_injection", "visual_render", "design_conformance", "target_runtime", "input_variation"] },
     "environment": {
       "oneOf": [
         {

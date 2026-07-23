@@ -8,6 +8,7 @@ import { preflightDeliveryContract } from "../../packages/ty-context/dist/lib/lo
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
 import { parseControls } from "../../packages/ty-context/dist/lib/long-task-product-shape.js";
+import { parseSurfaceBindings } from "../../packages/ty-context/dist/lib/long-task-ui-surface-shape.js";
 import {
   createDeliveryFixture,
   deliveryContract,
@@ -67,6 +68,84 @@ test("Control Schema and Parser preserve the complete control-level UI vocabular
   );
   assert.deepEqual(parsed, input);
   assert.deepEqual(schema.$defs.control.required, ["key", "location"]);
+});
+
+test("production surface bindings and design conformance have Schema/Parser parity", async () => {
+  const input = {
+    key: "settings-native",
+    surface_ref: "settings",
+    target_ref: "fixture-app",
+    control_refs: ["save"],
+    route_binding_ref: "settings-route",
+    component_binding_refs: ["settings-screen"],
+    root_journey_check_ref: "settings-root",
+    entry_action_ref: "open-settings",
+    design_targets: [
+      {
+        key: "settings-default",
+        interpretation: "exact_target",
+        source_paths: ["design/settings.png"],
+        condition_keys: ["phone", "dark", "default"],
+        claim_refs: ["control.save.location"],
+        conformance_check_ref: "settings-root",
+        conformance_assertion_ref: "settings-conformance",
+        actual_artifact_path: "artifacts/settings-actual.png",
+        comparison_artifact_path: "artifacts/settings-diff.json",
+      },
+    ],
+    acceptance_blockers: [
+      {
+        key: "save-validation",
+        status: "machine_claim",
+        refs: ["control.save.validation"],
+        rationale: "The target-local validation Claim resolves the blocker.",
+      },
+    ],
+  };
+  const [parsed] = parseSurfaceBindings([input], "surface_bindings");
+  const schema = await deliverySchema();
+  assert.deepEqual(
+    Object.keys(parsed).sort(),
+    Object.keys(schema.$defs.surfaceBinding.properties).sort(),
+  );
+  assert.deepEqual(
+    Object.keys(parsed.design_targets[0]).sort(),
+    Object.keys(schema.$defs.designTarget.properties).sort(),
+  );
+  assert.deepEqual(
+    Object.keys(parsed.acceptance_blockers[0]).sort(),
+    Object.keys(schema.$defs.designAcceptanceBlocker.properties).sort(),
+  );
+  assert.ok(
+    schema.$defs.evidenceCapability.enum.includes("design_conformance"),
+  );
+  assert.deepEqual(schema.$defs.designAcceptanceBlocker.properties.status.enum, [
+    "machine_claim",
+    "external_confirmation",
+  ]);
+
+  const legacy = deliveryContract();
+  legacy.outcomes[0].product.controls.push({
+    key: "save",
+    location: "footer",
+    trigger: "",
+    input: "",
+    loading_state: "",
+    empty_state: "",
+    success_state: "",
+    failure_state: "",
+    feedback: "",
+  });
+  delete legacy.outcomes[0].product.surface_bindings;
+  assert.throws(
+    () => parseDeliveryContractText(YAML.stringify(legacy)),
+    /semantic_drift_migration_required:outcomes\[0\]\.product\.surface_bindings/u,
+  );
+  assert.ok(
+    schema.$defs.product.allOf[0].then.required.includes(
+      "surface_bindings",
+    ),
+  );
 });
 
 test("negative-only Global Check and zero positive Assertions have Schema/Parser parity", async () => {

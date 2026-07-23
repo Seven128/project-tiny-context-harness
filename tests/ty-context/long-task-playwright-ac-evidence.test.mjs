@@ -201,6 +201,53 @@ test("the same AC aggregates independently across Playwright projects", () => {
   );
 });
 
+test("an executed Playwright AC emits its compiled design-conformance record", () => {
+  const check = compiledPlaywrightCheck();
+  check.positive_assertions[0].evidence_capabilities.push(
+    "design_conformance",
+    "target_runtime",
+  );
+  check.design_conformance_targets = [
+    {
+      key: "map-default",
+      target_ref: "browser-app",
+      condition_keys: ["phone", "dark", "default"],
+      conformance_assertion_ref: "ac-one",
+      actual_artifact_path: "artifacts/map-actual.png",
+      comparison_artifact_path: "artifacts/map-diff.json",
+    },
+  ];
+  const decoded = decode(
+    check,
+    report([ac("ac-one", "expected", "passed")]),
+    0,
+  );
+  assert.deepEqual(
+    decoded.evidence_records.filter(
+      (record) => record.capability === "design_conformance",
+    ),
+    [
+      {
+        assertion_key: "ac-one",
+        capability: "design_conformance",
+        design_target_ref: "map-default",
+        target_ref: "browser-app",
+        condition_keys: ["phone", "dark", "default"],
+        actual_artifact_path: "artifacts/map-actual.png",
+        comparison_artifact_path: "artifacts/map-diff.json",
+      },
+    ],
+  );
+  assert.ok(
+    decoded.evidence_records.some(
+      (record) =>
+        record.capability === "target_runtime" &&
+        record.target_ref === "browser-app" &&
+        record.cold_start,
+    ),
+  );
+});
+
 function compiledPlaywrightCheck() {
   return {
     internal_id: "CHECK.first.ui",
@@ -251,6 +298,7 @@ function compiledPlaywrightCheck() {
     verification_inputs: ["tests/ui.spec.ts"],
     verification_input_hashes: {},
     raw_execution_identity: "playwright",
+    design_conformance_targets: [],
     input_paths: [],
     expected_output_paths: [],
     artifact_globs: [],

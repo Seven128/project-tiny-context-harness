@@ -119,6 +119,27 @@ export function projectProductSemantics(
         feedback: control.feedback,
         accessibility: control.accessibility,
       })),
+      surface_bindings: [...(outcome.product.surface_bindings ?? [])]
+        .sort(keyOrder)
+        .map((binding) => ({
+          ...binding,
+          control_refs: [...binding.control_refs].sort(),
+          component_binding_refs: [...binding.component_binding_refs].sort(),
+          design_targets: [...binding.design_targets]
+            .sort(keyOrder)
+            .map((target) => ({
+              ...target,
+              source_paths: [...target.source_paths].sort(),
+              condition_keys: [...target.condition_keys].sort(),
+              claim_refs: [...target.claim_refs].sort(),
+            })),
+          acceptance_blockers: [...binding.acceptance_blockers]
+            .sort(keyOrder)
+            .map((blocker) => ({
+              ...blocker,
+              refs: [...blocker.refs].sort(),
+            })),
+        })),
       non_completing_outcomes: keyedStatements(
         outcome.product.non_completing_outcomes,
       ),

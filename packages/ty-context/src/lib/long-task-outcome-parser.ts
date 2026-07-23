@@ -27,6 +27,7 @@ import {
   assertNoSemanticDriftMigration,
   semanticDriftOutcomeMigrationFields,
 } from "./long-task-semantic-drift-migration.js";
+import { parseSurfaceBindings } from "./long-task-ui-surface-shape.js";
 
 export function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
   assertNoSemanticDriftMigration(
@@ -47,7 +48,13 @@ export function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
       "degradation_path_required",
       "owner",
     ],
-    ["requirements", "owner_surfaces", "controls", "non_completing_outcomes"],
+    [
+      "requirements",
+      "owner_surfaces",
+      "controls",
+      "surface_bindings",
+      "non_completing_outcomes",
+    ],
   );
   const technical = object(
     row.technical,
@@ -102,6 +109,12 @@ export function parseOutcome(value: unknown, label: string): DeliveryOutcomeV2 {
         : [],
       controls: Object.hasOwn(product, "controls")
         ? parseControls(product.controls, `${label}.product.controls`)
+        : [],
+      surface_bindings: Object.hasOwn(product, "surface_bindings")
+        ? parseSurfaceBindings(
+            product.surface_bindings,
+            `${label}.product.surface_bindings`,
+          )
         : [],
       non_completing_outcomes: Object.hasOwn(product, "non_completing_outcomes")
         ? parseKeyedStatements(

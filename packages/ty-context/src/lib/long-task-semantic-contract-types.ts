@@ -53,6 +53,7 @@ export type EvidenceCapabilityV2 =
   | "external_side_effect"
   | "failure_injection"
   | "visual_render"
+  | "design_conformance"
   | "target_runtime"
   | "input_variation";
 

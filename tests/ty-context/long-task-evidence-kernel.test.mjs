@@ -8,6 +8,26 @@ import {
   runCliFailure,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
+import { decodeEvidenceCapabilityRecords } from "../../packages/ty-context/dist/lib/long-task-evidence-capability-policy.js";
+
+test("design-conformance evidence has a strict target, condition and artifact shape", () => {
+  const record = {
+    assertion_key: "map-default-conformance",
+    capability: "design_conformance",
+    design_target_ref: "map-default",
+    target_ref: "mobile-native",
+    condition_keys: ["phone", "dark", "default"],
+    actual_artifact_path: "artifacts/map-actual.png",
+    comparison_artifact_path: "artifacts/map-diff.json",
+  };
+  assert.deepEqual(decodeEvidenceCapabilityRecords([record]), [record]);
+  const missingComparison = structuredClone(record);
+  delete missingComparison.comparison_artifact_path;
+  assert.throws(
+    () => decodeEvidenceCapabilityRecords([missingComparison]),
+    /check_evidence_records_invalid:evidence_records\[0\]\.shape/u,
+  );
+});
 
 test("strict security proof combines per-Check artifacts, negative Assertions and a valid Counterfactual", async () => {
   const fixture = await createDeliveryFixture();

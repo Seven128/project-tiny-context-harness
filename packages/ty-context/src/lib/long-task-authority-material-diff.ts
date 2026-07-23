@@ -258,6 +258,32 @@ function flattenProductSemantics(
           `${prefix}.controls.${control.key}.${field}`,
           control[field],
         );
+    for (const binding of outcome.surface_bindings ?? []) {
+      const bindingPrefix = `${prefix}.surface_bindings.${binding.key}`;
+      fields.set(`${bindingPrefix}.surface_ref`, binding.surface_ref);
+      fields.set(`${bindingPrefix}.target_ref`, binding.target_ref);
+      fields.set(`${bindingPrefix}.control_refs`, binding.control_refs);
+      fields.set(
+        `${bindingPrefix}.route_binding_ref`,
+        binding.route_binding_ref,
+      );
+      fields.set(
+        `${bindingPrefix}.component_binding_refs`,
+        binding.component_binding_refs,
+      );
+      fields.set(
+        `${bindingPrefix}.root_journey_check_ref`,
+        binding.root_journey_check_ref,
+      );
+      fields.set(`${bindingPrefix}.entry_action_ref`, binding.entry_action_ref);
+      for (const target of binding.design_targets)
+        fields.set(`${bindingPrefix}.design_targets.${target.key}`, target);
+      for (const blocker of binding.acceptance_blockers)
+        fields.set(
+          `${bindingPrefix}.acceptance_blockers.${blocker.key}`,
+          blocker,
+        );
+    }
     for (const item of outcome.non_completing_outcomes)
       fields.set(`${prefix}.non_completing.${item.key}`, item.statement);
   }

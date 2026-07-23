@@ -56,13 +56,20 @@ export function assertNoSemanticDriftMigration(fields: string[]): void {
 function collectOutcome(outcome: Row, label: string, missing: string[]): void {
   required(outcome, label, ["stage"], missing);
   const product = row(outcome.product);
-  if (product)
+  if (product) {
     required(
       product,
       `${label}.product`,
       ["success_path_required", "degradation_path_required"],
       missing,
     );
+    if (
+      Array.isArray(product.controls) &&
+      product.controls.length > 0 &&
+      !Object.hasOwn(product, "surface_bindings")
+    )
+      missing.push(`${label}.product.surface_bindings`);
+  }
   const acceptance = row(outcome.acceptance);
   collectChecks(acceptance?.checks, `${label}.acceptance.checks`, missing);
 }

@@ -34,6 +34,20 @@ test("hotspot source changes select focused regression tests", () => {
   ]);
 });
 
+test("UI production-surface owners select the proxy and design-conformance sentinels", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-ui-surface-policy.ts",
+  ]);
+  assert.equal(selection.mode, "selected");
+  assert.equal(selection.requires_build, true);
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-authoring-claims.test.mjs",
+    "tests/ty-context/long-task-claim-coverage.test.mjs",
+    "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
+    "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
+  ]);
+});
+
 test("Design Authority scaffold and advisory changes select focused coverage", () => {
   const design = selectAffectedTests([
     "packages/ty-context/src/lib/design-md.ts",

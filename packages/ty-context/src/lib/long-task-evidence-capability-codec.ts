@@ -171,6 +171,34 @@ function decodeRecord(
         artifact_path: nonEmpty(row.artifact_path, `${label}.artifact_path`),
         artifact_sha256: sha(row.artifact_sha256, `${label}.artifact_sha256`),
       };
+    case "design_conformance":
+      exact(row, label, [
+        "assertion_key",
+        "capability",
+        "design_target_ref",
+        "target_ref",
+        "condition_keys",
+        "actual_artifact_path",
+        "comparison_artifact_path",
+      ]);
+      return {
+        ...base,
+        capability,
+        design_target_ref: key(
+          row.design_target_ref,
+          `${label}.design_target_ref`,
+        ),
+        target_ref: key(row.target_ref, `${label}.target_ref`),
+        condition_keys: keys(row.condition_keys, `${label}.condition_keys`),
+        actual_artifact_path: nonEmpty(
+          row.actual_artifact_path,
+          `${label}.actual_artifact_path`,
+        ),
+        comparison_artifact_path: nonEmpty(
+          row.comparison_artifact_path,
+          `${label}.comparison_artifact_path`,
+        ),
+      };
     case "target_runtime":
       exact(row, label, [
         "assertion_key",
