@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -18,14 +18,15 @@ const exec = promisify(execFile);
 
 test("long-task never invokes model/Git orchestration surfaces and runs only declared Checks", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
+  const shims = await mkdtemp(
+    path.join(os.tmpdir(), "ty-context-forbidden-process-shims-"),
+  );
   try {
-    const shims = path.join(fixture.root, "forbidden-process-shims");
-    const forbiddenLog = path.join(fixture.root, "forbidden-process.log");
+    const forbiddenLog = path.join(shims, "forbidden-process.log");
     const gitTrace = path.join(
       os.tmpdir(),
       `ty-context-git-trace-${path.basename(fixture.root)}.log`,
     );
-    await mkdir(shims);
     for (const name of ["codex", "gh", "app-server", "agent"]) {
       await writeFile(
         path.join(shims, `${name}.cmd`),
@@ -72,6 +73,7 @@ test("long-task never invokes model/Git orchestration surfaces and runs only dec
       ),
       { force: true },
     );
+    await rm(shims, { recursive: true, force: true });
     await rm(fixture.root, { recursive: true, force: true });
   }
 });

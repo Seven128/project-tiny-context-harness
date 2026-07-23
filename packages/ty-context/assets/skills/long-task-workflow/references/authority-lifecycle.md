@@ -8,6 +8,8 @@ Run `ty-context long-task preflight <workdir>` before first formal Compile. Reso
 
 Preflight and Compile call the same activation-safety validator. Skipping Preflight bypasses no Source continuity, criterion, Claim/all-of-surface, Stage closure/cross-surface gate, required-target/root/runner binding, scenario/journey separation, capability adequacy, typed external impact, bounded Product Conformance, adapter/Observation, risk, owner/path/Binding, runner/input, Counterfactual or sensitivity rule.
 
+The same workspace classifier also runs before activation and during verification. Before first lock it classifies `HEAD`-relative current paths; later it classifies immutable-`initial_task_base` changes. Protected authority, declared expected change and allowed support remain distinct from forbidden or unclassified paths, which block activation. During first enable, protection covers only exact files present in the current package asset tree for configured managed destinations plus the exact harness config/hook files; managed directory roots and broad `.codex/**` are never implicitly allowed.
+
 Preflight keeps every independently discovered diagnostic. When a structural duplicate makes the same Claim ambiguous or repeated, only that pair receives stable `diagnostic_id`, `repair_group`, `repair_priority` and `blocked_by` metadata so the structural blocker is repaired first. Independent findings keep their compact existing shape; no finding is hidden, reclassified or treated as resolved, and no repair state or authority is created.
 
 The first successful `ty-context long-task compile <workdir>` is Authority Lock and freezes the immutable initial base and complete compiled authority snapshot in Git common-dir, bound to the worktree marker by task id, revision and compiled identity.
@@ -36,15 +38,21 @@ A selected design target, its exact/constraint interpretation, an authored token
 
 ## Targeted Verification And Recovery
 
+`verify --explain [--outcome/--check]` is a read-only execution preview. It groups declared Main Raw Executions, lists applicable Counterfactual runner invocations and bounded declared retry-attempt counts, but runs no command, writes no Progress, predicts no duration/internal subprocess count and creates no proof.
+
+Before an expensive first targeted run, use the preview to review selected Check count, deduplicated Main executions, Counterfactual mutations and retry bounds. If the expanded plan reveals an obsolete carrier, unnecessarily broad invalidation surface or repeated expensive runner, repair the same Contract Draft/Authority through the normal revision path. The preview cannot see build systems or subprocesses hidden inside a project runner.
+
 `verify --outcome/--check` runs scoped current-snapshot checks for repair and rechecks active identity before writing Progress. A Counterfactual finding is projected into the owning Main Check, changes an otherwise passed Check to `invalid_evidence`, clears Claim proofs and remains recoverable through `status`/`resume`. Global Checks use the same record without a new Global Outcome state.
 
-For a declared target-runtime Check, run targeted verify once when its earliest owning Outcome reaches the first runnable boundary. After accumulated changes to its declared `input_paths` or Binding carriers make Progress stale, rerun before dependent work grows. Coalesce related edits and use the cheapest reliable Check; do not create a per-edit/per-Outcome rebuild rule, trigger queue or platform state. These runs remain `acceptance_authorized: false`.
+For a declared target-runtime Check, run targeted verify once when its earliest owning Outcome reaches the first runnable boundary. `progress_stale` is a fact about evidence freshness, not an immediate execution instruction. Coalesce related edits and use the cheapest reliable project-owned feedback, then refresh the declared Check before dependent work relies on that Outcome or before Final Gate. Do not create a per-edit/per-Outcome rebuild rule, trigger queue or platform state. These runs remain `acceptance_authorized: false`.
+
+Do not add a second executing `diagnose-check` mode merely to avoid Progress: it would still pay the project runner's cost and create a competing execution path. Use project-owned fast feedback while editing, the read-only preview for declared cost shape, targeted verify at a useful stability boundary and the complete Final Gate for acceptance.
 
 Progress freshness binds Outcome authority, runner, verification inputs, Controlling Context and implementation inputs. Retry defaults to none; one retry is allowed only for explicit `transient_once`, idempotent, read-only/test-sandbox work.
 
 Status, Progress, Receipts and workdir compiled output are audit/recovery projections only. Development-period authority state is `manual_required` and never migrated.
 
-Report their exact meaning: `progress_passing` is current targeted repair evidence rather than “Outcome complete”; `progress_stale` is not a current pass; `final_workflow_status: null` means the Goal is unfinished. `status`/`resume` derive `ready_stages`, `ready_outcomes` and Stage status from current Progress; they do not persist a Stage pass. `target_state` remains `not_accepted` until a fresh Final Gate accepts, becomes `blocked_external` for a target blocker, or names the Contract's `implementation_complete`, `target_profile_usable` or `production_release_ready` state after machine acceptance. Do not invent per-platform progress/status.
+Report their exact meaning: `progress_passing` is current targeted repair evidence rather than “Outcome complete”; `progress_stale` is a freshness fact rather than a current pass or immediate rerun command; `final_workflow_status: null` means the Goal is unfinished. `status`/`resume` derive `ready_stages`, `ready_outcomes` and Stage status from current Progress; they do not persist a Stage pass. `target_state` remains `not_accepted` until a fresh Final Gate accepts, becomes `blocked_external` for a target blocker, or names the Contract's `implementation_complete`, `target_profile_usable` or `production_release_ready` state after machine acceptance. Do not invent per-platform progress/status.
 
 ## Final Gate And Terminal Paths
 

@@ -22,7 +22,7 @@ test("PROJECT_SPEC defines the controlling objective and trusted results", async
     "Long-Task Workflow Controlling Objective",
     "Authority Scope And Trusted Results",
     "Contract Draft And Draft Outcome Semantics",
-    "Integrated Source Authoring And Contract Draft Boundary",
+    "Source-Bound Contract Draft Boundary",
     "Integrated Contract Authoring Rationale",
     "Mechanism Admission Rule",
   ]) {
@@ -219,10 +219,20 @@ test("target-runtime feedback stays live, rolling, and state-free", async () => 
   assert.match(combined, /first runnable (?:slice|boundary)/iu);
   assert.match(combined, /coalesc/iu);
   assert.match(combined, /`input_paths`[\s\S]*Binding carrier/iu);
+  assert.match(combined, /smallest sound causal envelope/iu);
+  assert.match(combined, /defensible (?:path|route) from the declared target root/iu);
+  assert.match(
+    combined,
+    /no second executing `diagnose-check`|Do not add a second executing `diagnose-check`/iu,
+  );
+  assert.match(
+    combined,
+    /(?:heartbeat|descendant-process (?:cleanup|cancellation))[\s\S]{0,240}(?:project-owned runner|project-runner responsibilities)/iu,
+  );
   assert.match(combined, /Final Gate[\s\S]*rerun/iu);
   assert.match(
     combined,
-    /no `platform_impact`|adds no `platform_impact`|Do not add `platform_impact`/iu,
+    /no (?:open-ended )?`platform_impact`|adds no `platform_impact`|Do not add `platform_impact`/iu,
   );
   assert.match(
     combined,
@@ -241,7 +251,7 @@ test("target-runtime feedback stays live, rolling, and state-free", async () => 
   assert.match(sourceCode, /\bimplementation_complete\b/u);
 });
 
-test("Source authoring and Contract Draft authoring stay in one long-task loop", async () => {
+test("Source repair and Contract mapping converge in one Source-bound Draft loop", async () => {
   const [spec, sourcePlan, sourceAuthoring, longTask, agents, publicReadmes] =
     await Promise.all([
       read("PROJECT_SPEC.md"),
@@ -266,7 +276,10 @@ test("Source authoring and Contract Draft authoring stay in one long-task loop",
     /pre-existing Source Plan remains valid ordinary Source/iu,
   );
   assert.match(sourcePlan, /Do not rewrite it merely for compatibility/iu);
-  assert.match(sourceAuthoring, /not a standalone Source Plan stage/iu);
+  assert.match(
+    sourceAuthoring,
+    /neither an earlier Source-authoring phase nor a standalone Source Plan stage/iu,
+  );
   assert.match(
     sourceAuthoring,
     /Assign every proposal, selected design resource[\s\S]*a stable input ID/iu,
@@ -285,7 +298,7 @@ test("Source authoring and Contract Draft authoring stay in one long-task loop",
   );
   assert.match(
     spec,
-    /Integrated Source Authoring And Contract Draft Boundary/iu,
+    /Source-Bound Contract Draft Boundary/iu,
   );
   assert.match(spec, /meaning-preserving structural decomposition/iu);
   assert.match(
@@ -297,11 +310,14 @@ test("Source authoring and Contract Draft authoring stay in one long-task loop",
     spec,
     /writable initial proposal[\s\S]*revised as the real Source/iu,
   );
-  assert.match(longTask, /use the Source-authoring reference now/iu);
-  assert.match(longTask, /internal authoring step in the same Goal/iu);
+  assert.match(longTask, /Every input enters.*Draft immediately/iu);
+  assert.match(
+    longTask,
+    /Source completeness is a Preflight\/Compile convergence requirement, not an earlier internal stage/iu,
+  );
   assert.match(
     agents,
-    /Source-quality authoring and Contract Draft authoring belong inside `long-task-workflow`/iu,
+    /enter one Source-bound Contract Draft loop immediately/iu,
   );
   assert.match(publicReadmes, /compatibility pointer/iu);
   assert.match(publicReadmes, /initial proposal[\s\S]*Web GPT/iu);

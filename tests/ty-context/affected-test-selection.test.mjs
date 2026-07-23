@@ -89,6 +89,7 @@ test("Long-Task command changes include the one-time model-choice regression", (
     "tests/ty-context/long-task-model-choice-checkpoint.test.mjs",
     "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
     "tests/ty-context/long-task-semantic-drift-lifecycle.test.mjs",
+    "tests/ty-context/long-task-verification-preview.test.mjs",
     "tests/ty-context/long-task-workflow-black-box.test.mjs",
   ]);
 });
@@ -126,6 +127,7 @@ test("split Authority Revision command modules retain focused routing coverage",
   ]);
   assert.deepEqual(args.tests, [
     "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
+    "tests/ty-context/long-task-verification-preview.test.mjs",
     "tests/ty-context/long-task-workflow-black-box.test.mjs",
   ]);
 });
@@ -144,7 +146,6 @@ test("Context authority topology changes use focused selection and freshness cov
 
 test("Preflight repair-diagnostic changes stay on focused Authoring coverage", () => {
   for (const file of [
-    "packages/ty-context/src/lib/long-task-authoring-preflight-diagnostics.ts",
     "packages/ty-context/src/lib/long-task-authoring-preflight-repair-order.ts",
     "packages/ty-context/src/lib/long-task-authoring-preflight-types.ts",
   ]) {
@@ -156,6 +157,30 @@ test("Preflight repair-diagnostic changes stay on focused Authoring coverage", (
       file,
     );
   }
+  for (const file of [
+    "packages/ty-context/src/lib/long-task-authoring-preflight.ts",
+    "packages/ty-context/src/lib/long-task-authoring-preflight-diagnostics.ts",
+  ])
+    assert.deepEqual(selectAffectedTests([file]).tests, [
+      "tests/ty-context/long-task-authoring-preflight.test.mjs",
+      "tests/ty-context/long-task-workspace-scope.test.mjs",
+    ]);
+});
+
+test("workspace-scope and execution-preview owners select their focused regressions", () => {
+  for (const file of [
+    "packages/ty-context/src/lib/long-task-workspace.ts",
+    "packages/ty-context/src/lib/long-task-workspace-scope.ts",
+  ])
+    assert.deepEqual(selectAffectedTests([file]).tests, [
+      "tests/ty-context/long-task-workspace-scope.test.mjs",
+    ]);
+  assert.deepEqual(
+    selectAffectedTests([
+      "packages/ty-context/src/lib/long-task-verification-preview.ts",
+    ]).tests,
+    ["tests/ty-context/long-task-verification-preview.test.mjs"],
+  );
 });
 
 test("shared long-task runtime types use focused authority and recovery coverage", () => {
@@ -229,6 +254,7 @@ test("guidance-only changes select static consistency checks", () => {
     "tests/ty-context/long-task-design-context.test.mjs",
     "tests/ty-context/long-task-efficiency-design.test.mjs",
     "tests/ty-context/package-source.test.mjs",
+    "tests/ty-context/source-plan-authoring-skill.test.mjs",
     "tests/ty-context/visual-delivery-guidance.test.mjs",
     "tests/ty-context/workflow-contract-routing.test.mjs",
   ]);

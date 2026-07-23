@@ -13,15 +13,15 @@ import {
 test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagnosed without state, batched into one exact approval, and adopted with evidence invalidation", async () => {
   const fixture = await createDeliveryFixture();
   try {
-    await writeFile(
-      path.join(fixture.root, "tests", "extra.mjs"),
-      "export const extraProofDependency = true;\n",
-    );
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
     await runCli(fixture.root, ["long-task", "final-gate", fixture.workdir]);
 
+    await writeFile(
+      path.join(fixture.root, "tests", "extra.mjs"),
+      "export const extraProofDependency = true;\n",
+    );
     const activeBefore = (await loadActiveLongTaskAuthority(fixture.root))
       .authority;
     assert.ok(activeBefore);

@@ -18,12 +18,14 @@ import {
   preflightLongTask,
 } from "./long-task-authoring.js";
 import {
+  flag,
   option,
   rejectOptions,
   rejectUnknown,
 } from "./long-task-command-args.js";
 import { explainLongTask } from "./long-task-explain.js";
 import { handleLongTaskRevisionCommand } from "./long-task-revision.js";
+import { previewVerificationExecution } from "../lib/long-task-verification-preview.js";
 
 export async function longTask(args: string[]): Promise<void> {
   const subcommand = args[0] ?? "help";
@@ -115,9 +117,19 @@ export async function longTask(args: string[]): Promise<void> {
 }
 
 async function verify(workdir: string, args: string[]): Promise<void> {
-  const outcome = option(args, "--outcome");
-  const check = option(args, "--check");
-  rejectOptions(args, ["--outcome", "--check"]);
+  const explain = flag(args, "--explain");
+  const optionArgs = args.filter((value) => value !== "--explain");
+  const outcome = option(optionArgs, "--outcome");
+  const check = option(optionArgs, "--check");
+  rejectOptions(optionArgs, ["--outcome", "--check"]);
+  if (explain) {
+    console.log(
+      JSON.stringify(
+        await previewVerificationExecution(workdir, { outcome, check }),
+      ),
+    );
+    return;
+  }
   const result = await verifyDeliveryContract(workdir, { outcome, check });
   console.log(JSON.stringify(result));
   if (result.findings.length) process.exitCode = 1;
@@ -149,7 +161,7 @@ function help(): void {
   diagnose-revision <workdir> [--outcome <key>] [--check <key>]
   approve-authority-revision <workdir> --revision <sha>
   explain <workdir>
-  verify <workdir> [--outcome <key>] [--check <key>]
+  verify <workdir> [--outcome <key>] [--check <key>] [--explain]
   status <workdir>
   resume <workdir>
   doctor <workdir>

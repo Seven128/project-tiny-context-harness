@@ -9,28 +9,28 @@ const SUPPORTED_TEST_SUITES = new Set([
 
 export const TEST_TIER_REVIEW_BUDGETS = Object.freeze({
   long_task_trust: Object.freeze({
-    max_files: 11,
-    reviewed_on: "2026-07-22",
+    max_files: 12,
+    reviewed_on: "2026-07-23",
     rationale:
-      "One canonical file per currently reviewed high-impact trust-boundary invariant family; raise only when a new independent invariant cannot be covered by an existing sentinel.",
+      "One canonical file per reviewed high-impact trust-boundary invariant family, including first-lock workspace-scope completeness; raise only when a new independent invariant cannot be covered by an existing sentinel.",
   }),
   long_task_focused: Object.freeze({
-    max_files: 16,
-    reviewed_on: "2026-07-22",
+    max_files: 19,
+    reviewed_on: "2026-07-23",
     rationale:
-      "Bound the default Long-Task edit loop while retaining the current authority, Context, design, semantic-drift, and entry-point coverage.",
+      "Bound the default Long-Task edit loop while retaining authority, Context, design, semantic-drift, direct-Draft authoring, workspace-scope and execution-preview coverage.",
   }),
   delivery_contract_focused: Object.freeze({
-    max_files: 9,
-    reviewed_on: "2026-07-22",
+    max_files: 10,
+    reviewed_on: "2026-07-23",
     rationale:
-      "Bound Contract-authoring feedback while retaining parser, compiler, coverage, risk, semantic-drift, and Source-authority sentinels.",
+      "Bound Contract-authoring feedback while retaining parser, compiler, coverage, risk, semantic-drift, Source-authority and first-lock workspace-scope sentinels.",
   }),
   hotspot_fanout: Object.freeze({
-    max_tests_per_path: 8,
-    reviewed_on: "2026-07-22",
+    max_tests_per_path: 9,
+    reviewed_on: "2026-07-23",
     rationale:
-      "A single implementation path selecting more tests requires remapping or an explicit review; complete-suite discovery remains uncapped.",
+      "A single implementation path selecting more tests requires remapping or explicit review; the ninth slot covers the independent workspace-scope/preview boundary without reducing existing coverage, while complete-suite discovery remains uncapped.",
   }),
 });
 
@@ -40,6 +40,12 @@ export const CRITICAL_TEST_SENTINELS = Object.freeze([
     "long-task-active-authority-continuity.test.mjs",
     ["long-task", "long-task-trust"],
     "Proves that deleting derived cache cannot reset the first compiled Authority Lock or its immutable task base.",
+  ),
+  criticalSentinel(
+    "first-lock-workspace-scope",
+    "long-task-workspace-scope.test.mjs",
+    ["long-task", "long-task-trust"],
+    "Proves that Preflight and direct Compile cannot absorb an undeclared dirty path into the first immutable baseline and later drift still fails closed.",
   ),
   criticalSentinel(
     "forged-evidence-rejection",
@@ -151,6 +157,9 @@ export const LONG_TASK_FOCUSED_TESTS = Object.freeze(
     "long-task-semantic-authority-revision.test.mjs",
     "long-task-semantic-drift-closure.test.mjs",
     "long-task-semantic-drift-lifecycle.test.mjs",
+    "long-task-verification-preview.test.mjs",
+    "long-task-workspace-scope.test.mjs",
+    "source-plan-authoring-skill.test.mjs",
     "visual-delivery-guidance.test.mjs",
     "workflow-test-entrypoints.test.mjs",
   ].map(testPath),
@@ -167,6 +176,7 @@ export const DELIVERY_CONTRACT_FOCUSED_TESTS = Object.freeze(
     "long-task-semantic-drift-closure.test.mjs",
     "long-task-semantic-drift-lifecycle.test.mjs",
     "long-task-source-authority-closure.test.mjs",
+    "long-task-workspace-scope.test.mjs",
   ].map(testPath),
 );
 
@@ -179,6 +189,7 @@ export const STATIC_TESTS = new Set(
     "design-resource-authoring-skill.test.mjs",
     "long-task-design-context.test.mjs",
     "long-task-efficiency-design.test.mjs",
+    "source-plan-authoring-skill.test.mjs",
     "test-suite-runtime.test.mjs",
     "visual-delivery-guidance.test.mjs",
     "workflow-test-entrypoints.test.mjs",
@@ -239,6 +250,8 @@ export const LONG_TASK_ISOLATED_TEST_FILES = Object.freeze([
   "long-task-source-authority-closure.test.mjs",
   "long-task-source-risk-binding.test.mjs",
   "long-task-state-resume.test.mjs",
+  "long-task-verification-preview.test.mjs",
+  "long-task-workspace-scope.test.mjs",
 ]);
 
 export const LONG_TASK_EXCLUSIVE_TEST_FILES = Object.freeze([
@@ -463,11 +476,11 @@ function assertIsolationPolicy() {
     throw new Error("Long-Task isolation classes must be disjoint.");
   if (
     LONG_TASK_PURE_TEST_FILES.length !== 11 ||
-    LONG_TASK_ISOLATED_TEST_FILES.length !== 39 ||
+    LONG_TASK_ISOLATED_TEST_FILES.length !== 41 ||
     LONG_TASK_EXCLUSIVE_TEST_FILES.length !== 10
   )
     throw new Error(
-      "Long-Task isolation policy changed from the reviewed 11/39/10 population; review the new file explicitly instead of parallelizing it by default.",
+      "Long-Task isolation policy changed from the reviewed 11/41/10 population; review the new file explicitly instead of parallelizing it by default.",
     );
 }
 

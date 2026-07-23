@@ -30,10 +30,17 @@ import { captureVerifierIdentity } from "./long-task-verifier-identity.js";
 import { verifierAuthorityDiff } from "./long-task-verifier-authority.js";
 import {
   changedWorkspacePaths,
+  changedWorkspacePathsFromHead,
   currentGitTree,
   repoRelative,
   repositoryRoot,
 } from "./long-task-workspace.js";
+import {
+  assertWorkspaceScope,
+  classifyWorkspaceScope,
+  firstLockManagedWorkspacePaths,
+  protectedWorkspacePaths,
+} from "./long-task-workspace-scope.js";
 
 export interface CompileDeliveryOptionsV2 {
   require_completion_gate?: boolean;
@@ -75,6 +82,12 @@ export async function compileDeliveryContract(
   const current = validation.workspace!;
   const globalChecks = validation.global_checks;
   const outcomes = validation.outcomes;
+  const contractFiles = Object.fromEntries(
+    Object.entries(parsed.contract_files).map(([relative, hash]) => [
+      repoRelative(repository, path.join(workdir, ...relative.split("/"))),
+      hash,
+    ]),
+  );
 
   const contractHash = sha256Hex(canonicalValueJson(contract));
   const authorityMaterials = computeAuthorityMaterials(
@@ -86,17 +99,36 @@ export async function compileDeliveryContract(
   const previous = options.live_gate
     ? null
     : (options.previous_authority ?? null);
-  const initialTaskBase = options.initial_task_base ??
-    previous?.initial_task_base ?? {
-      git_commit: current.git_head,
-      git_tree: await currentGitTree(repository),
-      workspace_manifest: current,
-    };
-  await validateActualRiskSurfaces(
-    repository,
-    changedWorkspacePaths(initialTaskBase.workspace_manifest, current),
-    contract,
+  const existingInitialTaskBase =
+    options.initial_task_base ?? previous?.initial_task_base ?? null;
+  const changedPaths = existingInitialTaskBase
+    ? changedWorkspacePaths(existingInitialTaskBase.workspace_manifest, current)
+    : await changedWorkspacePathsFromHead(repository, workdir);
+  const firstLockManagedPaths = existingInitialTaskBase
+    ? []
+    : await firstLockManagedWorkspacePaths(repository, changedPaths);
+  assertWorkspaceScope(
+    classifyWorkspaceScope(
+      contract,
+      changedPaths,
+      protectedWorkspacePaths({
+        contract_files: contractFiles,
+        source_hashes: sourceHashes,
+        context_hashes: context.sha256,
+        checks: [
+          ...globalChecks,
+          ...outcomes.flatMap((outcome) => outcome.acceptance.checks),
+        ],
+        additional_files: firstLockManagedPaths,
+      }),
+    ),
   );
+  const initialTaskBase = existingInitialTaskBase ?? {
+    git_commit: current.git_head,
+    git_tree: await currentGitTree(repository),
+    workspace_manifest: current,
+  };
+  await validateActualRiskSurfaces(repository, changedPaths, contract);
 
   const verifier = await captureVerifierIdentity(
     repository,
@@ -174,12 +206,7 @@ export async function compileDeliveryContract(
     workdir,
     contract_file: repoRelative(repository, contractFile),
     contract_sha256: contractHash,
-    contract_files: Object.fromEntries(
-      Object.entries(parsed.contract_files).map(([relative, hash]) => [
-        repoRelative(repository, path.join(workdir, ...relative.split("/"))),
-        hash,
-      ]),
-    ),
+    contract_files: contractFiles,
     source_hashes: sourceHashes,
     source_items: sourceItems,
     context_snapshot: normalizeContextAuthoritySnapshot(context),

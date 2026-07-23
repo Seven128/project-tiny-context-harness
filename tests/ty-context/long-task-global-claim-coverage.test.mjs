@@ -4,7 +4,7 @@ import test from "node:test";
 import YAML from "yaml";
 import { compileProductClaimCoverage } from "../../packages/ty-context/dist/lib/long-task-claims.js";
 import { parseDeliveryContractText } from "../../packages/ty-context/dist/lib/long-task-delivery-parser.js";
-import { findScopeEscapes } from "../../packages/ty-context/dist/lib/long-task-paths.js";
+import { classifyWorkspaceScope } from "../../packages/ty-context/dist/lib/long-task-workspace-scope.js";
 import {
   createDeliveryFixture,
   deliveryContract,
@@ -149,11 +149,11 @@ test("Global forbidden paths stay outside Claim coverage and remain statically e
   const coverage = compileProductClaimCoverage(parsed);
   assert.equal(coverage.by_global.length, 0);
   assert.deepEqual(
-    findScopeEscapes(
+    classifyWorkspaceScope(
+      contract,
       ["secrets/token.txt"],
-      ["src/**"],
-      contract.global.technical.forbidden_paths.map((item) => item.path),
-    ),
+      [],
+    ).forbidden,
     ["secrets/token.txt"],
   );
 });

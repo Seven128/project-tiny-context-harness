@@ -8,7 +8,7 @@ read_policy: on-demand
 
 Single-Goal Long-Task Workflow exists to prevent false completion inside one complete declared delivery authority. It uses one native Goal, one selected workspace, one continuously authored Contract, semantic Outcome boundaries, repair-only targeted verification and one current-snapshot Final Gate. It does not own agent, process, model or Git orchestration.
 
-Source-quality authoring, Contract Draft authoring, Preflight repair, formal Compile, one model-choice checkpoint, rolling implementation, verification and Final Gate remain one `long-task-workflow` lifecycle. `source-plan-authoring` is now only a compatibility pointer.
+Source-quality rules and Contract Draft authoring form one Source-bound authoring loop, followed by Preflight repair, formal Compile, one model-choice checkpoint, rolling implementation, verification and Final Gate in one `long-task-workflow` lifecycle. `source-plan-authoring` is now only a compatibility pointer.
 
 The shared Architecture Deliberation occurs during Source/Contract authoring before formal Compile and implementation. Long-Task Final Gate is the sole post-implementation Architecture Conformance carrier; no default-workflow closure is nested around it.
 
@@ -82,9 +82,27 @@ The platform-neutral form of this rationale belongs in `PROJECT_SPEC.md`. The We
 
 The earlier separate `source-plan-authoring` boundary existed so an external conversational service could prepare a high-fidelity proposal before Codex. Once external proposal generation moved to the initial-proposal boundary—and selected design resources had to join that proposal—the extra handoff no longer provided independent protection. It added manual intervention, duplicate context transfer and a place to lose design provenance while saving little token cost.
 
-The useful semantics remain: full mixed-input inventory, direct/derived/delegated/evidence-backed provenance, preference-sensitive research, stable keys, surface/control/state completeness, exact risk facts and falsifiable acceptance. They now live in `long-task-workflow/references/source-authoring.md` and run only when raw/revised Source needs refinement. A writable initial proposal becomes the real Source; conversation-only input materializes one project-native Source. Then markers and the same Contract Draft follow in the same Goal.
+The useful semantics remain: full mixed-input inventory, direct/derived/delegated/evidence-backed provenance, preference-sensitive research, stable keys, surface/control/state completeness, exact risk facts and falsifiable acceptance. They now live in `long-task-workflow/references/source-authoring.md` as on-demand rules within the same Source-bound Contract Draft loop. A writable initial proposal becomes the real Source; conversation-only input materializes one project-native Source. Draft mapping can begin immediately, while provenance, Source repair and markers converge before Preflight/Compile.
 
 This removes a service boundary without creating a Source schema, Authoring Authority, gate, Receipt, cache or state. Legacy Source Plans remain valid ordinary Source and are never rewritten merely for compatibility. The old Skill is retained as a pointer so explicit historical invocations fail legibly rather than silently restoring the former workflow.
+
+Keeping Source Authority does not justify keeping Source Authoring as an internal phase. The Contract cannot become the sole owner of missing meaning, but forcing Source completion before opening the Draft adds a serial pass without independent protection. The fail-closed invariant is instead a convergence deadline: real Source, provenance, markers, repository bindings and complete mapping must all be ready before Preflight/Compile.
+
+## Why Workspace Scope Is Classified Before Activation
+
+The immutable baseline protects later verification only if the first Compile cannot absorb an already-dirty undeclared file. A Verify-only `scope_escape` check detects post-lock drift but misses that first-lock path, while a Preflight-only fix can be bypassed by direct Compile.
+
+One pure classifier therefore owns protected authority, declared expected change, allowed support, forbidden and unclassified path categories. Preflight and direct Compile classify `HEAD` to current workspace before first lock; later Compile/Verify/Final Gate classify immutable `initial_task_base` to current workspace. A bounded input collector enumerates only actual current package-asset files for configured managed destinations plus exact config/hook files during first enable; it never exempts a managed directory root or broad `.codex/**`. This shares semantics without adding schema, persistent classification state or a blanket package-directory exemption.
+
+## Why Stale Progress And Execution Preview Stay Advisory
+
+`progress_stale` means historical targeted evidence no longer describes the current authority/input snapshot. It is not a scheduler event and cannot know the cheapest trustworthy feedback path for every project. The current Goal may coalesce relevant edits and use project-owned incremental feedback, but must refresh evidence before relying on the affected Outcome or entering Final Gate.
+
+`verify --explain` lowers feedback-planning cost by projecting selected compiled main Raw Execution groups and applicable Counterfactual executions without running them. It reports only declared execution counts and boundaries; it cannot promise elapsed time or reveal how many internal builds/processes a project runner may perform. Because it writes no Progress and produces no proof, it adds no acceptance bypass, execution mode or persistent state.
+
+A second executing `diagnose-check` would still invoke the same opaque project runner while adding another execution surface and ambiguous evidence semantics. It is therefore rejected. The lower-cost generic combination is project-owned fast feedback during edits, preview before an expensive declared run, targeted verify at a useful stability/dependency boundary and Final Gate for acceptance.
+
+Likewise, glob width and carrier/root reachability are semantic rather than syntactic. Authoring requires the smallest sound causal `input_paths`/Binding envelope and a defensible target-root route for every Counterfactual carrier, but a generic path-name linter cannot know whether `apps/**` is necessary or whether a language/runtime actually imports a barrel. Repository evidence may support the authoring decision; otherwise the current-execution Counterfactual is the proof. Runtime-specific readiness probes, build-cache invalidation, streaming progress/heartbeat and descendant-process cleanup stay with the project runner. This avoids false confidence and business-specific Harness logic while addressing the expensive-rerun cause before execution.
 
 Preference clarification and delegation semantics are unchanged: ask only when an unknown priority would change research/recommendation; use current authoritative evidence for unstable claims; record defensible recommendations in real Source; and leave payment/contract/deployment/destructive/permission/sensitive-data/legal-security actions as external confirmations. Contract YAML cannot introduce unrecorded product meaning.
 

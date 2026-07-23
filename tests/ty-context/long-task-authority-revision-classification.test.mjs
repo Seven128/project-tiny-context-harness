@@ -115,13 +115,13 @@ test("[critical:protected-revision-classification] semantic or proof changes are
 test("additive verification dependencies remain automatic and are summarized", async () => {
   const fixture = await createDeliveryFixture();
   try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+
     await writeFile(
       path.join(fixture.root, "tests", "extra.mjs"),
       "export const extraProofDependency = true;\n",
     );
-    await runCli(fixture.root, ["enable", "long-task"]);
-    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
-
     fixture.contract.outcomes[0].acceptance.checks[0].verification_inputs.push(
       "tests/extra.mjs",
     );

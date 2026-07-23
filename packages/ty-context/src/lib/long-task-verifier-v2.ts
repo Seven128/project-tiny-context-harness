@@ -19,7 +19,7 @@ import {
   evaluateGlobalCounterfactuals,
   evaluateOutcomeCounterfactuals,
 } from "./long-task-evidence-v2.js";
-import { findScopeEscapes, matchesRepoPattern } from "./long-task-paths.js";
+import { matchesRepoPattern } from "./long-task-paths.js";
 import {
   activeAuthorityIdentityMatches,
   loadActiveLongTaskAuthority,
@@ -32,6 +32,10 @@ import {
   repositoryRoot,
   type WorkspaceSnapshotV2,
 } from "./long-task-workspace.js";
+import {
+  classifyWorkspaceScope,
+  protectedWorkspacePaths,
+} from "./long-task-workspace-scope.js";
 
 export interface DeliveryRunV2 {
   snapshot: WorkspaceManifestV2;
@@ -376,36 +380,28 @@ async function preRunFindings(
       next_action:
         "Run ty-context long-task compile --revise after reviewing the Contract change.",
     }));
-  const protectedAuthorityFiles = new Set([
-    ...Object.keys(compiled.contract_files),
-    ...Object.keys(compiled.source_hashes),
-    ...Object.keys(compiled.context_snapshot.sha256),
-    ...allCompiledChecks(compiled).flatMap((check) =>
-      Object.keys(check.verification_input_hashes),
-    ),
-  ]);
   const changed = changedWorkspacePaths(
     compiled.initial_task_base.workspace_manifest,
     current,
-  ).filter((file) => !protectedAuthorityFiles.has(file));
-  const allowed = compiled.outcomes.flatMap((outcome) => [
-    ...outcome.technical.expected_change_paths,
-    ...outcome.technical.allowed_support_paths,
-  ]);
-  const forbidden = [
-    ...compiled.global.technical.forbidden_paths.map((entry) => entry.path),
-    ...compiled.outcomes.flatMap(
-      (outcome) => outcome.technical.forbidden_paths,
-    ),
-  ];
-  const escaped = findScopeEscapes(changed, allowed, forbidden);
+  );
+  const classification = classifyWorkspaceScope(
+    compiled,
+    changed,
+    protectedWorkspacePaths({
+      contract_files: compiled.contract_files,
+      source_hashes: compiled.source_hashes,
+      context_hashes: compiled.context_snapshot.sha256,
+      checks: allCompiledChecks(compiled),
+    }),
+  );
+  const escaped = classification.blocking_paths;
   return escaped.length
     ? [
         {
           code: "scope_escape",
           outcome_key: null,
           check_key: null,
-          message: `Changed paths are outside the Contract boundary: ${escaped.join(",")}`,
+          message: `Changed paths escape the Contract boundary (forbidden: ${classification.forbidden.join(",") || "none"}; unclassified: ${classification.unclassified.join(",") || "none"}).`,
           actual: escaped,
           next_action:
             "Review risk/ownership, revise declared change paths and recompile in the same Goal.",

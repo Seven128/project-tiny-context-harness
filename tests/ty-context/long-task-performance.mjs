@@ -50,6 +50,15 @@ const fixture = await createDeliveryFixture();
 const previousCwd = process.cwd();
 try {
   await seedLargeRepository(fixture.root);
+  fixture.contract.outcomes[0].product.owner.path_globs.push(
+    "large/**",
+    "untracked/**",
+  );
+  fixture.contract.outcomes[0].technical.allowed_support_paths.push(
+    "large/**",
+    "untracked/**",
+  );
+  await writeContract(fixture.workdir, fixture.contract);
   await runCli(fixture.root, ["enable", "long-task"]);
   await createDirtyMatrix(fixture.root);
 
@@ -57,7 +66,11 @@ try {
   const preflight = await timed(() =>
     preflightDeliveryContract(fixture.workdir, fixture.root),
   );
-  assert.equal(preflight.value.status, "ready");
+  assert.equal(
+    preflight.value.status,
+    "ready",
+    JSON.stringify(preflight.value.diagnostics),
+  );
   const compile = await timed(() =>
     compileDeliveryContract(fixture.workdir, fixture.root, {
       require_completion_gate: true,

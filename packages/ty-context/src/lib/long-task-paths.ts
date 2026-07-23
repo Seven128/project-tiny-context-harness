@@ -323,18 +323,6 @@ export function repositoryPatternsMayOverlap(
   );
 }
 
-export function findScopeEscapes(
-  changedPaths: string[],
-  allowedPatterns: string[],
-  forbiddenPatterns: string[],
-): string[] {
-  return changedPaths.filter(
-    (file) =>
-      forbiddenPatterns.some((pattern) => matchesRepoPattern(file, pattern)) ||
-      !allowedPatterns.some((pattern) => matchesRepoPattern(file, pattern)),
-  );
-}
-
 type SegmentAst = Extract<RepositoryPatternSegmentAst, { kind: "segment" }>;
 
 type SegmentRelation =

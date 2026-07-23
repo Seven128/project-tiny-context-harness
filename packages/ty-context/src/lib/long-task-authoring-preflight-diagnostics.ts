@@ -167,6 +167,9 @@ function diagnosticRefs(code: string, message: string): string[] {
       return payload.slice(0, 2);
     case "owner_path_globs_empty":
       return payload.slice(0, 1);
+    case "workspace_path_forbidden":
+    case "workspace_path_unclassified":
+      return payload.slice(0, 1);
     case "product_claim_uncovered":
     case "global_claim_uncovered":
     case "source_claim_decision_required":
@@ -198,6 +201,10 @@ function diagnosticRepairHint(code: string): string | null {
       return "Correct source_ref or add the matching non-rendering Source marker/anchor without rewriting the Source statement.";
     case "source_claim_decision_required":
       return "Resolve the stated product decision from the user or authoritative Source before Compile.";
+    case "workspace_path_forbidden":
+      return "Revert or relocate the forbidden workspace change, or revise the owning Source/Contract boundary through the appropriate authority path.";
+    case "workspace_path_unclassified":
+      return "Declare the file under the owning Outcome's expected_change_paths or allowed_support_paths, or remove the unrelated workspace change before Compile.";
     default:
       if (code.endsWith("_path_not_found"))
         return "Create or correct the declared repository path, runner target or Binding carrier, then rerun Preflight.";

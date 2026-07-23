@@ -22,6 +22,7 @@ import {
   createDeliveryFixture,
   parseCliJson,
   pathExists,
+  writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
 const exec = promisify(execFile);
@@ -41,6 +42,13 @@ test("Verifier relocation is automatic while content changes require approval", 
       version: "0.6.0-relocated.0",
     });
 
+    fixture.contract.outcomes[0].product.owner.path_globs.push(
+      ".codex/hooks.json",
+    );
+    fixture.contract.outcomes[0].technical.allowed_support_paths.push(
+      ".codex/hooks.json",
+    );
+    await writeContract(fixture.workdir, fixture.contract);
     await runPackageCli(packageA, fixture.root, ["enable", "long-task"]);
     const first = await runPackageCli(packageA, fixture.root, [
       "long-task",

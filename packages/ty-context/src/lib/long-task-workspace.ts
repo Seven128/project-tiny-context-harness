@@ -264,6 +264,36 @@ export function changedWorkspacePaths(
     .sort();
 }
 
+export async function changedWorkspacePathsFromHead(
+  rootInput: string,
+  workdirInput: string,
+  additionalExcludedWorkdirs: string[] = [],
+): Promise<string[]> {
+  const root = path.resolve(rootInput);
+  const workdir = path.resolve(workdirInput);
+  const excluded = excludedPrefixes(root, [
+    workdir,
+    ...additionalExcludedWorkdirs,
+  ]);
+  const [trackedBytes, untrackedBytes] = await Promise.all([
+    gitBuffer(
+      root,
+      scopedDiffArgs(
+        ["diff", "--name-only", "--no-renames", "--no-ext-diff", "-z", "HEAD"],
+        excluded,
+      ),
+    ),
+    gitBuffer(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
+  ]);
+  return [
+    ...new Set(
+      [...splitZero(trackedBytes), ...splitZero(untrackedBytes)]
+        .map((raw) => raw.replace(/\\/gu, "/"))
+        .filter((relative) => !excludedPath(relative, excluded)),
+    ),
+  ].sort();
+}
+
 export async function currentGitState(root: string): Promise<{
   head: string;
   tree: string;

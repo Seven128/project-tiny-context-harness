@@ -10,6 +10,12 @@ export function option(args: string[], name: string): string | undefined {
   return value;
 }
 
+export function flag(args: string[], name: string): boolean {
+  const count = args.filter((value) => value === name).length;
+  if (count > 1) throw new Error(`duplicate option: ${name}`);
+  return count === 1;
+}
+
 export function rejectOptions(args: string[], allowed: string[]): void {
   for (let index = 0; index < args.length; index += 2)
     if (!allowed.includes(args[index]) || !args[index + 1])

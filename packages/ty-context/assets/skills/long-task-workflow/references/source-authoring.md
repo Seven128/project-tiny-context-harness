@@ -1,12 +1,12 @@
-# Integrated Source Authoring Reference
+# Source-Bound Draft Input Reference
 
-Read this when raw, mixed, attachment-heavy or incomplete inputs need to become self-contained delivery Source before Contract mapping. This work occurs inside the same `long-task-workflow` Goal and feeds the same Contract Draft; it is not a standalone Source Plan stage or second lifecycle.
+Read this alongside `contract-authoring.md` when raw, mixed, attachment-heavy or incomplete inputs need Source-quality repair while the same Contract Draft is being mapped. Inputs enter the Draft immediately; this reference is neither an earlier Source-authoring phase nor a standalone Source Plan stage or second lifecycle.
 
 ## Objective and boundary
 
-Preserve every material user, product, technical, visual and acceptance constraint from the initial/revised proposal and supplied resources. Add only traceable necessary derivations, defensible delegated choices and evidence-backed repository facts. Make the real Source understandable without the original conversation.
+Preserve every material user, product, technical, visual and acceptance constraint from the initial/revised proposal and supplied resources. Add only traceable necessary derivations, defensible delegated choices and evidence-backed repository facts. Make the real Source understandable without the original conversation before Preflight/Compile, while allowing Draft decomposition and repository binding to proceed incrementally.
 
-Do not create a Source Plan schema, CLI, Preflight, Compile, Receipt, cache, authority or state. Do not bind a choice only in Contract YAML. Do not let current implementation silently redefine intent. A pre-existing Source Plan is simply one possible input.
+Do not create a Source Plan schema, CLI, Preflight, Compile, Receipt, cache, authority, state or internal Source-authoring stage. Contract YAML cannot become the sole owner of a choice or missing semantic. Do not let current implementation silently redefine intent. A pre-existing Source Plan is simply one possible input.
 
 ## Input inventory
 
@@ -24,9 +24,9 @@ Infer preferences only from user words, Source, Context or controlling constrain
 
 Use current primary/authoritative evidence for changing external facts. Record source, scope and retrieval date. Preference clarification authorizes plan meaning, not payment, contracting, deployment/publication, destructive production mutation, permission grants, sensitive-data transmission or required legal/security/human approval; those remain typed external confirmations.
 
-## Authoring modes
+## Working strategies, not phases
 
-Infer rather than ask the user to choose:
+Choose locally as needed while revising the same Draft; do not expose these as lifecycle stages or ask the user to choose:
 
 - **refinement:** preserve and complete a substantially developed proposal;
 - **synthesis:** build coherent Source from a goal plus mixed inputs;
@@ -80,9 +80,9 @@ Each AC has exactly one Given/When/Then scenario, names the REQ/CTRL/OBL/NCOMP m
 
 Use the Runtime's exact risk Fact names when marking risk. Data migration is `data_migration`; a weakly observable critical path is separate `critical_user_path` and `weak_observability` facts; preserve `multi_repository_change` in Source so Contract compilation can reject unsupported delivery honestly.
 
-## Completeness audit
+## Preflight/Compile convergence audit
 
-Before Contract mapping confirm:
+Before Preflight/Compile confirm:
 
 1. Every material original statement and qualifier is preserved.
 2. Every supplied input is incorporated or has an explicit unreadable/unused/conflict disposition.
@@ -93,6 +93,6 @@ Before Contract mapping confirm:
 7. Non-goals, forbidden shortcuts, risks and recovery are concrete.
 8. No unsupported number, threshold, metric or external claim appears.
 9. Selected design resources retain stable identity and exact declared coverage; candidates remain non-authoritative.
-10. The Source is self-contained enough for Contract authoring and names every still-required external artifact.
+10. The Source is self-contained enough to own every mapped Draft semantic and names every still-required external artifact.
 
-Then add non-rendering `ty-source-item:start/end` markers to the real Markdown Source without rewriting direct text, and proceed to `contract-authoring.md`. The markers and Contract mapping are part of this same Long-Task authoring loop.
+Complete non-rendering `ty-source-item:start/end` markers in the real Markdown Source without rewriting direct text, and finish the corresponding Contract mapping in the same loop. Neither markers nor this audit delay opening the Draft; all are fail-closed convergence requirements before Preflight/Compile.

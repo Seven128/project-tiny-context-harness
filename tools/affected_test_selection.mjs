@@ -97,6 +97,7 @@ const HOTSPOT_TESTS = new Map([
       "long-task-model-choice-checkpoint.test.mjs",
       "long-task-semantic-drift-closure.test.mjs",
       "long-task-semantic-drift-lifecycle.test.mjs",
+      "long-task-verification-preview.test.mjs",
       "long-task-workflow-black-box.test.mjs",
     ],
   ],
@@ -115,6 +116,7 @@ const HOTSPOT_TESTS = new Map([
     "packages/ty-context/src/commands/long-task-command-args.ts",
     [
       "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-verification-preview.test.mjs",
       "long-task-workflow-black-box.test.mjs",
     ],
   ],
@@ -209,12 +211,22 @@ const HOTSPOT_TESTS = new Map([
     ],
   ],
   [
+    "packages/ty-context/src/lib/long-task-authoring-preflight.ts",
+    [
+      "long-task-authoring-preflight.test.mjs",
+      "long-task-workspace-scope.test.mjs",
+    ],
+  ],
+  [
     "packages/ty-context/src/lib/long-task-authoring-preflight-repair-order.ts",
     ["long-task-authoring-preflight.test.mjs"],
   ],
   [
     "packages/ty-context/src/lib/long-task-authoring-preflight-diagnostics.ts",
-    ["long-task-authoring-preflight.test.mjs"],
+    [
+      "long-task-authoring-preflight.test.mjs",
+      "long-task-workspace-scope.test.mjs",
+    ],
   ],
   [
     "packages/ty-context/src/lib/long-task-authoring-preflight-types.ts",
@@ -258,6 +270,7 @@ const HOTSPOT_TESTS = new Map([
       "long-task-semantic-authority-revision.test.mjs",
       "long-task-semantic-drift-closure.test.mjs",
       "long-task-semantic-drift-lifecycle.test.mjs",
+      "long-task-workspace-scope.test.mjs",
     ],
   ],
   [
@@ -316,6 +329,7 @@ const HOTSPOT_TESTS = new Map([
       "long-task-semantic-drift-closure.test.mjs",
       "long-task-semantic-drift-lifecycle.test.mjs",
       "long-task-state-resume.test.mjs",
+      "long-task-verification-preview.test.mjs",
     ],
   ],
   [
@@ -323,8 +337,21 @@ const HOTSPOT_TESTS = new Map([
     [
       "long-task-authority-progress-retry.test.mjs",
       "long-task-authority-revision-diagnosis.test.mjs",
+      "long-task-workspace-scope.test.mjs",
       "long-task-workflow-black-box.test.mjs",
     ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-verification-preview.ts",
+    ["long-task-verification-preview.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-workspace-scope.ts",
+    ["long-task-workspace-scope.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-workspace.ts",
+    ["long-task-workspace-scope.test.mjs"],
   ],
   [
     "packages/ty-context/src/lib/long-task-progress.ts",
@@ -464,6 +491,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("package-source.test.mjs"));
+      tests.add(testPath("source-plan-authoring-skill.test.mjs"));
       tests.add(testPath("visual-delivery-guidance.test.mjs"));
       tests.add(testPath("workflow-contract-routing.test.mjs"));
       reasons.push(`${file}:managed_guidance`);
@@ -475,6 +503,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
       tests.add(testPath("design-resource-authoring-skill.test.mjs"));
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
+      tests.add(testPath("source-plan-authoring-skill.test.mjs"));
       tests.add(testPath("visual-delivery-guidance.test.mjs"));
       tests.add(testPath("validators.test.mjs"));
       reasons.push(`${file}:project_context`);
@@ -491,6 +520,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
       tests.add(testPath("package-source.test.mjs"));
+      tests.add(testPath("source-plan-authoring-skill.test.mjs"));
       tests.add(testPath("visual-delivery-guidance.test.mjs"));
       reasons.push(`${file}:public_design_surface`);
       continue;
@@ -520,6 +550,7 @@ export function selectAffectedTests(changedPaths, options = {}) {
         tests.add(testPath("design-resource-authoring-skill.test.mjs"));
       tests.add(testPath("long-task-design-context.test.mjs"));
       tests.add(testPath("long-task-efficiency-design.test.mjs"));
+      tests.add(testPath("source-plan-authoring-skill.test.mjs"));
       reasons.push(`${file}:documentation`);
       continue;
     }

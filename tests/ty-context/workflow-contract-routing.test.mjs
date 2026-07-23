@@ -195,7 +195,7 @@ test("CLI and managed guidance route only explicit or active work to long-task",
   assert.match(guidance, /`design-system-authoring` is an explicit-only cold-start\/repair capability/iu);
 });
 
-test("Workflow Contract names the complete Draft-to-qualified-result lifecycle", async () => {
+test("Workflow Contract names the complete Source-bound-Draft-to-qualified-result lifecycle", async () => {
   const workflow = await read(
     "project_context/areas/harness-package/contracts/workflow-contract.md",
   );
@@ -203,8 +203,8 @@ test("Workflow Contract names the complete Draft-to-qualified-result lifecycle",
   assert.ok(summary);
   for (const concept of [
     "initial/revised proposal + selected design resources",
-    "integrated Source inventory/synthesis/refinement",
-    "one Contract Draft",
+    "one Source-bound Contract Draft loop",
+    "inventory/provenance/refinement/markers/mapping",
     "Preflight",
     "Authority Lock",
     "one-time model choice",
@@ -339,7 +339,7 @@ test("long-task Skill is the only active long-task workflow and normal-long-task
   );
 });
 
-test("retired Source Plan entry points to integrated long-task Source authoring", async () => {
+test("retired Source Plan entry points to the Source-bound Contract Draft loop", async () => {
   const [sourcePlan, sourceAuthoring, workflowContext] = await Promise.all([
     read(".codex/ty-context-managed/skills/source-plan-authoring/SKILL.md"),
     read(
@@ -357,10 +357,13 @@ test("retired Source Plan entry points to integrated long-task Source authoring"
     sourcePlan,
     /ty-context long-task (?:init|preflight|compile)/,
   );
-  assert.match(sourceAuthoring, /not a standalone Source Plan stage/iu);
   assert.match(
     sourceAuthoring,
-    /Do not create a Source Plan schema, CLI, Preflight, Compile, Receipt, cache, authority or state/iu,
+    /neither an earlier Source-authoring phase nor a standalone Source Plan stage/iu,
+  );
+  assert.match(
+    sourceAuthoring,
+    /Do not create a Source Plan schema, CLI, Preflight, Compile, Receipt, cache, authority, state or internal Source-authoring stage/iu,
   );
   assert.match(
     sourceAuthoring,

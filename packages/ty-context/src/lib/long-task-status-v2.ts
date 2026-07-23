@@ -441,8 +441,12 @@ function nextAction(status: DeliveryStatusV2): string {
       status.pending_authority_revision,
     );
   if (status.findings.length) return status.findings.at(-1)!.next_action;
-  if (status.ready_outcomes.length)
-    return `Implement and verify ready Outcome: ${status.ready_outcomes[0]}.`;
+  if (status.ready_outcomes.length) {
+    const outcome = status.ready_outcomes[0]!;
+    if (status.outcomes[outcome] === "progress_stale")
+      return `Targeted evidence for ready Outcome ${outcome} is stale. This is a freshness fact, not an immediate per-edit rerun instruction: coalesce relevant changes, use the cheapest reliable project-owned feedback, and refresh the declared Check before relying on this Outcome or entering Final Gate.`;
+    return `Implement and verify ready Outcome: ${outcome}.`;
+  }
   return "Create a clean candidate commit; Stop will run the authoritative Live Final Gate.";
 }
 

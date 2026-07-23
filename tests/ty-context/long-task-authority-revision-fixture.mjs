@@ -15,16 +15,8 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution
 `,
   );
   await writeFile(
-    path.join(fixture.root, "tests", "alternate-oracle.mjs"),
-    `console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:true,negative:false},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"alternate-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"negative-floor",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["negative"]}]}));\n`,
-  );
-  await writeFile(
     path.join(fixture.root, "tests", "helper.mjs"),
     "export const helper = true;\n",
-  );
-  await writeFile(
-    path.join(fixture.root, "tests", "extra.mjs"),
-    "export const extra = true;\n",
   );
   await writeFile(path.join(fixture.root, "src", "extra.json"), "true\n");
   await mkdir(path.join(fixture.root, "artifacts"), { recursive: true });
@@ -37,7 +29,11 @@ console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution
   check.environment_requirements = [
     { key: "path", kind: "env_var", target: "PATH" },
   ];
-  outcome.technical.allowed_support_paths = ["src/support/**"];
+  outcome.product.owner.path_globs.push("artifacts/**");
+  outcome.technical.allowed_support_paths = [
+    "src/support/**",
+    "artifacts/**",
+  ];
   outcome.technical.rollback_and_recovery = {
     rollback: "Restore the previous state file.",
     recovery: "Rerun the first Check.",

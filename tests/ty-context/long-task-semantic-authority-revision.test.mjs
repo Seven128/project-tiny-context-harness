@@ -293,10 +293,6 @@ ${statement}
 test("mechanical proof additions and path tightening remain automatic revisions", async () => {
   const fixture = await createDeliveryFixture();
   try {
-    await writeFile(
-      path.join(fixture.root, "tests", "extra-input.mjs"),
-      "export const extra = true;\n",
-    );
     await runCli(fixture.root, ["enable", "long-task"]);
     await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
     await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
@@ -320,6 +316,10 @@ test("mechanical proof additions and path tightening remain automatic revisions"
     assert.equal(result.authority_revision, 2);
     await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
 
+    await writeFile(
+      path.join(fixture.root, "tests", "extra-input.mjs"),
+      "export const extra = true;\n",
+    );
     fixture.contract.outcomes[0].acceptance.checks[0].verification_inputs.push(
       "tests/extra-input.mjs",
     );

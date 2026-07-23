@@ -119,6 +119,10 @@ test("weak-observability Playwright rejects a constant AC and accepts a sensitiv
         runner,
         `import { access } from "node:fs/promises";\nlet ready = ${constant ? "true" : "false"};\nif (!ready) { try { await access(new URL("../src/state.json", import.meta.url)); ready = true; } catch {} }\nconst status = ready ? "expected" : "unexpected";\nconst resultStatus = ready ? "passed" : "failed";\nconst steps = [{title:"[given:fixture-loaded]"},{title:"[action:read-outcome]"}];\nconsole.log(JSON.stringify({stats:{expected:ready?1:0,unexpected:ready?0:1,skipped:0,flaky:0},errors:[],suites:[{specs:[{title:"[ac:first-result] first-result",tests:[{projectId:"default",status,results:[{status:resultStatus,steps}]}]}]}]}));\nprocess.exitCode = ready ? 0 : 1;\n`,
       );
+      fixture.contract.outcomes[0].acceptance.checks[0].verification_inputs.push(
+        "tests/fake-playwright.mjs",
+      );
+      await writeContract(fixture.workdir, fixture.contract);
       const compiled = await compileDeliveryContract(
         fixture.workdir,
         fixture.root,

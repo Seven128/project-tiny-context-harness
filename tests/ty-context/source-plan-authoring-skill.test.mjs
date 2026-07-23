@@ -33,9 +33,13 @@ test("source-plan-authoring is a byte-identical retired compatibility pointer", 
   assert.deepEqual(Object.keys(metadata).sort(), ["description", "name"]);
   assert.equal(metadata.name, "source-plan-authoring");
   assert.match(metadata.description, /Retired compatibility pointer/iu);
+  assert.match(metadata.description, /Source-bound Contract Draft loop immediately/iu);
+  assert.match(metadata.description, /no.*internal Source-authoring stage/isu);
   assert.match(match[2], /no longer defines a separate handoff/iu);
   assert.match(match[2], /revised proposal, selected immutable design resources/iu);
   assert.match(match[2], /Source-quality synthesis\/refinement/iu);
+  assert.match(match[2], /enter the same `delivery-contract\.yaml` Draft immediately/iu);
+  assert.match(match[2], /Contract mapping converge in one Goal/iu);
   assert.match(match[2], /current native Goal.*default Workflow Contract/isu);
   assert.match(match[2], /pre-existing Source Plan remains valid ordinary Source/iu);
   assert.match(match[2], /Do not.*create a new Source Plan artifact/isu);
@@ -59,8 +63,8 @@ test("long-task-workflow owns the former Source-quality authoring semantics", as
 
   for (const expected of [
     /raw, mixed, attachment-heavy or incomplete inputs/iu,
-    /same `long-task-workflow` Goal/iu,
-    /not a standalone Source Plan stage/iu,
+    /Inputs enter the Draft immediately/iu,
+    /neither an earlier Source-authoring phase nor a standalone Source Plan stage/iu,
     /Assign every proposal, selected design resource, screenshot/iu,
     /never silently sample a multi-part artifact/iu,
     /`exact-target`, `constraint` or `inspiration`/iu,
@@ -75,23 +79,27 @@ test("long-task-workflow owns the former Source-quality authoring semantics", as
     /`data_migration`/u,
     /`critical_user_path` and `weak_observability`/u,
     /`multi_repository_change`/u,
-    /Completeness audit/iu,
+    /Preflight\/Compile convergence audit/iu,
     /ty-source-item:start\/end/iu,
   ]) assert.match(source, expected);
 
   assert.match(longTask, /references\/source-authoring\.md/iu);
   assert.match(longTask, /external initial proposal, selected design resources/iu);
-  assert.match(longTask, /materialize exactly one project-native Markdown Source/iu);
-  assert.match(longTask, /not a standalone Source Plan service, second plan/iu);
-  assert.match(contract, /use `source-authoring\.md` inside this workflow/iu);
+  assert.match(longTask, /Conversation-only material becomes exactly one project-native Markdown Source/iu);
+  assert.match(longTask, /Every input enters.*Draft immediately/iu);
+  assert.match(longTask, /Do not create a Source-authoring phase/iu);
+  assert.match(contract, /apply `source-authoring\.md` alongside mapping/iu);
   assert.match(contract, /revised initial proposal and selected design resources are parallel Source inputs/iu);
-  assert.match(spec, /^## Integrated Source Authoring And Contract Draft Boundary$/mu);
+  assert.match(spec, /^## Source-Bound Contract Draft Boundary$/mu);
+  assert.match(spec, /Source-quality work is not an earlier lifecycle stage/iu);
   assert.match(spec, /`\/source-plan-authoring` is a retired explicit-invocation compatibility pointer/iu);
   assert.match(readmes, /Retired Source Plan Compatibility/iu);
   assert.match(readmes, /退役 Source Plan 兼容入口/u);
+  assert.match(readmes, /Source-bound Contract Draft loop immediately/iu);
+  assert.doesNotMatch(readmes, /before Contract mapping/iu);
 });
 
-test("profile keeps the pointer only with long-task while integrated authoring stays there", async () => {
+test("profile keeps the pointer only with long-task while one Draft loop owns authoring", async () => {
   const [profile, context, agents] = await Promise.all([
     read("packages/ty-context/src/lib/profiles.ts"),
     read("project_context/areas/harness-package/contracts/package-managed-surfaces.md"),
@@ -99,6 +107,7 @@ test("profile keeps the pointer only with long-task while integrated authoring s
   ]);
   assert.match(profile, /if \(isProfileEnabled\(config, "long-task"\)\)[\s\S]*names\.add\("long-task-workflow"\)[\s\S]*names\.add\("source-plan-authoring"\)/u);
   assert.match(context, /retired `source-plan-authoring` pointer/iu);
-  assert.match(agents, /Source-quality authoring and Contract Draft authoring belong inside `long-task-workflow`/iu);
+  assert.match(agents, /enter one Source-bound Contract Draft loop immediately/iu);
+  assert.match(agents, /there is no prior or internal Source-authoring stage/iu);
   assert.match(agents, /legacy Source Plan remains ordinary input/iu);
 });

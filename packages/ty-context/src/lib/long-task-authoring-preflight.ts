@@ -17,7 +17,18 @@ import {
 } from "./long-task-authoring-preflight-types.js";
 import { validateContractForActivation } from "./long-task-activation-validation.js";
 import { parseDeliveryContractBundle } from "./long-task-delivery-parser.js";
-import { repositoryRoot } from "./long-task-workspace.js";
+import {
+  changedWorkspacePaths,
+  changedWorkspacePathsFromHead,
+  repoRelative,
+  repositoryRoot,
+} from "./long-task-workspace.js";
+import {
+  classifyWorkspaceScope,
+  firstLockManagedWorkspacePaths,
+  protectedWorkspacePaths,
+  workspaceScopeErrors,
+} from "./long-task-workspace-scope.js";
 
 export type {
   AuthoringPreflightDiagnosticV1,
@@ -55,6 +66,53 @@ export async function preflightDeliveryContract(
     workdir,
     diagnostics,
   );
+  if (validation.workspace)
+    try {
+      const changedPaths =
+        active?.workdir === workdir
+          ? changedWorkspacePaths(
+              active.initial_task_base.workspace_manifest,
+              validation.workspace,
+            )
+          : await changedWorkspacePathsFromHead(repository, workdir);
+      const contractFiles = Object.fromEntries(
+        Object.entries(parsed.contract_files).map(([relative, hash]) => [
+          repoRelative(repository, path.join(workdir, ...relative.split("/"))),
+          hash,
+        ]),
+      );
+      const checks = [
+        ...validation.global_checks,
+        ...validation.outcomes.flatMap((outcome) => outcome.acceptance.checks),
+      ];
+      const declaredVerificationInputs = [
+        ...contract.global.acceptance.checks,
+        ...contract.outcomes.flatMap((outcome) => outcome.acceptance.checks),
+      ].flatMap((check) => check.verification_inputs);
+      const firstLockManagedPaths =
+        active?.workdir === workdir
+          ? []
+          : await firstLockManagedWorkspacePaths(repository, changedPaths);
+      const classification = classifyWorkspaceScope(
+        contract,
+        changedPaths,
+        protectedWorkspacePaths({
+          contract_files: contractFiles,
+          source_hashes: validation.source_hashes,
+          context_hashes: validation.context_snapshot?.sha256,
+          checks,
+          additional_files: [
+            ...contract.task.source_paths,
+            ...declaredVerificationInputs,
+            ...firstLockManagedPaths,
+          ],
+        }),
+      );
+      for (const error of workspaceScopeErrors(classification))
+        addDiagnosticError(diagnostics, new Error(error));
+    } catch (error) {
+      addDiagnosticError(diagnostics, error);
+    }
   const normalizedDiagnostics = normalizeAuthoringDiagnostics(diagnostics);
   const ready = !normalizedDiagnostics.some(
     (item) => item.level === "error" || item.level === "decision_required",

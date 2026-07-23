@@ -9,7 +9,7 @@ Read this only while authoring or structurally revising the one `delivery-contra
 - Typed dispositions keep Result, Requirement, Control, Technical Obligation, Non-completing Claim, Acceptance, Global Constraint/Non-goal, Forbidden Shortcut, Risk, External Confirmation and Decision distinct.
 - Every non-decision Source item owns exactly one same-kind, text-identical canonical target; no target may collapse multiple Source items. `out_of_scope` is not a resolution.
 - A Source AC maps criterion-identically to one named Assertion and proves at least one independently Source-backed non-Result Claim.
-- Missing recommended legacy Source Plan headings or keys never blocks authoring. When raw/mixed inputs are not self-contained, use `source-authoring.md` inside this workflow before Contract mapping. Missing mandatory Material Source Item markers does block activation.
+- Missing recommended legacy Source Plan headings or keys never blocks authoring. Raw/mixed inputs enter this Contract Draft immediately; apply `source-authoring.md` alongside mapping until real Source, provenance and markers converge. Missing mandatory Material Source Item markers still blocks Preflight/Compile.
 - A revised initial proposal and selected design resources are parallel Source inputs. Preserve their stable resource/surface/control/state/target keys, declared conditions, provider/project/run/entry provenance and immutable digest/snapshot; do not flatten visual meaning into an untraceable prose summary.
 - `delegated` in a Source Plan is provenance, not a Contract disposition or new Claim kind. An instruction to synthesize, refine, complete, implement or use judgment delegates plan-level authoring, but it does not invent material tradeoff preferences. Before comparative research or a material product, technical, architecture or provider selection, identify the criteria that could change the research scope, candidate set or recommendation. If such a preference is unknown or ambiguous, ask a concise targeted question before research or selection and keep the item `decision_required` until answered; do not impose a fixed questionnaire or re-ask preferences already supplied by the user, Source, Context or controlling constraints.
 - Once the material preference envelope is clear, use current authoritative or primary evidence for external capability, price, quota, license, compatibility, region, security posture or support claims. When one defensible recommendation exists, record the authoring instruction, preference/evidence or conservative-default basis and exact added meaning in real Source, then preserve that keyed item as ordinary Source of its semantic kind. If ordinary prose is the Source, append the delegated item without rewriting the user's original text; never place the choice only in Contract YAML.
@@ -31,6 +31,14 @@ For every Outcome declare:
 - executable Checks and named AC Assertions.
 
 Global non-goals, constraints and forbidden shortcuts remain Global authority and use Global Checks/Assertions when machine proof is required.
+
+## Feedback-cost boundary
+
+Declare each Check's `input_paths` and Binding carriers as the smallest sound causal envelope for that Check. Do not use a repository, application or platform root merely because it is convenient: a broad pattern is justified only when any matching change can actually invalidate the declared result. If independent capabilities have different invalidation surfaces or useful feedback boundaries, assign them to the owning Outcomes/Checks rather than making every early Stage gate stale.
+
+Every Counterfactual mutation path must be a current production carrier with a defensible route from the declared target root to the asserted behavior. Review `verify --explain` before an expensive first execution and repair obsolete routes, barrels, fixtures or duplicate Main/Counterfactual invocations. Preflight cannot claim language/runtime reachability from a path name alone; when repository evidence cannot establish that route, the current-execution Counterfactual remains the proof.
+
+Declare cheap machine-checkable prerequisites through existing environment requirements and verification inputs. Product/API readiness probes, incremental build caches, streaming phase output, timeout heartbeats and descendant-process cleanup belong to the project-owned runner when they depend on its runtime; do not encode them as Harness business logic.
 
 ## Stage And Target Profile
 

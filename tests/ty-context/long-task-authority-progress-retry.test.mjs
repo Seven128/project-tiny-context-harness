@@ -35,6 +35,11 @@ test("Authority Revision reports concrete reductions, requires approval, and aut
       /authority_revision_requires_revise_flag/u,
     );
     for (const scenario of authorityReductionScenarios) {
+      if (scenario.name === "runner target")
+        await writeFile(
+          path.join(fixture.root, "tests", "alternate-oracle.mjs"),
+          `console.log(JSON.stringify({schema_version:"long-task-check-result-v3",execution_status:"completed",observations:{result:true,negative:false},evidence_records:[{assertion_key:"first-result",capability:"target_runtime",target_ref:"fixture-app",root_entrypoint:"tests/oracle.mjs",session_id:"alternate-session",cold_start:true},{assertion_key:"first-result",capability:"state_delta",before_sha256:"0".repeat(64),after_sha256:"1".repeat(64),changed_fields:["first"]},{assertion_key:"negative-floor",capability:"state_delta",before_sha256:"2".repeat(64),after_sha256:"3".repeat(64),changed_fields:["negative"]}]}));\n`,
+        );
       const candidate = structuredClone(baseline);
       scenario.mutate(candidate);
       await writeContract(fixture.workdir, candidate);
@@ -66,8 +71,17 @@ test("Authority Revision reports concrete reductions, requires approval, and aut
         pending.revision_diff.reduction_reasons.includes(scenario.reason),
         scenario.name,
       );
+      if (scenario.name === "runner target")
+        await rm(
+          path.join(fixture.root, "tests", "alternate-oracle.mjs"),
+          { force: true },
+        );
     }
 
+    await writeFile(
+      path.join(fixture.root, "tests", "extra.mjs"),
+      "export const extra = true;\n",
+    );
     const addedInput = structuredClone(baseline);
     addedInput.outcomes[0].acceptance.checks[0].verification_inputs.push(
       "tests/extra.mjs",
@@ -85,6 +99,7 @@ test("Authority Revision reports concrete reductions, requires approval, and aut
     const tightened = structuredClone(addedInput);
     tightened.outcomes[0].technical.allowed_support_paths = [
       "src/support/core/**",
+      "artifacts/**",
     ];
     await writeContract(fixture.workdir, tightened);
     await runCli(fixture.root, [
@@ -151,6 +166,12 @@ test("input and expected-output authority reductions cover Global and Outcome Ch
     );
     await writeFile(path.join(fixture.root, "src", "extra.json"), "true\n");
     const outcomeCheck = fixture.contract.outcomes[0].acceptance.checks[0];
+    fixture.contract.outcomes[0].product.owner.path_globs.push(
+      "artifacts/**",
+    );
+    fixture.contract.outcomes[0].technical.allowed_support_paths.push(
+      "artifacts/**",
+    );
     outcomeCheck.input_paths = ["src/state.json"];
     outcomeCheck.expected_output_paths = ["artifacts/proof.json"];
     fixture.contract.global.technical.constraints.push({

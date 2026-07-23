@@ -286,7 +286,7 @@ ${renderUpdateInstructions(releaseUpdateMode)}
 - Keeps the install path on the renamed package: \`${packageName}\`.
 - Adds the explicit-only \`/design-system-authoring\` cold-start flow for generating, selecting and adopting Open Design systems into canonical project Design Authority.
 - Gates only style-bearing \`/design-resource-authoring\` work on configured Design Authority, verifies Open Design project binding, and reconciles accepted final decisions into the initial proposal once.
-- Moves Source-quality authoring into \`/long-task-workflow\`; \`/source-plan-authoring\` remains only as a retired compatibility pointer, so revised proposals and selected resources enter the same native Goal directly.
+- Sends revised proposals and selected resources directly into \`/long-task-workflow\`'s Source-bound Contract Draft loop; Source completeness and Contract mapping converge there without an internal Source-authoring stage, while \`/source-plan-authoring\` remains only a retired compatibility pointer.
 - Keeps the authority boundary explicit: provider candidates and bindings are provenance, while \`DESIGN.md\`, its one authored token source and owning \`project_context/**\` remain canonical.
 - Makes package updates explicit through release update modes: ${releaseUpdateModes.map((mode) => `\`${mode}\``).join(", ")}.
 

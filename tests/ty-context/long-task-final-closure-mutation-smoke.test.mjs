@@ -86,6 +86,10 @@ test("[critical:final-gate-mutation-rejection] controlled closure mutation smoke
     const structured = fixture.contract.outcomes[1];
     structured.acceptance.checks[0].runner.target = "tests/oracle.mjs";
     structured.acceptance.checks[0].verification_inputs = ["tests/oracle.mjs"];
+    await rm(
+      path.join(fixture.root, "tests", "constant-oracle.mjs"),
+      { force: true },
+    );
     structured.acceptance.counterfactual_controls = [
       {
         key: "remove-second-state",

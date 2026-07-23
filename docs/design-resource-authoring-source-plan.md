@@ -61,7 +61,7 @@ For an implementation handoff, sufficiency is development-corresponding rather t
 
 The resource-generation Skill never updates `project_context/**`, `DESIGN.md` or production code merely because generation succeeded. It never promotes a candidate to `exact-target`, creates Contract authority or claims product acceptance. The separate explicit-only `design-system-authoring` Skill may adopt one selected system into canonical project authority.
 
-`source-plan-authoring` is no longer a recommended next step and remains only a compatibility pointer. A raw initial proposal enters a bounded design loop directly. During iteration the Skill buffers decision effects task-locally; after explicit or delegated final selection it performs one consolidated idempotent reconciliation of accepted decisions into that proposal. The revised proposal plus selected immutable resources then goes directly to the current native Goal or `long-task-workflow`, whose integrated Source authoring prevents semantic flattening.
+`source-plan-authoring` is no longer a recommended next step and remains only a compatibility pointer. A raw initial proposal enters a bounded design loop directly. During iteration the Skill buffers decision effects task-locally; after explicit or delegated final selection it performs one consolidated idempotent reconciliation of accepted decisions into that proposal. The revised proposal plus selected immutable resources then goes directly to the current native Goal or enters `long-task-workflow`'s Source-bound Contract Draft loop immediately, where Source completeness and Contract mapping converge without semantic flattening.
 
 ## 2026-07-22 Workflow And Provider Amendment
 
@@ -610,7 +610,7 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 2. Candidate iterations remain task-local and do not continuously rewrite the proposal.
 3. After explicit/delegated final selection, the Skill consolidates accepted, rejected and unresolved choices plus affected keys exactly once.
 4. The Skill applies only accepted changes to an authorized writable initial proposal, or returns one complete revised proposal for conversation-only input. Reruns update rather than duplicate the decision/reference.
-5. The revised proposal and selected immutable resources go directly to the default native Goal or `long-task-workflow`; integrated Source authoring preserves rich meaning.
+5. The revised proposal and selected immutable resources go directly to the default native Goal or enter `long-task-workflow`'s Source-bound Contract Draft loop immediately; Source completeness and Contract mapping converge there while preserving rich meaning.
 
 ### Default Workflow Contract consumption
 

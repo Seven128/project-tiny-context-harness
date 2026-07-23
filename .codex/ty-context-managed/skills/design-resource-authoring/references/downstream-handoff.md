@@ -94,7 +94,7 @@ The consuming Goal brings the revised proposal and selected resources as ordinar
 
 ### Long-Task consumption
 
-The same revised proposal and selected resources enter `long-task-workflow`. Its integrated Source-quality authoring makes the delivery self-contained, then Contract `source_paths`, Bindings, `verification_inputs`, Check `input_paths` and `artifact_globs` name only stable locators and conditions actually consumed. Authority Lock, protected revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
+The same revised proposal and selected resources enter `long-task-workflow`'s Source-bound Contract Draft loop immediately. Source self-containment and Contract mapping converge there, so `source_paths`, Bindings, `verification_inputs`, Check `input_paths` and `artifact_globs` name only stable locators and conditions actually consumed. Authority Lock, protected revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
 
 ## Forbidden inferences
 
