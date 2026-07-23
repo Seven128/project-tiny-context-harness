@@ -12,7 +12,9 @@ export function authorityRevisionDecisionNextAction(
   const outcomes = brief.affected_outcomes.length
     ? brief.affected_outcomes.join(", ")
     : "contract-wide or global authority";
-  return `Decision brief: ${brief.headline} ${brief.approval_reason} Material changes: ${brief.material_changes.join(" ")} Affected Outcomes: ${outcomes}. ${brief.if_approved.join(" ")} Present this brief first. Ask the user to approve or reject exact Authority Revision ${decision.revision_identity}; keep the previous Authority active until approved and atomically adopted.`;
+  if (!decision.user_decision_required)
+    return `Authority Revision brief: ${brief.overview} ${brief.headline} ${brief.approval_reason} Material changes: ${brief.material_changes.join(" ")} Affected Outcomes: ${outcomes}. ${brief.if_approved.join(" ")}`;
+  return `Authority Revision brief: ${brief.overview} ${brief.headline} ${brief.approval_reason} Material changes: ${brief.material_changes.join(" ")} Affected Outcomes: ${outcomes}. ${brief.if_approved.join(" ")} Present this brief first. If an explicit task-specific user instruction already covers every listed decision reason, mechanically relay that existing decision for exact Authority Revision ${decision.revision_identity} without asking again. A generic continue, blanket approval, recommendation or Agent inference does not count. Otherwise ask the user once to approve or reject this exact identity; keep the previous Authority active until approved and atomically adopted.`;
 }
 
 export function buildAuthorityRevisionDecisionBrief(
@@ -96,14 +98,20 @@ export function buildAuthorityRevisionDecisionBrief(
     );
 
   return {
+    overview:
+      "An Authority Revision is a proposed replacement of the locked delivery contract or its protected inputs. It changes what future execution and proof are bound to, but adoption never completes delivery.",
     headline: approvalRequired
-      ? `Approval required: ${categories.length ? categories.join(", ") : changeClass} changed.`
-      : "No user approval is required for this mechanically safe Authority Revision.",
+      ? `User decision required: ${categories.length ? categories.join(", ") : changeClass} changed.`
+      : "No user decision is required for this mechanically bounded Authority Revision.",
     approval_reason: approvalRequired
       ? changeClass === "scope_only_expansion"
         ? "The candidate expands declared implementation ownership or write scope and cannot replace the active Authority without exact user approval."
         : "The candidate changes protected delivery meaning, proof, risk, or execution authority and cannot replace the active Authority without exact user approval."
-      : "The change is a machine-proven monotonic strengthening or other mechanically safe revision.",
+      : changeClass === "scope_only_expansion"
+        ? "The candidate only expands repository-bound implementation scope; it changes no locked product Claim, target, acceptance capability, forbidden boundary or external confirmation."
+        : changeClass === "mechanically_bounded_repair"
+          ? "The locked user-facing meaning and proof obligations are preserved; changed execution, Source/Context snapshot or equivalent failure interception must still be re-proven on the new snapshot."
+          : "The change is a machine-proven monotonic strengthening.",
     material_changes: materialChanges,
     affected_outcomes: [...summary.affected_outcomes],
     if_approved: approvalRequired

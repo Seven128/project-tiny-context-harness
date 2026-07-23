@@ -220,7 +220,10 @@ test("target-runtime feedback stays live, rolling, and state-free", async () => 
   assert.match(combined, /coalesc/iu);
   assert.match(combined, /`input_paths`[\s\S]*Binding carrier/iu);
   assert.match(combined, /smallest sound causal envelope/iu);
-  assert.match(combined, /defensible (?:path|route) from the declared target root/iu);
+  assert.match(
+    combined,
+    /defensible (?:path|route) from the declared target root/iu,
+  );
   assert.match(
     combined,
     /no second executing `diagnose-check`|Do not add a second executing `diagnose-check`/iu,
@@ -296,10 +299,7 @@ test("Source repair and Contract mapping converge in one Source-bound Draft loop
     sourceAuthoring,
     /fidelity versus cost[\s\S]*ask one concise targeted clarification/iu,
   );
-  assert.match(
-    spec,
-    /Source-Bound Contract Draft Boundary/iu,
-  );
+  assert.match(spec, /Source-Bound Contract Draft Boundary/iu);
   assert.match(spec, /meaning-preserving structural decomposition/iu);
   assert.match(
     spec,
@@ -395,9 +395,9 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
     "Source AC to named Assertion",
     "Shared Preflight/Compile activation-safety kernel",
     "First-Compile Authority Lock and Authority Revision",
-    "Executing Agent cannot approve",
-    "Three-way revision classification",
-    "Exact material revision summary, derived decision brief and rolling return",
+    "Executing Agent cannot originate its own weakening decision",
+    "Decision-relevance revision classification",
+    "Exact material revision summary, self-contained decision brief and rolling return",
     "Stateless same-Contract candidate diagnosis",
     "Targeted verify is repair evidence only",
     "Same-snapshot Final Gate",
@@ -418,20 +418,24 @@ test("registered rationale owns history, mechanism mapping and trusted limits", 
   assert.match(verification, /Long-Task design consistency/iu);
 });
 
-test("revision diagnosis stays one-Contract, non-authoritative, and exact-approval bound", async () => {
-  const [spec, globalContext, lifecycle, publicReadmes] = await Promise.all([
-    read("PROJECT_SPEC.md"),
-    read("project_context/global.md"),
-    read(
-      ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
-    ),
-    Promise.all([
-      read("README.md"),
-      read("README.zh-CN.md"),
-      read("packages/ty-context/README.md"),
-    ]).then((values) => values.join("\n")),
-  ]);
-  const combined = [spec, globalContext, lifecycle, publicReadmes].join("\n");
+test("revision diagnosis stays one-Contract and non-authoritative while decision revisions remain exact-bound", async () => {
+  const [spec, globalContext, skill, lifecycle, publicReadmes] =
+    await Promise.all([
+      read("PROJECT_SPEC.md"),
+      read("project_context/global.md"),
+      read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/authority-lifecycle.md",
+      ),
+      Promise.all([
+        read("README.md"),
+        read("README.zh-CN.md"),
+        read("packages/ty-context/README.md"),
+      ]).then((values) => values.join("\n")),
+    ]);
+  const combined = [spec, globalContext, skill, lifecycle, publicReadmes].join(
+    "\n",
+  );
   assert.match(combined, /diagnose-revision/iu);
   assert.match(
     combined,
@@ -443,7 +447,27 @@ test("revision diagnosis stays one-Contract, non-authoritative, and exact-approv
   );
   assert.match(
     combined,
-    /previous Authority remains active[\s\S]*exact approval[\s\S]*Final Gate/iu,
+    /previous Authority remains active[\s\S]*exact (?:approval|user decision)[\s\S]*Final Gate/iu,
+  );
+  assert.match(
+    combined,
+    /Authority changed[\s\S]*user decision required|Authority change is separated from user decision/iu,
+  );
+  assert.match(
+    combined,
+    /explicit current-task instruction[\s\S]*exactly covers every listed decision reason[\s\S]*(?:generic|blanket)/iu,
+  );
+  assert.match(
+    skill,
+    /machine-proven monotonic strengthening[\s\S]*mechanically bounded repair/iu,
+  );
+  assert.match(
+    skill,
+    /Product\/Source Claim\/target\/external-confirmation change[\s\S]*exact user-decision identity/iu,
+  );
+  assert.doesNotMatch(
+    skill,
+    /Semantic changes, proof weakening, runner or verifier-content changes, and risk-increase candidates are preview-only/iu,
   );
   assert.match(
     combined,
@@ -451,7 +475,7 @@ test("revision diagnosis stays one-Contract, non-authoritative, and exact-approv
   );
   assert.match(
     combined,
-    /Source\/Product Claim reductions[\s\S]*external-confirmation keys/iu,
+    /Product\/Source Claim\/target\/external-confirmation change/iu,
   );
   assert.match(
     combined,

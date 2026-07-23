@@ -120,12 +120,19 @@ test("handoff preserves immutable resource identity and direct downstream routin
   assert.match(handoff, /stable resource, surface\/control\/state\/target keys/iu);
   assert.match(handoff, /provider\/project\/run\/entry/iu);
   assert.match(handoff, /immutable digest\/snapshot/iu);
+  assert.match(
+    handoff,
+    /editable upstream owner, locator and update\/export method/iu,
+  );
   assert.match(handoff, /declared platform, viewport, mode, state, content, interaction, accessibility and motion coverage/iu);
   assert.match(handoff, /selected immutable resources \+ reconciled initial proposal/iu);
   assert.match(handoff, /long-task-workflow.*current native Goal/isu);
   assert.match(handoff, /`source-plan-authoring` is not an intermediate stage/iu);
   assert.match(handoff, /source_paths.*verification_inputs.*input_paths.*artifact_globs/isu);
   assert.match(handoff, /creates no Contract Draft, Outcome, Receipt, Check result or Gate/iu);
+  assert.match(handoff, /Context-reachable through existing owners/iu);
+  assert.match(handoff, /opens affected exact\/constraint resources before deciding/iu);
+  assert.match(handoff, /new immutable version rather than overwriting the adopted baseline/iu);
 });
 
 test("Source, specification, Context and public docs expose the new resource contract", async () => {

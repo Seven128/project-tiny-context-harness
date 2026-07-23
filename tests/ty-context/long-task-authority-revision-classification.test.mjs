@@ -62,7 +62,15 @@ test("[critical:protected-revision-classification] semantic or proof changes are
         "artifact_removed",
       ),
     );
-    assert.match(diagnosis.revision.decision_brief.headline, /Approval required/iu);
+    assert.equal(diagnosis.revision.user_decision_required, true);
+    assert.match(
+      diagnosis.revision.decision_brief.overview,
+      /proposed replacement of the locked delivery contract/iu,
+    );
+    assert.match(
+      diagnosis.revision.decision_brief.headline,
+      /User decision required/iu,
+    );
     assert.match(
       diagnosis.revision.decision_brief.approval_reason,
       /protected delivery meaning|proof|execution authority/iu,
@@ -105,7 +113,7 @@ test("[critical:protected-revision-classification] semantic or proof changes are
       pending.pending_authority_revision.decision_brief,
       diagnosis.revision.decision_brief,
     );
-    assert.match(pending.next_action, /Decision brief:/u);
+    assert.match(pending.next_action, /Authority Revision brief:/u);
     assert.match(pending.next_action, new RegExp(diagnosis.revision.revision_identity, "u"));
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
@@ -153,7 +161,7 @@ test("additive verification dependencies remain automatic and are summarized", a
     );
     assert.match(
       revised.authority_revision_change.decision_brief.headline,
-      /No user approval is required/iu,
+      /No user decision is required/iu,
     );
     assert.match(
       revised.authority_revision_change.decision_brief.if_approved[0],

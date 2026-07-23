@@ -50,7 +50,71 @@ Revised before execution.
   }
 });
 
-test("Source, Context, Product, Global, and Product Claim changes require exact approval after verify", async () => {
+test("snapshot-only Source and controlling Context changes auto-revise but invalidate prior proof", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await runCli(fixture.root, ["enable", "long-task"]);
+    await runCli(fixture.root, ["long-task", "compile", fixture.workdir]);
+    await runCli(fixture.root, ["long-task", "verify", fixture.workdir]);
+
+    const sourceFile = path.join(fixture.root, "source.md");
+    const sourceBaseline = await readFile(sourceFile, "utf8");
+    await writeFile(sourceFile, `${sourceBaseline}\nNon-Claim provenance note.\n`);
+    let revised = await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    assert.equal(
+      revised.authority_revision_change.change_class,
+      "mechanically_bounded_repair",
+    );
+    assert.equal(
+      revised.authority_revision_change.user_decision_required,
+      false,
+    );
+    assert.ok(
+      revised.authority_revision_change.approval_summary
+        .mechanically_bounded_reasons.includes("source_file_content_changed"),
+    );
+    assert.equal(revised.progress_preserved, false);
+
+    const contextFile = path.join(
+      fixture.root,
+      "project_context",
+      "areas",
+      "main.md",
+    );
+    const contextBaseline = await readFile(contextFile, "utf8");
+    await writeFile(
+      contextFile,
+      `${contextBaseline}\nUpdated implementation guidance.\n`,
+    );
+    revised = await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    assert.equal(
+      revised.authority_revision_change.change_class,
+      "mechanically_bounded_repair",
+    );
+    assert.equal(
+      revised.authority_revision_change.user_decision_required,
+      false,
+    );
+    assert.ok(
+      revised.authority_revision_change.approval_summary
+        .mechanically_bounded_reasons.includes("context_authority_changed"),
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Product, Global, Source Claim, and acceptance meaning changes require an exact user decision", async () => {
   const fixture = await createDeliveryFixture();
   try {
     prepareSemanticAuthority(fixture.contract);
@@ -63,80 +127,8 @@ test("Source, Context, Product, Global, and Product Claim changes require exact 
       fixture.workdir,
     ]);
     const sourceFile = path.join(fixture.root, "source.md");
-    const contextFile = path.join(
-      fixture.root,
-      "project_context",
-      "areas",
-      "main.md",
-    );
-    const manifestFile = path.join(
-      fixture.root,
-      "project_context",
-      "context.toml",
-    );
     const sourceBaseline = await readFile(sourceFile, "utf8");
-    const contextBaseline = await readFile(contextFile, "utf8");
-    const manifestBaseline = await readFile(manifestFile, "utf8");
     const contractBaseline = structuredClone(fixture.contract);
-
-    await writeFile(sourceFile, `${sourceBaseline}\nChanged after verify.\n`);
-    await assert.rejects(
-      () => runCli(fixture.root, ["long-task", "compile", fixture.workdir]),
-      /authority_revision_requires_revise_flag/u,
-    );
-    const firstSourcePending = await expectDecision(fixture, {
-      field: "source_files_changed",
-      includes: "source.md",
-      reason: "source_file_content_changed",
-    });
-    assert.notEqual(
-      firstSourcePending.previous_material_hashes.source_hashes_sha256,
-      firstSourcePending.next_material_hashes.source_hashes_sha256,
-    );
-    await runCli(fixture.root, [
-      "long-task",
-      "approve-authority-revision",
-      fixture.workdir,
-      "--revision",
-      firstSourcePending.revision_identity,
-    ]);
-    await writeFile(
-      sourceFile,
-      `${sourceBaseline}\nA different post-approval change.\n`,
-    );
-    const secondSourcePending = await expectDecision(fixture, {
-      field: "source_files_changed",
-      includes: "source.md",
-      reason: "source_file_content_changed",
-    });
-    assert.notEqual(
-      secondSourcePending.revision_identity,
-      firstSourcePending.revision_identity,
-    );
-    await writeFile(sourceFile, sourceBaseline);
-
-    await writeFile(contextFile, `${contextBaseline}\nChanged Context.\n`);
-    await expectDecision(fixture, {
-      field: "context_files_changed",
-      includes: "project_context/areas/main.md",
-      reason: "context_authority_changed",
-    });
-    await writeFile(contextFile, contextBaseline);
-
-    await writeFile(
-      manifestFile,
-      manifestBaseline.replace('id = "main"', 'id = "main-revised"'),
-    );
-    const topologyPending = await expectDecision(fixture, {
-      field: "context_topology_changed",
-      equals: true,
-      reason: "context_authority_changed",
-    });
-    assert.notEqual(
-      topologyPending.previous_materials.context_snapshot.topology_sha256,
-      topologyPending.next_materials.context_snapshot.topology_sha256,
-    );
-    await writeFile(manifestFile, manifestBaseline);
 
     const semanticCases = [
       {

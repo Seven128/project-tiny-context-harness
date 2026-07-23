@@ -120,7 +120,7 @@ test("binding carriers must be contained by declared change paths", async () => 
   }
 });
 
-test("same-prefix glob widening becomes an Authority Revision reduction", async () => {
+test("same-prefix glob widening is visible but auto-adopts as repo-bound scope expansion", async () => {
   const fixture = await createDeliveryFixture();
   try {
     const outcome = fixture.contract.outcomes[0];
@@ -133,35 +133,26 @@ test("same-prefix glob widening becomes an Authority Revision reduction", async 
 
     outcome.technical.expected_change_paths = ["src/safe/**"];
     await writeContract(fixture.workdir, fixture.contract);
-    await assert.rejects(
-      () =>
-        runCli(fixture.root, [
-          "long-task",
-          "compile",
-          fixture.workdir,
-          "--revise",
-        ]),
-      /authority_change_requires_user_decision/u,
+    const diagnosis = await runCli(fixture.root, [
+      "long-task",
+      "diagnose-revision",
+      fixture.workdir,
+    ]);
+    assert.deepEqual(
+      diagnosis.revision.approval_summary.expanded_expected_change_paths,
+      ["first:src/safe/**"],
     );
-    const pending = JSON.parse(
-      await readFile(
-        path.join(
-          fixture.workdir,
-          ".ty-context",
-          "authority-revision-pending.json",
-        ),
-        "utf8",
-      ),
-    );
-    assert.ok(
-      pending.revision_diff.expected_change_paths_expanded.includes(
-        "first:src/safe/**",
-      ),
-    );
-    assert.ok(
-      pending.revision_diff.reduction_reasons.includes(
-        "expected_change_path_expanded",
-      ),
+    assert.equal(diagnosis.revision.change_class, "scope_only_expansion");
+    assert.equal(diagnosis.revision.user_decision_required, false);
+    const adopted = await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
+    assert.equal(
+      adopted.authority_revision_change.change_class,
+      "scope_only_expansion",
     );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });

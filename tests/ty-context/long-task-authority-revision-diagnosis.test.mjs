@@ -6,11 +6,10 @@ import { loadActiveLongTaskAuthority } from "../../packages/ty-context/dist/lib/
 import {
   createDeliveryFixture,
   runCli,
-  runCliFailure,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
-test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagnosed without state, batched into one exact approval, and adopted with evidence invalidation", async () => {
+test("[critical:revision-diagnosis-isolation] scope-only candidates stay stateless, coalesce before Compile, and auto-adopt with evidence invalidation", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await runCli(fixture.root, ["enable", "long-task"]);
@@ -56,7 +55,9 @@ test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagn
     assert.equal(diagnosis.pending_revision_written, false);
     assert.equal(diagnosis.diagnostics_executed, true);
     assert.equal(diagnosis.revision.change_class, "scope_only_expansion");
-    assert.equal(diagnosis.revision.approval_required, true);
+    assert.equal(diagnosis.revision.user_decision_required, false);
+    assert.equal(diagnosis.revision.approval_required, false);
+    assert.deepEqual(diagnosis.revision.user_decision_reasons, []);
     assert.equal(
       diagnosis.revision.approval_summary.product_semantics_changed,
       false,
@@ -93,51 +94,17 @@ test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagn
       runtimeBefore,
     );
 
-    const firstPendingOutput = await runCliFailure(fixture.root, [
-      "long-task",
-      "compile",
-      fixture.workdir,
-      "--revise",
-    ]);
-    assert.equal(firstPendingOutput.status, "authority_revision_pending");
-    const firstDecision = firstPendingOutput.pending_authority_revision;
-    assert.equal(
-      firstDecision.revision_identity,
-      diagnosis.revision.revision_identity,
-    );
-    assert.equal(firstDecision.change_class, "scope_only_expansion");
-    assert.match(firstDecision.decision_brief.headline, /write scope/iu);
     assert.match(
-      firstDecision.decision_brief.approval_reason,
-      /expands declared implementation ownership or write scope/iu,
+      diagnosis.revision.decision_brief.headline,
+      /No user decision is required/iu,
     );
-    assert.deepEqual(firstDecision.decision_brief.affected_outcomes, ["first"]);
-
-    const status = await runCli(fixture.root, [
-      "long-task",
-      "status",
-      fixture.workdir,
+    assert.match(
+      diagnosis.revision.decision_brief.approval_reason,
+      /only expands repository-bound implementation scope/iu,
+    );
+    assert.deepEqual(diagnosis.revision.decision_brief.affected_outcomes, [
+      "first",
     ]);
-    assert.deepEqual(status.pending_authority_revision, firstDecision);
-    const resume = await runCli(fixture.root, [
-      "long-task",
-      "resume",
-      fixture.workdir,
-    ]);
-    assert.deepEqual(resume.pending_authority_revision, firstDecision);
-    assert.match(resume.next_safe_action, /Decision brief:/u);
-    assert.match(resume.next_safe_action, /Ask the user to approve or reject/u);
-    assert.match(resume.next_safe_action, new RegExp(firstDecision.revision_identity, "u"));
-
-    await runCli(fixture.root, [
-      "long-task",
-      "approve-authority-revision",
-      fixture.workdir,
-      "--revision",
-      firstDecision.revision_identity,
-    ]);
-    const pendingBeforeMoreEdits = await readRuntimeProjection(fixture.workdir);
-    assert.notEqual(pendingBeforeMoreEdits.approved, null);
 
     candidate.outcomes[0].product.owner.path_globs.push("config/**");
     candidate.outcomes[0].technical.expected_change_paths.push("config/**");
@@ -151,44 +118,15 @@ test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagn
     ]);
     assert.notEqual(
       revisedDiagnosis.revision.revision_identity,
-      firstDecision.revision_identity,
+      diagnosis.revision.revision_identity,
     );
     assert.equal(revisedDiagnosis.status, "scope_candidate_exercised");
     assert.deepEqual(
       await readRuntimeProjection(fixture.workdir),
-      pendingBeforeMoreEdits,
-      "diagnosis must not refresh pending or approval state",
+      runtimeBefore,
+      "diagnosis must not create pending/approval state or adopt a withdrawn candidate",
     );
 
-    const secondPendingOutput = await runCliFailure(fixture.root, [
-      "long-task",
-      "compile",
-      fixture.workdir,
-      "--revise",
-    ]);
-    const secondDecision = secondPendingOutput.pending_authority_revision;
-    assert.equal(
-      secondDecision.revision_identity,
-      revisedDiagnosis.revision.revision_identity,
-    );
-    assert.notEqual(
-      secondDecision.revision_identity,
-      firstDecision.revision_identity,
-    );
-    assert.equal(
-      await exists(
-        runtimeFile(fixture.workdir, "authority-revision-approved.json"),
-      ),
-      false,
-    );
-
-    await runCli(fixture.root, [
-      "long-task",
-      "approve-authority-revision",
-      fixture.workdir,
-      "--revision",
-      secondDecision.revision_identity,
-    ]);
     const adopted = await runCli(fixture.root, [
       "long-task",
       "compile",
@@ -201,6 +139,14 @@ test("[critical:revision-diagnosis-isolation] scope-only candidates can be diagn
     assert.equal(
       adopted.authority_revision_change.change_class,
       "scope_only_expansion",
+    );
+    assert.equal(
+      adopted.authority_revision_change.revision_identity,
+      revisedDiagnosis.revision.revision_identity,
+    );
+    assert.equal(
+      adopted.authority_revision_change.user_decision_required,
+      false,
     );
     assert.equal(await exists(runtimeFile(fixture.workdir, "progress")), false);
     assert.equal(

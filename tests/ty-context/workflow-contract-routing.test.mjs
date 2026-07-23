@@ -73,9 +73,18 @@ test("default Context routing combines manifest candidates with bounded search",
       /no index, cache, state or second authority|不创建索引、缓存或第二权威/iu,
     );
   }
-  assert.match(managed, /Before material production UI implementation/iu);
+  assert.match(
+    managed,
+    /Before a material product, design, implementation or acceptance decision/iu,
+  );
   assert.match(managed, /unconfigured starter, candidate, style-only guidance or inspiration/iu);
-  assert.match(managed, /selected exact\/constraint target with adequate declared coverage/iu);
+  assert.match(
+    managed,
+    /selected `exact-target` or `constraint`[\s\S]*declared coverage/iu,
+  );
+  assert.match(managed, /open every affected selected `exact-target` or `constraint`/iu);
+  assert.match(managed, /registry mention alone is not consumption/iu);
+  assert.match(managed, /editable upstream owner\/locator\/update route/iu);
 });
 
 test("shared architecture quality is observable, risk-proportional, and single-carrier", async () => {

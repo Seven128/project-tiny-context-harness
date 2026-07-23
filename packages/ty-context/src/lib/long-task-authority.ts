@@ -116,7 +116,7 @@ export function isMonotonicAcceptanceStrengthening(
       previous.global.acceptance.external_confirmations,
       next.global.acceptance.external_confirmations,
     ) ||
-    !subset(
+    !counterfactualsStrengthened(
       previous.global.acceptance.counterfactual_controls ?? [],
       next.global.acceptance.counterfactual_controls,
     ) ||
@@ -142,7 +142,7 @@ export function isMonotonicAcceptanceStrengthening(
         previousOutcome.acceptance.population,
         nextOutcome.acceptance.population,
       ) ||
-      !subset(
+      !counterfactualsStrengthened(
         previousOutcome.acceptance.counterfactual_controls,
         nextOutcome.acceptance.counterfactual_controls,
       )
@@ -258,6 +258,40 @@ function assertionsStrengthened(
       return false;
   }
   return true;
+}
+
+function counterfactualsStrengthened(
+  previous: Array<{
+    binding_key?: string;
+    binding_ref?: string;
+    check_key: string;
+    claims: string[];
+    mutation: unknown;
+    expected_assertion_failures: string[];
+  }>,
+  next: Array<{
+    binding_key?: string;
+    binding_ref?: string;
+    check_key: string;
+    claims: string[];
+    mutation: unknown;
+    expected_assertion_failures: string[];
+  }>,
+): boolean {
+  return previous.every((control) =>
+    next.some(
+      (candidate) =>
+        same(candidate.binding_key, control.binding_key) &&
+        same(candidate.binding_ref, control.binding_ref) &&
+        candidate.check_key === control.check_key &&
+        same(candidate.mutation, control.mutation) &&
+        subset(control.claims, candidate.claims) &&
+        subset(
+          control.expected_assertion_failures,
+          candidate.expected_assertion_failures,
+        ),
+    ),
+  );
 }
 
 function subset(previous: unknown[], next: unknown[]): boolean {

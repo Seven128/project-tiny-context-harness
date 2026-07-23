@@ -108,6 +108,10 @@ export function authorityRevisionDiff(
     ...selectedRevisionReasons([
       ["check_removed", checksRemoved],
       ["negative_assertion_removed", checkChanges.negative_assertions_removed],
+      [
+        "acceptance_semantics_reduced",
+        checkChanges.acceptance_semantics_reduced,
+      ],
       ["proof_surface_changed", checkChanges.proof_surfaces_changed],
       ["source_claim_removed_or_changed", sourceClaimsRemovedOrChanged],
       ["source_claim_added", sourceClaimsAdded],
@@ -170,6 +174,7 @@ export function authorityRevisionDiff(
     ),
     checks_removed: checksRemoved,
     negative_assertions_removed: checkChanges.negative_assertions_removed,
+    acceptance_semantics_reduced: checkChanges.acceptance_semantics_reduced,
     proof_surfaces_changed: checkChanges.proof_surfaces_changed,
     source_claims_added: sourceClaimsAdded,
     source_claims_removed_or_changed: sourceClaimsRemovedOrChanged,

@@ -81,6 +81,15 @@ test("visual design and implementation guidance reaches every managed copy", asy
   assert.match(uiux, /只有进入默认开发流程或 Long-Task、需要采纳稳定结论时/u);
   assert.match(uiux, /UI Authority Closure/iu);
   assert.match(uiux, /stable surface\/control\/target key/iu);
+  assert.match(
+    uiux,
+    /主动打开每个受影响的 selected `exact-target`\/`constraint`/u,
+  );
+  assert.match(
+    uiux,
+    /不可变 adopted locator\/digest[\s\S]*editable upstream owner\/locator\/update route/iu,
+  );
+  assert.match(uiux, /new immutable version|新 immutable version/iu);
   assert.match(uiux, /^## Design Authority Readiness \/ 设计权威就绪$/mu);
   assert.match(
     uiux,
@@ -121,6 +130,15 @@ test("visual design and implementation guidance reaches every managed copy", asy
   );
   assert.match(development, /first confirm Design Authority readiness/iu);
   assert.match(development, /`exact-target`, `constraint` or `inspiration`/iu);
+  assert.match(
+    development,
+    /open the immutable adopted locator\/digest before deciding or coding/iu,
+  );
+  assert.match(
+    development,
+    /editable upstream owner\/locator\/update route[\s\S]*manual\/external boundary/iu,
+  );
+  assert.match(development, /Never overwrite an adopted baseline/iu);
   assert.match(development, /production components and real product routes/iu);
   assert.match(
     development,
@@ -271,10 +289,22 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(workflow, /conditional order-of-thought guidance/iu);
   assert.match(
     workflow,
+    /open and inspect every selected `exact-target` or `constraint`/iu,
+  );
+  assert.match(
+    workflow,
+    /immutable adopted locator\/digest[\s\S]*editable upstream locator\/owner\/update route/iu,
+  );
+  assert.match(workflow, /new immutable version\/digest/iu);
+  assert.match(
+    workflow,
     /design-system-authoring[\s\S]*never auto-runs[\s\S]*design-resource-authoring[\s\S]*style-bearing work stops on unconfigured authority/isu,
   );
   assert.doesNotMatch(workflow, /Visual Coverage Set/u);
-  assert.match(agents, /Before material production UI implementation/iu);
+  assert.match(
+    agents,
+    /Before a material product, design, implementation or acceptance decision/iu,
+  );
   assert.match(agents, /stable surface\/control\/target key/iu);
   assert.match(
     agents,
@@ -288,6 +318,17 @@ test("default workflow routes Design Authority readiness without adding a visual
     agents,
     /Externally authored design resources such as Figma frames, images, prototypes/iu,
   );
+  assert.match(agents, /registry mention alone is not consumption/iu);
+  assert.match(
+    agents,
+    /readable immutable adopted locator\/digest[\s\S]*editable upstream owner\/locator\/update route/iu,
+  );
+  assert.match(agents, /Never overwrite an adopted baseline/iu);
+  assert.match(managedSurface, /Context-reachable Source/iu);
+  assert.match(
+    managedSurface,
+    /no binary copy in Context, provider registry, asset registry, state or second authority/iu,
+  );
 
   for (const content of [rootReadme, packageReadme]) {
     assert.match(content, /^### Visual Delivery Guidance$/mu);
@@ -298,6 +339,11 @@ test("default workflow routes Design Authority readiness without adding a visual
     );
     assert.match(content, /no `uiux_delivery` block/iu);
     assert.match(content, /surface implementation readiness/iu);
+    assert.match(content, /Context-reachable Source/iu);
+    assert.match(
+      content,
+      /immutable locator\/digest[\s\S]*editable upstream owner\/locator\/update route/iu,
+    );
     assert.match(
       content,
       /visibility\/availability.*validation\/default.*recovery\/permission.*accessibility/isu,
@@ -308,4 +354,6 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(chineseReadme, /默认 Workflow.*Design Authority Check/u);
   assert.match(chineseReadme, /不新增 `uiux_delivery`/u);
   assert.match(chineseReadme, /UI Authority Closure/u);
+  assert.match(chineseReadme, /Context-reachable Source/iu);
+  assert.match(chineseReadme, /新 immutable version/u);
 });

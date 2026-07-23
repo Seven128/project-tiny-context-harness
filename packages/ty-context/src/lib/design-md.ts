@@ -156,7 +156,8 @@ function designMdTemplate(): string {
     "- Authored exact-value token source: not selected.",
     "- Generation direction and generated token targets: not selected.",
     "- Durable design references: none selected.",
-    "- For each selected reference, record a stable id, surface/route/component, project path or URI, `exact-target` / `constraint` / `inspiration` interpretation, and the viewport/theme/state conditions it covers.",
+    "- For each selected reference, record a stable id, surface/route/component, `exact-target` / `constraint` / `inspiration` interpretation, viewport/theme/state coverage, a readable immutable adopted path/URI plus digest, and the editable upstream owner/locator/update route (or an explicit manual/external-update boundary).",
+    "- Relevant product/design/development work must open affected selected exact targets/constraints; an index entry alone is not resource consumption.",
     "",
     "## Colors",
     "",
@@ -192,6 +193,7 @@ function designMdTemplate(): string {
     "- When there is a scan target such as UI source, page files, build output or a local/remote URL, run `npx impeccable detect <target>` before finalizing design changes.",
     "- Treat Impeccable findings as design-review signals: fix issues that affect clarity, consistency, accessibility or trust, and note when there is no suitable scan target.",
     "- After design decisions stabilize, replace the unconfigured marker, index the selected targets and authored token source/generation direction, and record durable tokens, component rules and do/don't guidance.",
+    "- Change an adopted target through its recorded upstream route, create or approve a new immutable version/digest, and update its index entry; never overwrite the adopted baseline in place.",
     "",
   ].join("\n");
 }

@@ -84,6 +84,15 @@ test("design-system workflow separates provider output, selection, adoption and 
   assert.match(adoption, /root `DESIGN\.md`/u);
   assert.match(adoption, /exactly one authored exact-value token source or generation direction/iu);
   assert.match(adoption, /provider name\/version.*design-system ID.*revision.*SHA-256/isu);
+  assert.match(
+    adoption,
+    /editable upstream owner\/locator\/update\/export route/iu,
+  );
+  assert.match(adoption, /Context-reachable/iu);
+  assert.match(
+    adoption,
+    /Never overwrite an adopted baseline[\s\S]*new immutable version\/digest/iu,
+  );
   assert.match(adoption, /Project files are canonical/iu);
   assert.match(adoption, /Provider mismatch is a synchronization problem/iu);
 });

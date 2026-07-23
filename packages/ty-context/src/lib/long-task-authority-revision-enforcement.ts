@@ -5,6 +5,7 @@ import {
 } from "./long-task-authority-materials.js";
 import { authorityRevisionDiff } from "./long-task-authority-revision.js";
 import {
+  authorityRevisionUserDecisionReasons,
   classifyAuthorityRevision,
   summarizeAuthorityRevision,
 } from "./long-task-authority-revision-summary.js";
@@ -57,6 +58,8 @@ export function buildAuthorityRevisionProposal(
     nextVerifier,
   );
   const changeClass = classifyAuthorityRevision(diff);
+  const userDecisionReasons = authorityRevisionUserDecisionReasons(diff);
+  const userDecisionRequired = userDecisionReasons.length > 0;
   const approvalSummary = summarizeAuthorityRevision(
     diff,
     nextContract.outcomes.map((outcome) => outcome.key),
@@ -76,7 +79,9 @@ export function buildAuthorityRevisionProposal(
     new_risk_floor: riskFloor,
     affected_outcomes_or_contracts: approvalSummary.affected_outcomes,
     change_class: changeClass,
-    approval_required: diff.reduction_reasons.length > 0,
+    user_decision_required: userDecisionRequired,
+    user_decision_reasons: userDecisionReasons,
+    approval_required: userDecisionRequired,
     approval_summary: approvalSummary,
   };
   const revisionIdentity = sha256Hex(canonicalValueJson(unsignedRevision));
@@ -87,7 +92,7 @@ export async function enforceAuthorityRevision(
   proposal: AuthorityRevisionProposalV2,
   workdir: string,
 ): Promise<void> {
-  if (!proposal.approval_required) return;
+  if (!proposal.user_decision_required) return;
   if (!(await authorityRevisionApproved(workdir, proposal.revision_identity))) {
     await writePendingAuthorityRevision(workdir, {
       schema_version: "long-task-authority-revision-pending-v2",

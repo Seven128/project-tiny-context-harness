@@ -105,13 +105,24 @@ test("non_codex_sync_does_not_install_codex_hooks", async () => {
     assert.match(agents, /Contract Conformance/);
     assert.match(agents, /Context drift check/);
     assert.match(agents, /Context: no durable fact change/);
-    assert.match(agents, /Before material production UI implementation/iu);
+    assert.match(
+      agents,
+      /Before a material product, design, implementation or acceptance decision/iu,
+    );
 
     const design = await readFile(path.join(root, "DESIGN.md"), "utf8");
     assert.match(design, /name: "Unconfigured Project Design"/u);
     assert.match(design, /Design authority status: `unconfigured`/u);
     assert.match(design, /^### Design Authority Index$/mu);
     assert.match(design, /`exact-target` \/ `constraint` \/ `inspiration`/u);
+    assert.match(design, /readable immutable adopted path\/URI plus digest/iu);
+    assert.match(design, /editable upstream owner\/locator\/update route/iu);
+    assert.match(
+      design,
+      /must open affected selected exact targets\/constraints/iu,
+    );
+    assert.match(design, /new immutable version\/digest/iu);
+    assert.match(design, /never overwrite the adopted baseline/iu);
     assert.doesNotMatch(design, /name: "Starter Design System"/u);
     assert.doesNotMatch(design, /surface-card/u);
 

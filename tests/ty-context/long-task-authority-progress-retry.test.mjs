@@ -16,7 +16,7 @@ import {
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
 
-test("Authority Revision reports concrete reductions, requires approval, and auto-accepts additions or scope tightening", async () => {
+test("Authority Revision separates user decisions from mechanically bounded repairs", async () => {
   const fixture = await createDeliveryFixture();
   try {
     await prepareAuthorityRevisionFixture(fixture);
@@ -43,40 +43,78 @@ test("Authority Revision reports concrete reductions, requires approval, and aut
       const candidate = structuredClone(baseline);
       scenario.mutate(candidate);
       await writeContract(fixture.workdir, candidate);
-      await assert.rejects(
-        () =>
-          runCli(fixture.root, [
-            "long-task",
-            "compile",
-            fixture.workdir,
-            "--revise",
-          ]),
-        /authority_change_requires_user_decision/u,
+      const diagnosis = await runCli(fixture.root, [
+        "long-task",
+        "diagnose-revision",
+        fixture.workdir,
+      ]).catch((error) => {
+        error.message = `${scenario.name}: ${error.message}`;
+        throw error;
+      });
+      assert.equal(
+        diagnosis.revision.user_decision_required,
+        scenario.userDecisionRequired,
         scenario.name,
       );
-      const pending = JSON.parse(
-        await readFile(
-          path.join(
-            fixture.workdir,
-            ".ty-context/authority-revision-pending.json",
+      if (scenario.reason)
+        assert.ok(
+          diagnosis.revision.approval_summary.protected_reasons.includes(
+            scenario.reason,
           ),
-          "utf8",
-        ),
-      );
-      assert.ok(
-        pending.revision_diff[scenario.field].length > 0,
-        scenario.name,
-      );
-      assert.ok(
-        pending.revision_diff.reduction_reasons.includes(scenario.reason),
-        scenario.name,
-      );
+          scenario.name,
+        );
+      if (scenario.userDecisionRequired) {
+        await assert.rejects(
+          () =>
+            runCli(fixture.root, [
+              "long-task",
+              "compile",
+              fixture.workdir,
+              "--revise",
+            ]),
+          /authority_change_requires_user_decision/u,
+          scenario.name,
+        );
+        const pending = JSON.parse(
+          await readFile(
+            path.join(
+              fixture.workdir,
+              ".ty-context/authority-revision-pending.json",
+            ),
+            "utf8",
+          ),
+        );
+        assert.ok(
+          pending.revision_diff[scenario.field].length > 0,
+          scenario.name,
+        );
+        assert.equal(pending.user_decision_required, true, scenario.name);
+      } else {
+        assert.notEqual(
+          diagnosis.revision.change_class,
+          "protected_semantic_or_proof_change",
+          scenario.name,
+        );
+      }
       if (scenario.name === "runner target")
         await rm(
           path.join(fixture.root, "tests", "alternate-oracle.mjs"),
           { force: true },
         );
     }
+
+    const uncoveredCounterfactual = structuredClone(baseline);
+    uncoveredCounterfactual.outcomes[0].acceptance.counterfactual_controls = [];
+    await writeContract(fixture.workdir, uncoveredCounterfactual);
+    await assert.rejects(
+      () =>
+        runCli(fixture.root, [
+          "long-task",
+          "diagnose-revision",
+          fixture.workdir,
+        ]),
+      /structured_evidence_sensitivity_required/u,
+    );
 
     await writeFile(
       path.join(fixture.root, "tests", "extra.mjs"),

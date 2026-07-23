@@ -15,10 +15,10 @@ export const TEST_TIER_REVIEW_BUDGETS = Object.freeze({
       "One canonical file per reviewed high-impact trust-boundary invariant family, including first-lock workspace-scope completeness; raise only when a new independent invariant cannot be covered by an existing sentinel.",
   }),
   long_task_focused: Object.freeze({
-    max_files: 19,
+    max_files: 20,
     reviewed_on: "2026-07-23",
     rationale:
-      "Bound the default Long-Task edit loop while retaining authority, Context, design, semantic-drift, direct-Draft authoring, workspace-scope and execution-preview coverage.",
+      "Bound the default Long-Task edit loop while retaining authority, Context, design, semantic-drift, direct-Draft authoring, workspace-scope and execution-preview coverage; the twentieth pure file replays the adopted Rev3-Rev36 history to guard decision-rate ROI independently from synthetic classifier cases.",
   }),
   delivery_contract_focused: Object.freeze({
     max_files: 10,
@@ -57,13 +57,13 @@ export const CRITICAL_TEST_SENTINELS = Object.freeze([
     "protected-revision-classification",
     "long-task-authority-revision-classification.test.mjs",
     ["long-task", "long-task-trust"],
-    "Proves that semantic or proof weakening remains a protected revision requiring exact approval before execution.",
+    "Proves that semantic or proof weakening remains a protected revision requiring an exact user decision before execution.",
   ),
   criticalSentinel(
     "revision-diagnosis-isolation",
     "long-task-authority-revision-diagnosis.test.mjs",
     ["long-task", "long-task-trust"],
-    "Proves that revision diagnosis cannot mutate progress, pending approval state, or acceptance authority.",
+    "Proves that revision diagnosis cannot mutate progress, pending user-decision state, or acceptance authority.",
   ),
   criticalSentinel(
     "context-freshness",
@@ -148,6 +148,7 @@ export const LONG_TASK_FOCUSED_TESTS = Object.freeze(
     "long-task-authority-progress-retry.test.mjs",
     "long-task-authority-revision-classification.test.mjs",
     "long-task-authority-revision-diagnosis.test.mjs",
+    "long-task-authority-revision-replay.test.mjs",
     "long-task-closure-invariants.test.mjs",
     "long-task-context-authority-topology.test.mjs",
     "long-task-context-evolution.test.mjs",
@@ -199,6 +200,7 @@ export const STATIC_TESTS = new Set(
 export const LONG_TASK_PURE_TEST_FILES = Object.freeze([
   "long-task-assertion-safety.test.mjs",
   "long-task-authority-field-completeness.test.mjs",
+  "long-task-authority-revision-replay.test.mjs",
   "long-task-claim-coverage.test.mjs",
   "long-task-context-authority-topology.test.mjs",
   "long-task-delivery-parser.test.mjs",
@@ -475,12 +477,12 @@ function assertIsolationPolicy() {
   if (new Set(classified).size !== classified.length)
     throw new Error("Long-Task isolation classes must be disjoint.");
   if (
-    LONG_TASK_PURE_TEST_FILES.length !== 11 ||
+    LONG_TASK_PURE_TEST_FILES.length !== 12 ||
     LONG_TASK_ISOLATED_TEST_FILES.length !== 41 ||
     LONG_TASK_EXCLUSIVE_TEST_FILES.length !== 10
   )
     throw new Error(
-      "Long-Task isolation policy changed from the reviewed 11/41/10 population; review the new file explicitly instead of parallelizing it by default.",
+      "Long-Task isolation policy changed from the reviewed 12/41/10 population; review the new file explicitly instead of parallelizing it by default.",
     );
 }
 

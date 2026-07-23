@@ -241,17 +241,9 @@ export function counterfactualReductions(
   before: CompiledOutcomeV2,
   after: DeliveryOutcomeV2,
 ): string[] {
-  const next = new Map(
-    after.acceptance.counterfactual_controls.map((control) => [
-      control.key,
-      control,
-    ]),
-  );
+  const next = after.acceptance.counterfactual_controls;
   return before.acceptance.counterfactual_controls
-    .filter((control) => {
-      const candidate = next.get(control.key);
-      return !candidate || !same(control, candidate);
-    })
+    .filter((control) => !counterfactualCoveragePreserved(control, next))
     .map((control) => `${after.key}:${control.key}`);
 }
 
@@ -259,18 +251,47 @@ export function globalCounterfactualReductions(
   before: CompiledDeliveryContractV2,
   after: DeliveryContractV2,
 ): string[] {
-  const next = new Map(
-    after.global.acceptance.counterfactual_controls.map((control) => [
-      control.key,
-      control,
-    ]),
-  );
+  const next = after.global.acceptance.counterfactual_controls;
   return (before.global.acceptance.counterfactual_controls ?? [])
-    .filter((control) => {
-      const candidate = next.get(control.key);
-      return !candidate || !same(control, candidate);
-    })
+    .filter((control) => !counterfactualCoveragePreserved(control, next))
     .map((control) => `GLOBAL:${control.key}`);
+}
+
+function counterfactualCoveragePreserved(
+  previous: {
+    binding_key?: string;
+    binding_ref?: string;
+    check_key: string;
+    claims: string[];
+    mutation: unknown;
+    expected_assertion_failures: string[];
+  },
+  next: Array<{
+    binding_key?: string;
+    binding_ref?: string;
+    check_key: string;
+    claims: string[];
+    mutation: unknown;
+    expected_assertion_failures: string[];
+  }>,
+): boolean {
+  return next.some(
+    (candidate) =>
+      same(candidate.binding_key, previous.binding_key) &&
+      same(candidate.binding_ref, previous.binding_ref) &&
+      candidate.check_key === previous.check_key &&
+      same(candidate.mutation, previous.mutation) &&
+      includesEvery(candidate.claims, previous.claims) &&
+      includesEvery(
+        candidate.expected_assertion_failures,
+        previous.expected_assertion_failures,
+      ),
+  );
+}
+
+function includesEvery(values: string[], required: string[]): boolean {
+  const available = new Set(values);
+  return required.every((value) => available.has(value));
 }
 
 export function expandedPatterns(

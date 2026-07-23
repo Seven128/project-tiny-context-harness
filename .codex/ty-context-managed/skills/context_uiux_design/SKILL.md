@@ -27,7 +27,8 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - `design-system-authoring` 是另一个仅显式调用的冷启动/修复 Skill：它用 Open Design 生成或选择候选，经过明确或受托选择后，把结果采纳到 canonical `DESIGN.md`、唯一 token source/direction 与 owning Context。缺少设计系统不会让本 Skill 或 `design-resource-authoring` 自动调用它。
 - 本 Skill 不承担独立资源生产。只有进入默认开发流程或 Long-Task、需要采纳稳定结论时，本 Skill 才消费这些或其他外部设计 Source。
 - 候选、灵感和未选定输出不是 Context readiness 或实现权威，不能写入 selected registry；选定目标仍必须完成 UI Authority Closure 和 `Context Delta`。
-- 消费时核对产品 Source、Screen/Control Context、`DESIGN.md`、token owner、资源稳定身份及 exact-target 覆盖条件；只把长期稳定且无冲突的事实写入其唯一 owner，不要求统一 pack、目录或工具格式。
+- 消费时沿 owning Context 的 surface/control/target key 到 `DESIGN.md` 登记，主动打开每个受影响的 selected `exact-target`/`constraint`，而不是把登记存在视为已消费。核对产品 Source、Screen/Control Context、token owner、不可变 adopted locator/digest、覆盖条件以及 editable upstream owner/locator/update route；只把长期稳定且无冲突的事实写入其唯一 owner，不要求统一 pack、目录或工具格式。
+- 缺失、不可读、过期或冲突的 adopted resource 对受影响 claim 一律 fail closed。若 immutable adopted target 可读而 editable upstream 不可用，可以继续理解/实现既有目标，但修改资源必须保留为明确人工/外部边界。更新经 upstream 完成后生成/批准新 immutable version 并更新 owning reference，不能静默覆盖旧基线。
 - 设计资源生成本身不改 `project_context/**`、`DESIGN.md` 或 production code；定稿后只可一次性回改初始方案。设计系统采纳则由显式 `design-system-authoring` 完成。下游实现与验证仍由当前 Workflow Contract 或 `long-task-workflow` 负责。
 
 ## 工作方式
@@ -104,7 +105,7 @@ Use this check before material production UI: a new or redesigned screen, primar
 
 Configured is system-level visual authority only, not surface implementation-ready status. `DESIGN.md` 被识别为 configured 只说明项目级视觉系统不是 starter，不表示任一页面已可高保真实现。affected surface 还必须拥有充分的 Screen/Control meaning、覆盖该 claim 的 selected target/constraints、唯一 token source 和项目可执行的验证路径；任何缺失都按 UI Authority Closure 路由，而不是伪造一个全局 readiness 状态。
 
-- Read the owning surface/interaction Context, `DESIGN.md`, the authored exact-value token source and generation direction, existing production components/routes and every material design reference.
+- Read the owning surface/interaction Context, `DESIGN.md`, the authored exact-value token source and generation direction, existing production components/routes and every affected selected exact/constraint resource through its immutable locator; also resolve its editable upstream/update route before authoring a resource change.
 - Classify each reference as `exact-target`, `constraint` or `inspiration`. Record the affected surface/route/component, project path or URI and relevant viewport/theme/mode/state. Exact targets authorize fidelity comparison only for those conditions; constraints authorize only their named rule; inspiration proves no reproduction claim.
 - Treat a missing `DESIGN.md`, its package starter with Design authority status: `unconfigured`, style-only prose, an inspiration-only set or conflicting references as insufficient authority for invented production layout.
 - If the user explicitly asks to initialize/generate/select/adopt the project design system, use the explicit-only `design-system-authoring`; never infer it from a missing starter. If the user explicitly delegates standalone resource generation, use `design-resource-authoring`. Style-bearing resources must stop on unconfigured authority and bind the adopted Open Design system; low-fidelity/IA/semantics-only resources remain lightweight. After final selection, resource authoring may reconcile accepted decisions into the initial proposal once, but this downstream Skill adopts durable target meaning only after UI Authority Closure.

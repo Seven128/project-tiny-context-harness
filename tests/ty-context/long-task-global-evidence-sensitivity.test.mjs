@@ -267,7 +267,7 @@ test("Global Counterfactual carrier changes stale targeted Progress", async () =
   }
 });
 
-test("Global Counterfactual removal and binding_ref replacement are reviewed revisions", async () => {
+test("redundant Global Counterfactual removal auto-adopts but binding_ref replacement is reviewed", async () => {
   const removed = await createDeliveryFixture();
   try {
     await addGlobalClaim(removed, { counterfactual: true });
@@ -278,14 +278,20 @@ test("Global Counterfactual removal and binding_ref replacement are reviewed rev
     removed.contract.global.acceptance.counterfactual_controls.push(redundant);
     await writeContract(removed.workdir, removed.contract);
     await runCli(removed.root, ["enable", "long-task"]);
-    await runCli(removed.root, ["long-task", "compile", removed.workdir]);
+    const initial = await runCli(removed.root, [
+      "long-task",
+      "compile",
+      removed.workdir,
+    ]);
     removed.contract.global.acceptance.counterfactual_controls.pop();
     await writeContract(removed.workdir, removed.contract);
-    await expectDecision(removed, {
-      field: "counterfactuals_removed",
-      includes: "GLOBAL:remove-global-state-redundant",
-      reason: "counterfactual_removed",
-    });
+    const revised = await runCli(removed.root, [
+      "long-task",
+      "compile",
+      removed.workdir,
+      "--revise",
+    ]);
+    assert.equal(revised.authority_revision, initial.authority_revision + 1);
   } finally {
     await rm(removed.root, { recursive: true, force: true });
   }

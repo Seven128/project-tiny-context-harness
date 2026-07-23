@@ -28,6 +28,7 @@ export interface AuthorityRevisionDiagnosisV2 {
   status:
     | "no_authority_change"
     | "monotonic_revision_available"
+    | "automatic_revision_available"
     | "scope_candidate_exercised"
     | "scope_candidate_previewed"
     | "protected_change_previewed"
@@ -92,6 +93,14 @@ export async function diagnoseAuthorityRevision(
   if (proposal.change_class === "monotonic_evidence_strengthening")
     return result({
       status: "monotonic_revision_available",
+      activeIdentity: active.active_authority_identity,
+      candidateIdentity: candidate.compiled_identity,
+      revision: decision,
+      selection,
+    });
+  if (proposal.change_class === "mechanically_bounded_repair")
+    return result({
+      status: "automatic_revision_available",
       activeIdentity: active.active_authority_identity,
       candidateIdentity: candidate.compiled_identity,
       revision: decision,

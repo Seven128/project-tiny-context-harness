@@ -81,6 +81,7 @@ export const authorityReductionScenarios = [
     name: "runner target",
     field: "runner_definitions_changed",
     reason: "runner_definition_changed",
+    userDecisionRequired: false,
     mutate(contract) {
       contract.outcomes[0].acceptance.checks[0].runner.target =
         "tests/alternate-oracle.mjs";
@@ -90,6 +91,7 @@ export const authorityReductionScenarios = [
     name: "runner type",
     field: "runner_definitions_changed",
     reason: "runner_definition_changed",
+    userDecisionRequired: true,
     mutate(contract) {
       contract.outcomes[0].acceptance.checks[0].runner.type = "project_binary";
     },
@@ -98,6 +100,7 @@ export const authorityReductionScenarios = [
     name: "verification input removal",
     field: "verification_inputs_removed_or_replaced",
     reason: "verification_input_removed_or_replaced",
+    userDecisionRequired: false,
     mutate(contract) {
       contract.outcomes[0].acceptance.checks[0].verification_inputs = [
         "tests/oracle.mjs",
@@ -108,6 +111,7 @@ export const authorityReductionScenarios = [
     name: "allowed path expansion",
     field: "allowed_paths_expanded",
     reason: "allowed_path_expanded",
+    userDecisionRequired: false,
     mutate(contract) {
       contract.outcomes[0].product.owner.path_globs.push("support/**");
       contract.outcomes[0].technical.allowed_support_paths.push("support/**");
@@ -117,6 +121,7 @@ export const authorityReductionScenarios = [
     name: "owner Context removal",
     field: "owner_context_refs_removed",
     reason: "owner_context_ref_removed",
+    userDecisionRequired: true,
     mutate(contract) {
       contract.outcomes[0].product.owner.context_refs = [];
     },
@@ -125,6 +130,7 @@ export const authorityReductionScenarios = [
     name: "forbidden path removal",
     field: "forbidden_paths_removed",
     reason: "forbidden_path_removed",
+    userDecisionRequired: true,
     mutate(contract) {
       contract.outcomes[0].technical.forbidden_paths = [];
     },
@@ -133,6 +139,7 @@ export const authorityReductionScenarios = [
     name: "binding carrier expansion",
     field: "bindings_removed_or_expanded",
     reason: "binding_removed_or_expanded",
+    userDecisionRequired: false,
     mutate(contract) {
       contract.outcomes[0].technical.bindings[0].carrier_paths.push(
         "src/extra.json",
@@ -143,6 +150,7 @@ export const authorityReductionScenarios = [
     name: "Obligation removal",
     field: "obligations_removed_or_weakened",
     reason: "obligation_removed_or_weakened",
+    userDecisionRequired: true,
     mutate(contract) {
       contract.outcomes[0].technical.obligations = [];
       contract.outcomes[0].acceptance.checks[0].positive_assertions[0].claims =
@@ -156,6 +164,7 @@ export const authorityReductionScenarios = [
     name: "Environment Requirement removal",
     field: "environment_requirements_removed",
     reason: "environment_requirement_removed",
+    userDecisionRequired: false,
     mutate(contract) {
       contract.outcomes[0].acceptance.checks[0].environment_requirements = [];
     },
@@ -164,14 +173,16 @@ export const authorityReductionScenarios = [
     name: "artifact removal",
     field: "artifacts_removed",
     reason: "artifact_removed",
+    userDecisionRequired: true,
     mutate(contract) {
       contract.outcomes[0].acceptance.checks[0].artifact_globs = [];
     },
   },
   {
-    name: "Counterfactual removal",
+    name: "redundant Counterfactual removal",
     field: "counterfactuals_removed",
-    reason: "counterfactual_removed",
+    reason: null,
+    userDecisionRequired: false,
     mutate(contract) {
       contract.outcomes[0].acceptance.counterfactual_controls.pop();
     },
@@ -180,6 +191,7 @@ export const authorityReductionScenarios = [
     name: "rollback removal",
     field: "rollback_or_recovery_weakened",
     reason: "rollback_or_recovery_weakened",
+    userDecisionRequired: true,
     mutate(contract) {
       contract.outcomes[0].technical.rollback_and_recovery = null;
     },

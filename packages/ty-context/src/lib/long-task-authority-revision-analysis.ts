@@ -24,6 +24,7 @@ import {
 
 export interface CheckRevisionAnalysis {
   negative_assertions_removed: string[];
+  acceptance_semantics_reduced: string[];
   proof_surfaces_changed: string[];
   runner_definitions_changed: string[];
   verification_inputs_added: string[];
@@ -41,6 +42,7 @@ export function analyzeCheckRevisions(
 ): CheckRevisionAnalysis {
   const result: CheckRevisionAnalysis = {
     negative_assertions_removed: [],
+    acceptance_semantics_reduced: [],
     proof_surfaces_changed: [],
     runner_definitions_changed: [],
     verification_inputs_added: [],
@@ -57,6 +59,32 @@ export function analyzeCheckRevisions(
     for (const assertion of before.negative_assertions)
       if (!after.negative_assertions.some((item) => same(item, assertion)))
         result.negative_assertions_removed.push(`${identity}:${assertion.key}`);
+    if (!same(before.execution_target, after.execution_target))
+      result.acceptance_semantics_reduced.push(`${identity}:execution_target`);
+    collectRemovedValues(
+      result.acceptance_semantics_reduced,
+      `${identity}:journey_role`,
+      before.journey_roles,
+      after.journey_roles,
+    );
+    collectRemovedValues(
+      result.acceptance_semantics_reduced,
+      `${identity}:scenario.given`,
+      before.scenario.given,
+      after.scenario.given,
+    );
+    collectRemovedValues(
+      result.acceptance_semantics_reduced,
+      `${identity}:scenario.when`,
+      before.scenario.when,
+      after.scenario.when,
+    );
+    collectAssertionReductions(
+      result.acceptance_semantics_reduced,
+      identity,
+      before.positive_assertions,
+      after.positive_assertions,
+    );
     if (before.proof_surface !== after.proof_surface)
       result.proof_surfaces_changed.push(
         `${identity}:${before.proof_surface}->${after.proof_surface}`,
@@ -93,6 +121,44 @@ export function analyzeCheckRevisions(
     );
   }
   return result;
+}
+
+function collectRemovedValues(
+  result: string[],
+  prefix: string,
+  before: unknown[],
+  after: unknown[],
+): void {
+  for (const value of before)
+    if (!after.some((candidate) => same(candidate, value)))
+      result.push(`${prefix}:${String(value)}`);
+}
+
+function collectAssertionReductions(
+  result: string[],
+  identity: string,
+  before: CompiledCheckV2["positive_assertions"],
+  after: CompiledCheckV2["positive_assertions"],
+): void {
+  const next = new Map(after.map((assertion) => [assertion.key, assertion]));
+  for (const assertion of before) {
+    const candidate = next.get(assertion.key);
+    if (!candidate) {
+      result.push(`${identity}:positive_assertion.${assertion.key}:removed`);
+      continue;
+    }
+    const semanticChanged =
+      assertion.criterion !== candidate.criterion ||
+      !same(assertion.claims, candidate.claims) ||
+      assertion.observation !== candidate.observation ||
+      assertion.operator !== candidate.operator ||
+      !same(assertion.expected, candidate.expected);
+    const capabilityRemoved = assertion.evidence_capabilities.some(
+      (capability) => !candidate.evidence_capabilities.includes(capability),
+    );
+    if (semanticChanged || capabilityRemoved)
+      result.push(`${identity}:positive_assertion.${assertion.key}:changed`);
+  }
 }
 
 export interface OutcomeRevisionAnalysis {

@@ -23,7 +23,7 @@ Keep a task-local buffer during candidate iteration:
 ```yaml
 selection_basis: explicit user/team choice | explicit delegated selection
 selected_resources:
-  - stable key, provider/project/run/entry, declared conditions, immutable digest/snapshot
+  - stable key, provider/project/run/entry, declared conditions, immutable digest/snapshot, editable upstream owner/locator/update method
 accepted:
   - decision, rationale and affected proposal section/stable keys
 rejected:
@@ -46,7 +46,7 @@ This is an explanatory shape, not a schema or required file. Do not write during
 2. consolidate duplicate/intermediate notes;
 3. apply accepted decisions once while preserving all unaffected original requirements and source provenance;
 4. exclude rejected and unresolved choices from requirements, keeping unresolved items visibly unresolved;
-5. record selected resource keys, conditions, locators and digests in the proposal where downstream consumers can recover them;
+5. record selected resource keys, conditions, immutable locators/digests and editable upstream owner/locator/update method in the proposal where downstream consumers can recover and later change them;
 6. make reruns idempotent—update the existing decision/reference instead of appending it again;
 7. if the initial proposal has an authorized writable path, edit that file; otherwise return the full revised proposal in the response.
 
@@ -69,6 +69,7 @@ Add:
 - candidate/inspiration/constraint/pre-existing-exact-target classification;
 - provider version, project/run, capability/template, agent/model and live design-system binding;
 - exact entry/preview locator plus SHA-256 or approved snapshot;
+- editable upstream owner, locator and update/export method, or an explicit manual/external-update boundary when unavailable;
 - declared platform, viewport, mode, state, content, interaction, accessibility and motion coverage;
 - stable-key coverage mapping and unresolved dispositions;
 - selection basis, proposal reconciliation path/status and known limitations;
@@ -90,11 +91,11 @@ initial proposal
 
 ### Default Workflow consumption
 
-The consuming Goal brings the revised proposal and selected resources as ordinary Source, performs UI Authority Closure, classifies coverage, decides `Context Delta`, adopts durable facts through existing owners, implements and runs project-owned verification.
+The consuming Goal brings the revised proposal and selected resources as ordinary Source, performs UI Authority Closure, classifies coverage, decides `Context Delta`, and makes every adopted decision-relevant target Context-reachable through existing owners. It opens affected exact/constraint resources before deciding, records immutable adopted identity plus editable upstream/update route, implements and runs project-owned verification. A later update creates a new immutable version rather than overwriting the adopted baseline.
 
 ### Long-Task consumption
 
-The same revised proposal and selected resources enter `long-task-workflow`'s Source-bound Contract Draft loop immediately. Source self-containment and Contract mapping converge there, so `source_paths`, Bindings, `verification_inputs`, Check `input_paths` and `artifact_globs` name only stable locators and conditions actually consumed. Authority Lock, protected revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
+The same revised proposal and selected resources enter `long-task-workflow`'s Source-bound Contract Draft loop immediately. Source self-containment and Contract mapping converge there, so `source_paths`, Bindings, `verification_inputs`, Check `input_paths` and `artifact_globs` name only stable locators and conditions actually consumed. Authority Lock, Authority Revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
 
 ## Forbidden inferences
 
@@ -103,6 +104,6 @@ Unless independently proven downstream, never infer that a generated resource:
 - is selected, authoritative or accepted;
 - covers unlisted states, viewports, modes, platforms or accessibility;
 - is native implementation because an HTML/image preview renders;
-- is editable in Figma because a capability was listed;
+- is editable in Figma because a capability was listed; editability requires a verified upstream owner/locator/update route;
 - changed Context, `DESIGN.md`, a Source Plan, code or Contract;
 - proves production fidelity, correctness, test completion or release readiness.

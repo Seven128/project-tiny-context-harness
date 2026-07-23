@@ -26,9 +26,9 @@ Do not copy the same fact into several owners. Open Design metadata is provenanc
 1. Read the project's `DESIGN.md` format and lint expectations. Preserve valid project-specific content unless the user explicitly authorized replacement.
 2. Reconcile selected provider semantics against controlling Context. Provider-invented business, permission, data or algorithmic rules are excluded unless independently authorized by product Source.
 3. Write the selected visual system into `DESIGN.md` and declare exactly one authored exact-value token source or generation direction. Avoid style-only adjectives without implementation meaning.
-4. Record provider provenance in a normal `DESIGN.md` section unless the format explicitly permits metadata fields. Include provider name/version, design-system ID, selected revision when applicable, selection basis, source/snapshot locator and SHA-256 digest. State that project files are canonical.
-5. Update only relevant Context when durable surface/interaction/verification facts changed. Use stable surface/control/target keys to connect owners without duplicating the visual prose.
-6. Put concrete selected targets/tokens in project-native versioned paths selected by the user or existing project convention. Never silently choose a repository directory merely because Open Design has a mutable workspace.
+4. Record provider provenance in a normal `DESIGN.md` section unless the format explicitly permits metadata fields. Include provider name/version, design-system ID, selected revision when applicable, selection basis, immutable source/snapshot locator and SHA-256 digest, plus the editable upstream owner/locator/update/export route. State that project files are canonical.
+5. Update only relevant Context when durable surface/interaction/verification facts changed. Use stable surface/control/target keys to make every adopted decision-relevant target Context-reachable without duplicating the visual prose.
+6. Put concrete selected targets/tokens in project-native versioned paths selected by the user or existing project convention. Never silently choose a repository directory merely because Open Design has a mutable workspace. Never overwrite an adopted baseline in place; update upstream, create or approve a new immutable version/digest and update the owning reference.
 7. Accept the selected provider revision if one exists, then re-read the MCP design-system resource and compare its identity/body or digest with the adopted selection.
 8. Verify downstream project binding by creating or reading a provider project with the selected ID. Provider mismatch is a synchronization problem, not evidence that project Design Authority is absent.
 
@@ -39,6 +39,7 @@ Run the repository-owned Design Authority lint, Context validation and token gen
 - `DESIGN.md` is no longer an unconfigured starter;
 - exactly one authored token source/generation direction is declared and resolvable;
 - provenance points to the selected provider ID/revision/digest;
+- each adopted target has a readable immutable locator and a verified editable upstream/update route or an explicit manual/external-update boundary;
 - no competing design-system authority or duplicate token owner was introduced;
 - MCP can read the provider design system;
 - a downstream Open Design project reports the matching `designSystemId`;

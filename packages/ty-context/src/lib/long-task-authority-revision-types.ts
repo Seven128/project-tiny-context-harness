@@ -7,6 +7,7 @@ import type {
 
 export type AuthorityRevisionChangeClassV2 =
   | "monotonic_evidence_strengthening"
+  | "mechanically_bounded_repair"
   | "scope_only_expansion"
   | "protected_semantic_or_proof_change";
 
@@ -29,6 +30,8 @@ export interface AuthorityRevisionApprovalSummaryV2 {
   expanded_owner_paths: string[];
   expanded_expected_change_paths: string[];
   expanded_allowed_support_paths: string[];
+  user_decision_reasons: string[];
+  mechanically_bounded_reasons: string[];
   protected_reasons: string[];
   affected_outcomes: string[];
 }
@@ -45,12 +48,16 @@ export interface AuthorityRevisionProposalV2 {
   new_risk_floor: "standard" | "strict";
   affected_outcomes_or_contracts: string[];
   change_class: AuthorityRevisionChangeClassV2;
+  user_decision_required: boolean;
+  user_decision_reasons: string[];
+  /** Compatibility alias for user_decision_required. */
   approval_required: boolean;
   approval_summary: AuthorityRevisionApprovalSummaryV2;
   revision_identity: string;
 }
 
 export interface AuthorityRevisionDecisionBriefV2 {
+  overview: string;
   headline: string;
   approval_reason: string;
   material_changes: string[];
@@ -61,6 +68,9 @@ export interface AuthorityRevisionDecisionBriefV2 {
 export interface AuthorityRevisionDecisionV2 {
   revision_identity: string;
   change_class: AuthorityRevisionChangeClassV2;
+  user_decision_required: boolean;
+  user_decision_reasons: string[];
+  /** Compatibility alias for user_decision_required. */
   approval_required: boolean;
   approval_summary: AuthorityRevisionApprovalSummaryV2;
   decision_brief: AuthorityRevisionDecisionBriefV2;
@@ -75,6 +85,7 @@ export interface AuthorityRevisionDiffV2 {
   checks_added: string[];
   checks_removed: string[];
   negative_assertions_removed: string[];
+  acceptance_semantics_reduced: string[];
   proof_surfaces_changed: string[];
   source_claims_added: string[];
   source_claims_removed_or_changed: string[];

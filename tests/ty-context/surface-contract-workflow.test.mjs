@@ -112,6 +112,9 @@ for (const content of [sourceProductSkill, sourceUiuxSkill, sourceDevelopmentSki
   assert.match(content, /外部来源.*内部分类/s);
   assert.match(content, /Contract Conformance/);
   assert.match(content, /Context Delta: required/);
+  assert.match(content, /exact-target.*constraint/isu);
+  assert.match(content, /(?:immutable|不可变).*locator\/digest/isu);
+  assert.match(content, /editable upstream.*update route/isu);
 }
 
 for (const content of [rootReadme, packageReadme, spec, globalContext]) {
@@ -138,6 +141,11 @@ for (const content of [sourceScreenTemplate, packagedScreenTemplate]) {
   assert.match(content, /Accessibility/);
   assert.match(content, /^## Design Target References$/mu);
   assert.match(content, /exact-target.*constraint.*inspiration/iu);
+  assert.match(content, /Immutable Adopted Path \/ URI \+ Digest/iu);
+  assert.match(content, /Editable Upstream \/ Owner \/ Update Route/iu);
+  assert.match(content, /Relevant work opens the resource/iu);
+  assert.match(content, /register a new immutable version\/digest/iu);
+  assert.match(content, /never overwrite the adopted baseline/iu);
   assert.match(content, /role = "subdomain"/);
   assert.match(content, /read_policy = "on-demand"/);
   assert.match(content, /Do not introduce `screen`, `design`/);
@@ -164,6 +172,8 @@ assert.match(packageManagedSurfaces, /Product Surface Contract/);
 assert.match(packageManagedSurfaces, /must not generate project semantics, plan artifacts, lifecycle state or campaigns/);
 assert.match(packageManagedSurfaces, /screen-contract\.md/);
 assert.match(packageManagedSurfaces, /There is no `uiux_delivery` block/);
+assert.match(packageManagedSurfaces, /Context-reachable Source/iu);
+assert.match(packageManagedSurfaces, /index presence alone is not consumption/iu);
 
 for (const role of ["surface-contract", "product-surface", "web-contract", "app-contract", "game-surface", "screen", "design"]) {
   assert.doesNotMatch(validators, new RegExp(`["']${role}["']\\s*:`));

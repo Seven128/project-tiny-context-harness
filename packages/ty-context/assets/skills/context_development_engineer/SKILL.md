@@ -95,7 +95,8 @@ sample provider / interface / page 证据不能替代 all-provider / all-interfa
 For material production UI, first confirm Design Authority readiness; then carry declared Context, `DESIGN.md` and Source intent into the real implementation without creating another workflow:
 
 - treat an unconfigured starter, style-only guidance, inspiration-only references or conflicting targets as insufficient authority for invented production layout; route explicit design authoring through `context_uiux_design` or return for a genuine material decision;
-- classify referenced targets as `exact-target`, `constraint` or `inspiration` and bind fidelity claims only to the named target/constraint conditions;
+- classify referenced targets as `exact-target`, `constraint` or `inspiration`; for every affected selected exact target/constraint, traverse its stable key from owning Context through `DESIGN.md` and open the immutable adopted locator/digest before deciding or coding—a registry mention alone is not consumption. Bind fidelity claims only to the named conditions;
+- resolve the editable upstream owner/locator/update route before changing a design resource. Missing, unreadable, stale or conflicting adopted resources fail closed for the affected claim. If the immutable target is readable but upstream editing is unavailable, implementation may consume it but a resource change remains a named manual/external boundary. Never overwrite an adopted baseline; use a new immutable version and update the owning reference;
 - identify the production token source, its generation direction, the owning components/routes and any project-local UI/UX Skill before choosing implementation values;
 - reuse production components and real product routes for states/specimens instead of building a detached static imitation as the acceptance target;
 - preserve approved semantic tokens and component APIs; do not bypass them with undeclared raw color, spacing, typography or motion values merely to match one screenshot;
@@ -104,7 +105,7 @@ For material production UI, first confirm Design Authority readiness; then carry
 - For each applicable material control, preserve region/location, type/label, user task, visibility/availability, trigger/input/validation/default, interaction/navigation, loading/empty/success/failure/recovery/permission/feedback and accessibility semantics. An omitted field is not permission to invent durable product behavior; resolve it through UI Authority Closure.
 - never promote the implementation's own generated screenshot/diff into its target; exact targets and acceptance-affecting baselines are selected Source/verifier inputs before comparison.
 
-If an active Long-Task applies, express material visual expectations through its existing Requirement, full Control projection, Assertion, Check, Stage, Binding and external-confirmation mechanisms. A design candidate or planned target cannot unlock fidelity implementation: selection must become real Source/registry authority and an adopted protected revision first. Do not introduce a second visual plan, acceptance document or lifecycle.
+If an active Long-Task applies, express material visual expectations through its existing Requirement, full Control projection, Assertion, Check, Stage, Binding and external-confirmation mechanisms. A design candidate or planned target cannot unlock fidelity implementation: selection must become real Context-reachable Source with an owning Context/`DESIGN.md` reference and an adopted Authority Revision first. Do not introduce a second visual plan, acceptance document or lifecycle.
 
 ## Modularity Check
 

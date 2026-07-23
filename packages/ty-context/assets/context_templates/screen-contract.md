@@ -133,11 +133,11 @@ Describe composition or responsibility changes, not one-off screenshots.
 
 Reference project-native targets; do not embed binary content.
 
-| Target ID | Interpretation | Path / Immutable URI | Viewport / Platform | Theme / Mode | State / Content Coverage | Selection Basis |
-|---|---|---|---|---|---|---|
-| `<stable-target-id>` | `exact-target` / `constraint` / `inspiration` |  |  |  |  |  |
+| Target ID | Interpretation | Immutable Adopted Path / URI + Digest | Editable Upstream / Owner / Update Route | Viewport / Platform | Theme / Mode | State / Content Coverage | Selection Basis |
+|---|---|---|---|---|---|---|---|
+| `<stable-target-id>` | `exact-target` / `constraint` / `inspiration` |  |  |  |  |  |  |
 
-An `exact-target` authorizes fidelity comparison only for its declared conditions. A `constraint` governs only its named rule. `inspiration` does not authorize reproduction. An implementation screenshot cannot register itself as its own target.
+An `exact-target` authorizes fidelity comparison only for its declared conditions. A `constraint` governs only its named rule. `inspiration` does not authorize reproduction. For an adopted exact target/constraint, the immutable locator must be readable and the editable upstream/update route must be verified or explicitly marked as a manual/external boundary. Relevant work opens the resource rather than treating this row as consumption. Update upstream and register a new immutable version/digest; never overwrite the adopted baseline. An implementation screenshot cannot register itself as its own target.
 
 ## Verification
 

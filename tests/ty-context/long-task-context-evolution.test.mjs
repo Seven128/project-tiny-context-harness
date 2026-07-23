@@ -169,36 +169,21 @@ test("supporting Context revises without approval and preserves scoped Progress"
       controllingFile,
       "# Main\n\nChanged owning boundary discovered during execution.\n",
     );
-    await assert.rejects(
-      () =>
-        runCli(fixture.root, [
-          "long-task",
-          "compile",
-          fixture.workdir,
-          "--revise",
-        ]),
-      /authority_change_requires_user_decision/u,
-    );
-    const pending = JSON.parse(
-      await readFile(
-        path.join(
-          fixture.workdir,
-          ".ty-context",
-          "authority-revision-pending.json",
-        ),
-        "utf8",
-      ),
-    );
+    const controllingRevision = await runCli(fixture.root, [
+      "long-task",
+      "compile",
+      fixture.workdir,
+      "--revise",
+    ]);
     assert.ok(
-      pending.revision_diff.context_files_changed.includes(
-        "project_context/areas/main.md",
-      ),
+      controllingRevision.authority_revision_change.approval_summary
+        .mechanically_bounded_reasons.includes("context_authority_changed"),
     );
-    assert.ok(
-      pending.revision_diff.reduction_reasons.includes(
-        "context_authority_changed",
-      ),
+    assert.equal(
+      controllingRevision.authority_revision_change.user_decision_required,
+      false,
     );
+    assert.equal(controllingRevision.progress_preserved, false);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

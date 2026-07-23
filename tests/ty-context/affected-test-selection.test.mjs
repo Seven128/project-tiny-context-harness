@@ -103,9 +103,23 @@ test("Authority Revision classifier changes select diagnosis and semantic covera
   assert.deepEqual(selection.tests, [
     "tests/ty-context/long-task-authority-revision-classification.test.mjs",
     "tests/ty-context/long-task-authority-revision-diagnosis.test.mjs",
+    "tests/ty-context/long-task-authority-revision-replay.test.mjs",
     "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
     "tests/ty-context/long-task-semantic-drift-closure.test.mjs",
     "tests/ty-context/long-task-semantic-drift-lifecycle.test.mjs",
+  ]);
+});
+
+test("Authority monotonic-comparison changes retain the adopted-revision replay", () => {
+  const selection = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-authority.ts",
+  ]);
+  assert.equal(selection.mode, "selected");
+  assert.deepEqual(selection.tests, [
+    "tests/ty-context/long-task-authority-progress-retry.test.mjs",
+    "tests/ty-context/long-task-authority-revision-classification.test.mjs",
+    "tests/ty-context/long-task-authority-revision-replay.test.mjs",
+    "tests/ty-context/long-task-semantic-authority-revision.test.mjs",
   ]);
 });
 
