@@ -108,7 +108,7 @@ jobs:
           npm run test:trust:built --workspace project-tiny-context-harness --ignore-scripts 2>&1 | tee package-trust-test.log
       - name: Upload package test diagnostics
         if: failure()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: package-test-diagnostics-pr-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -118,7 +118,7 @@ jobs:
           retention-days: 3
       - name: Upload package test timing
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: package-test-timing-pr-${{ github.run_id }}-${{ github.run_attempt }}
           path: .artifacts/test-timing/pull-request/*.json
@@ -161,7 +161,7 @@ jobs:
           npm test --workspace project-tiny-context-harness --ignore-scripts 2>&1 | tee package-test.log
       - name: Upload package test diagnostics
         if: failure()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: package-test-diagnostics-main-${{ github.run_id }}-${{ github.run_attempt }}
           path: package-test.log
@@ -169,7 +169,7 @@ jobs:
           retention-days: 3
       - name: Upload package test timing
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: package-test-timing-main-${{ github.run_id }}-${{ github.run_attempt }}
           path: .artifacts/test-timing/main/*.json
