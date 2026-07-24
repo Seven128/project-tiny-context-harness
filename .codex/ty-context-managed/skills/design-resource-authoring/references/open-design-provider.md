@@ -110,11 +110,13 @@ Provider self-checks, outer artifact sanity review and downstream project verifi
 
 ## Figma and other specialist paths
 
-Figma is optional. Select it only when editable collaboration or library handoff materially benefits the request and a real connector/plugin/export path plus authentication is operational. A listed plugin, skill description or catalogue entry is not proof that editable Figma export works.
+Figma is optional. It may be either an editable downstream refinement of an Open Design result or selected existing native Source when inspectability, component/library reuse or organizational handoff materially benefits the request. In either case, a real connector/read/export path plus authentication must be operational. A listed plugin, skill description, catalogue entry, URL or thumbnail is not proof that native Figma input or editable export works.
+
+When Figma is requested, supplied or selected, read [figma-native-handoff.md](figma-native-handoff.md). That reference owns exact file/version/node acquisition, small-node inspection, immutable repository capture, Figma source-structure guidance and the residual provider-neutral handoff. Keep this file limited to provider discovery and availability; do not duplicate a Figma-specific workflow, schema or authority here.
 
 If Figma is requested but unavailable:
 
-- report the missing connector/auth/export capability precisely;
+- report the missing connector/auth/read/export capability precisely;
 - offer a non-Figma artifact only when it still answers the user's design decision;
 - never relabel HTML, an image or a manifest record as an editable Figma design.
 

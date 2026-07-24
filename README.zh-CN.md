@@ -50,7 +50,7 @@ ty-context enable long-task
 
 初始输入可以是一段产品意图，也可以是 Web GPT 等外部服务给出的详细初始方案。涉及独立设计资源时：
 
-- **长程任务：** 初始方案 → 项目尚无设计系统时由用户显式调用 `/design-system-authoring` 生成、选择并采纳 → `/design-resource-authoring` 生成/选择资源、一次性回改已接受决策，并为实现生成通过校验的 `design-resource-handoff-v1` → 把“修订后的初始方案 + handoff + 选定且身份稳定的设计资源”交给 `/long-task-workflow`；输入立即进入同一个原生 Goal 内的 Source-bound Contract Draft 循环。
+- **长程任务：** 初始方案 → 项目尚无设计系统时由用户显式调用 `/design-system-authoring` 生成、选择并采纳 → `/design-resource-authoring` 生成/选择资源、按需冻结精确 Figma 原生事实、一次性回改已接受决策，并为实现生成通过校验的残余 `design-resource-handoff-v1` → 把“修订后的初始方案 + handoff + 选定且身份稳定的设计资源”交给 `/long-task-workflow`；输入立即进入同一个原生 Goal 内的 Source-bound Contract Draft 循环。
 - **非长程任务：** 使用同样步骤 → 把“修订后的初始方案 + 已校验 handoff + 选定设计资源”直接交给 Codex 当前原生 Goal，按默认 Workflow Contract 执行。
 
 设计系统通常在项目冷启动时确定，但该 Skill 只由用户调用，`init`、`sync` 与下游 Skill 都不会自动执行。`/design-resource-authoring` 只对高保真、品牌化、视觉处理等 style-bearing 资源设门禁；低保真结构、IA/流程与纯语义状态研究不受此门禁。旧 Source Plan 仍可作为普通输入，但不再是推荐中间服务。
@@ -125,11 +125,13 @@ material UI 在实现前执行 **UI Authority Closure**：每个稳定 surface/c
 
 ### 视觉交付指导
 
-Long-Task Workflow 的一项明确设计目的，是让 Agent 的开发、验收和测试在 UI/UX 方面完整遵循选定设计资源在声明范围与条件内明确表达的全部材料性信息。Open Design 产出的 HTML、图片和原型仍是主要视觉资源，`design-resource-authoring` 会把结构化文本语义交接也作为选定实现设计资源的一部分，使这些信息能够可追踪、可测试地进入 Contract 要求和项目检查。资源没有表达的信息必须继续补充、形成明确决策或阻断 fidelity 开发，不能由 Agent 猜测。
+Long-Task Workflow 的一项明确设计目的，是让 Agent 的开发、验收和测试在 UI/UX 方面完整遵循选定设计资源在声明范围与条件内明确表达的全部材料性信息。直接看图会丢失或扁平化布局、控件、状态、交互、动效、适配、可访问性和资产信息，因此输入分成两层：可选的 Figma 原生路径锁定精确 file/version/node/conditions，把 metadata、design context、Variables、截图及适用的 motion/assets/Code Connect 冻结为仓库可读的不可变输入，减少人工转录并保留原生精度；provider-neutral 的残余结构化 handoff 继续闭合八个维度，补充 Figma 不拥有的 scope、条件语义、产品/技术规则、缺口、blocker、Source Item 与验证绑定。
+
+这些输入仍是普通 Source。消费流程先把选定 target 变成 Context-reachable，再经 Source Claims、适用 Controls/`surface_bindings` 到达生产 route/component owner 与冷启动真实用户旅程，最后由可独立失败的 `design_conformance`、interaction、target-runtime 证据进入当前快照 Contract Conformance 或 Long-Task 的唯一 Final Gate。可变链接、缺少 version/node、截断输入和未决覆盖会 fail closed；connector/extraction 成功、截图、hash 与 handoff preflight 只证明采集或完整性，不能替代生产实现一致性。这个混合方案提高准确度并降低 authoring 成本，但不新增 Figma 专属 schema、registry、第二 Authority 或第二 Gate，非 Figma 资源仍完整可用。
 
 默认 Workflow 会在 material 产品、设计、实现或验收判断前执行 UI Authority Closure 和条件式 Design Authority Check。它从 owning Surface/Screen/Control Context 的稳定 key 走到 `DESIGN.md`，主动打开每个受影响的 selected `exact-target`/`constraint`；只看到登记不算已消费。每个 adopted 记录包含可读的 immutable locator/digest、覆盖条件和 editable upstream owner/locator/update route。缺失、不可读、过期或冲突时对受影响 claim fail closed；若只有编辑上游不可用，仍可读取 immutable target，但修改资源属于人工/外部边界。更新必须产生新 immutable version，不能覆盖旧基线。未配置 starter、候选稿、只有风格文字或灵感图都不能授权 agent 发明生产布局。明确的设计系统初始化/采纳请求路由到 `/design-system-authoring`，独立资源生成请求路由到 `/design-resource-authoring`；已有充分权威的普通实现、局部样式修复和 throwaway prototype 仍保持轻量。
 
-只要是已经选定、准备进入实现的设计资源，两种开发路径都会先运行 `ty-context design-resource preflight <handoff.md>`。一个带 Source marker 的项目原生 Markdown 会把每个范围内 subject 的 surface/flow、visual/content、component/control、state/interaction、motion、adaptation/input、accessibility、assets 八个维度逐项闭合，并连接不可变证据、Source Item 和验证方法。缺维度、证据类型不成立、仍有未决语义或 digest 过期都会 fail closed。探索候选仍不需要 schema。preflight 只证明设计输入语义完整且资源身份正确；开发流程仍必须打开真实资源，并从生产入口证明当前实现。
+只要是已经选定、准备进入实现的设计资源，两种开发路径都会先运行 `ty-context design-resource preflight <handoff.md>`。一个带 Source marker 的项目原生 Markdown 作为残余结构化 handoff：它引用可定位的原生事实而不是手工复制，并把每个范围内 subject 的 surface/flow、visual/content、component/control、state/interaction、motion、adaptation/input、accessibility、assets 八个维度逐项闭合，连接不可变证据、Source Item 和验证方法。缺维度、证据类型不成立、仍有未决语义或 digest 过期都会 fail closed。探索候选仍不需要 schema。preflight 只证明设计输入语义完整且资源身份正确；开发流程仍必须打开真实资源，并从生产入口证明当前实现。
 
 对 material 工作，`context_uiux_design` 在任务内部维护风险比例化的 Visual Coverage Set；耐久 surface/interaction 事实属于 `project_context/**`，耐久视觉语义和设计引用 registry 属于 `DESIGN.md`，versioned target 保留在项目原生路径。`context_development_engineer` 用稳定 surface/control key 把每个选定 target/condition 追踪到生产 route/component owner、冷启动真实用户旅程及可渲染/交互检查，并在首个可运行纵向切片完成时先从真实入口检查，再扩展其余 UI。只报告真正检查过的组合；资源哈希、manifest 和数量只证明资源完整性，实现截图既不能成为自己的目标，也不能单独证明实现一致性。
 
@@ -153,9 +155,11 @@ Skill 把明确输出或开发内容当作硬 scope ceiling。局部功能只可
 
 Skill 会先分类 visual-style dependency。高保真/品牌化输出、视觉方向、字体/颜色/密度、组件视觉处理和 production-style prototype 属于 style-bearing：若 `DESIGN.md` 未配置或没有唯一 authored token source/direction，Skill 必须在创建 provider project/run 前停下，并提示用户显式调用 `/design-system-authoring`，绝不自动初始化。低保真结构、IA/flow topology 和纯语义 behavior/state study 属于 non-fidelity。style-bearing 工作必须把已采纳 provider ID 传给 MCP `create_project.designSystem`，并用 `get_project.designSystemId` 验证一致。
 
-Skill 只通过结构化 MCP（必要时有限使用 CLI/daemon/UI fallback）委托最小充分资源集。一个可定位、可检查的大页面稿、原型或组件族 workbench 可以覆盖多个事项；重复控件映射到共享变体，只有仍缺少材料性含义的独特/复杂控件才需要专门状态或交互稿。静态/default 页面不能自动代表没展示的动态状态、交互、动效、响应式或可访问性。原型、低/高保真组合、组件板、Figma handoff、逐控件一份稿、变体数量和目录都不是全局必选项。设计资源可以表达用户可感知的交互语义和产品规则的呈现方式，但业务、数据、权限和算法逻辑仍由产品/技术 Source 所有。Tiny Context 不复制 Open Design 的 prompt/template，也不内置 provider catalogue。
+Skill 只通过结构化 MCP（必要时有限使用 CLI/daemon/UI fallback）委托最小充分资源集。一个可定位、可检查的大页面稿、原型或组件族 workbench 可以覆盖多个事项；重复控件映射到共享变体，只有仍缺少材料性含义的独特/复杂控件才需要专门状态或交互稿。静态/default 页面不能自动代表没展示的动态状态、交互、动效、响应式或可访问性。原型、低/高保真组合、组件板、Figma 原生输入、逐控件一份稿、变体数量和目录都不是全局必选项。设计资源可以表达用户可感知的交互语义和产品规则的呈现方式，但业务、数据、权限和算法逻辑仍由产品/技术 Source 所有。Tiny Context 不复制 Open Design 的 prompt/template，也不内置 provider catalogue。
 
-探索模式只做最小完整性检查并尽快展示指定候选，不需要 handoff schema。明确或受托最终选择且资源将进入实现时，Skill 只做一次合并、幂等的初始方案回改，并在任意获准的项目路径写一个 provider-neutral、带 Source marker、且只含一个严格 `design-resource-handoff-v1` block 的 Markdown。它记录 scope/provenance、不可变资源路径/digest 与 editable upstream、conditions、可分组 subjects、selected targets、可定位 evidence、八维完整 coverage、Source-item/verification-method binding 和 acceptance blockers；随后运行共享 preflight，不能把 `decision_required`、`unavailable`、证据不成立或过期输入称为 ready。这里没有固定目录、provider pack 或逐控件一份稿；适配器只是普通 Source，不是 Design Authority 或验收结果。Skill 不会修改 Source Plan、`project_context/**`、`DESIGN.md`、生产代码或 Delivery Contract。
+当请求、提供或选中 Figma 时，Skill 读取专门的 Figma 原生 profile：feature-detect 当前 connector/tool/auth，锁定精确 file/version/nodes/conditions，从 metadata 与小型逻辑 node set 开始，再读取 design context、Variables、截图及适用的 motion、assets、Code Connect。上游可修改时优先采用 Components/Variants、Variables/token mapping、Auto Layout、语义命名和 Annotations/dev resources。选定结果冻结为带 hash 的仓库可读不可变输入，并把 editable upstream 路由单独记录。只有可变链接、metadata-only 或扁平化替代、过大/截断 extraction、以及不可用的 plan-dependent capability 都不能授权 fidelity。
+
+探索模式只做最小完整性检查并尽快展示指定候选，不需要 handoff schema。明确或受托最终选择且资源将进入实现时，Skill 只做一次合并、幂等的初始方案回改，并在任意获准的项目路径写一个 provider-neutral、带 Source marker、且只含一个严格残余 `design-resource-handoff-v1` block 的 Markdown。它引用可定位的 Figma 原生事实，再记录 scope/provenance、不可变资源路径/digest 与 editable upstream、conditions、可分组 subjects、selected targets、八维完整 coverage、仍需补充的产品/交互/可访问性语义、Source-item/verification-method binding 和 acceptance blockers；随后运行共享 preflight，不能把 `decision_required`、`unavailable`、证据不成立或过期输入称为 ready。这里没有固定目录、provider pack 或逐控件一份稿；适配器只是普通 Source，不是 Design Authority 或验收结果。Skill 不会修改 Source Plan、`project_context/**`、`DESIGN.md`、生产代码或 Delivery Contract。
 
 实际生成仍由已配置的 Open Design/Product Design、Figma、图片生成、原型工具或人工设计流程负责。这些输出以普通 external Source 进入默认 Workflow 或 Long-Task。candidate 与 inspiration 不授权 fidelity；adopted exact target/constraint 作为 Context-reachable Source，由 owning Context/`DESIGN.md` 把稳定 key 连接到覆盖条件、不可变身份/digest 和 editable upstream owner/locator/update route。`context_uiux_design` 在下游执行 UI Authority Closure，只把耐久事实采纳到 Context/`DESIGN.md`；实现截图与 diff 仍是证据 artifact，不能自我授权为目标。
 

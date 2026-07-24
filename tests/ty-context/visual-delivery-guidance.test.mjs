@@ -296,7 +296,7 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   );
   assert.match(
     evidence,
-    /Candidate comparison, a Figma link or an isolated prototype run is authoring\/review material/iu,
+    /Candidate comparison, a mutable Figma link, connector\/extraction success[\s\S]*authoring\/integrity material/iu,
   );
 });
 
@@ -341,11 +341,13 @@ test("complete selected-design conformance is an explicit Long-Task purpose", as
       content,
       /Agent implementation, acceptance and testing fully conform/iu,
     );
-    assert.match(content, /Open Design HTML, images and prototypes/iu);
+    assert.match(content, /Figma-native/iu);
     assert.match(
       content,
-      /structured textual semantic (?:handoff|supplement)/iu,
+      /residual[\s\S]{0,160}handoff|handoff[\s\S]{0,160}residual/iu,
     );
+    assert.match(content, /immutable/iu);
+    assert.match(content, /Final Gate/iu);
   }
   assert.match(
     globalContext,
@@ -353,7 +355,7 @@ test("complete selected-design conformance is an explicit Long-Task purpose", as
   );
   assert.match(
     globalContext,
-    /structured textual handoff is part of the selected implementation resource set/iu,
+    /provider-neutral structured handoff remains the residual semantic and coverage boundary/iu,
   );
   assert.match(
     chineseReadme,
@@ -361,11 +363,11 @@ test("complete selected-design conformance is an explicit Long-Task purpose", as
   );
   assert.match(
     chineseReadme,
-    /结构化文本语义交接也作为选定实现设计资源的一部分/iu,
+    /Figma 原生[\s\S]*残余结构化 handoff/iu,
   );
   assert.match(
     sourcePlan,
-    /structured textual semantic supplement is itself part of the selected implementation design-resource set/iu,
+    /Figma-Native Input And Residual Handoff Amendment/iu,
   );
 });
 
@@ -414,7 +416,7 @@ test("default workflow routes Design Authority readiness without adding a visual
   );
   assert.match(
     workflow,
-    /routes every covered Source Item and verification method[\s\S]*real-entry checks/iu,
+    /routes every covered[\s\S]{0,80}Source Item and verification method[\s\S]*real-entry checks/iu,
   );
   assert.match(workflow, /^## UI Authority Closure$/mu);
   assert.match(workflow, /material production UI/iu);

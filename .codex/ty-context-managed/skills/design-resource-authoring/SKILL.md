@@ -26,7 +26,8 @@ Commission the smallest sufficient set of design resources for the explicitly re
 
 1. Always read [resource-selection.md](references/resource-selection.md) before deciding what to generate or whether the request is style-bearing.
 2. Read [open-design-provider.md](references/open-design-provider.md) before capability discovery, Design Authority gating, provider execution, recovery or Figma routing.
-3. Read [downstream-handoff.md](references/downstream-handoff.md) before final selection, initial-proposal reconciliation, handoff or downstream use. A simple unselected non-fidelity preview may stop before this reference.
+3. Read [figma-native-handoff.md](references/figma-native-handoff.md) whenever Figma is requested, supplied or selected as native input. It owns the operational capability, exact version/node acquisition, immutable-capture and residual-handoff rules; a catalogue entry or mutable link is insufficient.
+4. Read [downstream-handoff.md](references/downstream-handoff.md) before final selection, initial-proposal reconciliation, handoff or downstream use. A simple unselected non-fidelity preview may stop before this reference.
 
 ## Core workflow
 
@@ -38,10 +39,11 @@ Commission the smallest sufficient set of design resources for the explicitly re
 6. **Discover live capabilities.** Inspect the current Open Design agent/model, skills, templates, design systems, plugins and export paths. Treat absent/non-enumerable capabilities honestly.
 7. **Choose the minimum sufficient commission.** Give each considered resource `selected`, `optional`, `not-needed`, `unavailable` or `decision-required` with one reason. Ask only when a missing preference materially changes the commission.
 8. **Bind and commission through Open Design.** For style-bearing work, create or verify the Open Design project with the adopted design-system ID and require `get_project.designSystemId` to match. Send a bounded product commission through structured MCP; use documented fallbacks only when required.
-9. **Observe, inspect and iterate.** Keep provider execution, artifact readiness and design suitability separate. Iterate within scope. Keep proposal effects only in the delta buffer while candidates remain unsettled.
-10. **Finalize selection and reconcile once.** After explicit human selection or explicit delegated selection, preserve immutable identity and consolidate accepted, rejected and unresolved effects. Apply only accepted decisions once to a writable initial-proposal file; if it exists only in conversation, return one complete revised proposal. Preserve original intent/provenance and make reruns idempotent. Do not write unresolved or rejected choices as requirements.
-11. **Compile an implementation handoff when requested.** For final selected resources intended for development, write one project-native Markdown Source at an authorized path. Preserve readable `ty-source-item` facts and exactly one fenced `design-resource-handoff-v1` YAML block. Close every in-scope subject across the eight required dimensions, bind covered rows to immutable resources/conditions/addressable evidence/Source Items/verification methods, and retain acceptance blockers. Run `ty-context design-resource preflight <handoff.md>` and iterate the resource or mapping until it passes; `decision_required`/`unavailable`, stale digests and unsupported evidence are blocking. Do not create this file for exploration.
-12. **Return an intent-sized result.** Exploration shows the artifact promptly. An implementation handoff returns the validated handoff path, selected immutable resources, stable-key coverage, provenance, binding, limitations and preflight result. Include the reconciled initial proposal or its updated path when final selection occurred.
+9. **Acquire selected Figma input natively when applicable.** Feature-detect the operational connector/tools, pin the exact file/version/nodes/conditions, inspect small logical node sets through metadata, design context, variables and screenshots plus applicable motion/assets/Code Connect, then freeze repository-readable immutable inputs with separate editable-upstream provenance. Follow `figma-native-handoff.md`; incomplete or mutable-only input is blocking for affected fidelity claims.
+10. **Observe, inspect and iterate.** Keep provider execution, artifact readiness and design suitability separate. Iterate within scope. Keep proposal effects only in the delta buffer while candidates remain unsettled.
+11. **Finalize selection and reconcile once.** After explicit human selection or explicit delegated selection, preserve immutable identity and consolidate accepted, rejected and unresolved effects. Apply only accepted decisions once to a writable initial-proposal file; if it exists only in conversation, return one complete revised proposal. Preserve original intent/provenance and make reruns idempotent. Do not write unresolved or rejected choices as requirements.
+12. **Compile the residual implementation handoff when requested.** For final selected resources intended for development, write one project-native Markdown Source at an authorized path. Preserve readable `ty-source-item` facts and exactly one fenced `design-resource-handoff-v1` YAML block. Reference addressable Figma-native facts instead of manually retranscribing them, then close every in-scope subject across the eight required dimensions, bind covered rows to immutable resources/conditions/addressable evidence/Source Items/verification methods, and retain the residual scope, semantics, unresolved meaning and acceptance blockers that native resources do not own. Run `ty-context design-resource preflight <handoff.md>` and iterate the resource or mapping until it passes; `decision_required`/`unavailable`, stale digests and unsupported evidence are blocking. Do not create this file for exploration.
+13. **Return an intent-sized result.** Exploration shows the artifact promptly. An implementation handoff returns the validated handoff path, selected immutable resources, stable-key coverage, provenance, binding, limitations and preflight result. Include the reconciled initial proposal or its updated path when final selection occurred.
 
 ## Conditional Design Authority gate
 
@@ -64,7 +66,8 @@ initial proposal
   -> explicit or delegated final selection
   -> one consolidated, idempotent initial-proposal reconciliation
   -> revised proposal + selected immutable resources
-  -> validated design-resource-handoff-v1 (implementation intent only)
+     + optional exact Figma-native capture
+  -> validated residual design-resource-handoff-v1 (implementation intent only)
   -> default Goal execution or long-task-workflow
 ```
 
@@ -80,4 +83,4 @@ Small requests may complete generation, selection and reconciliation in one turn
 
 ## Completion response
 
-Report scope, necessary context/exclusions, style dependency and gate result; selected/omitted/unavailable resources; visible artifacts/locators; provider, project/run and design-system binding status; review and selection basis; immutable provenance; material coverage/unresolved decisions; proposal reconciliation status/path; and forbidden inferences. For implementation intent, also report the `design-resource-handoff-v1` path and successful shared preflight; never call a failing or unresolved handoff ready.
+Report scope, necessary context/exclusions, style dependency and gate result; selected/omitted/unavailable resources; visible artifacts/locators; provider, project/run and design-system binding status; review and selection basis; immutable provenance; material coverage/unresolved decisions; proposal reconciliation status/path; and forbidden inferences. For selected Figma-native input, also report operational capability, exact version/nodes/conditions, frozen repository inputs, editable-upstream route and incomplete/unavailable tool results. For implementation intent, report the residual `design-resource-handoff-v1` path and successful shared preflight; never call a failing or unresolved handoff ready.

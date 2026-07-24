@@ -345,6 +345,57 @@ test("Source repair and Contract mapping converge in one Source-bound Draft loop
   }
 });
 
+test("Figma-native facts and residual handoff preserve the Long-Task proof chain", async () => {
+  const [skill, sourceAuthoring, contractAuthoring, evidenceDesign, spec, readmes] =
+    await Promise.all([
+      read(".codex/ty-context-managed/skills/long-task-workflow/SKILL.md"),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/source-authoring.md",
+      ),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/contract-authoring.md",
+      ),
+      read(
+        ".codex/ty-context-managed/skills/long-task-workflow/references/evidence-design.md",
+      ),
+      read("PROJECT_SPEC.md"),
+      Promise.all([
+        read("README.md"),
+        read("README.zh-CN.md"),
+        read("packages/ty-context/README.md"),
+      ]).then((contents) => contents.join("\n")),
+    ]);
+  const guidance = [
+    skill,
+    sourceAuthoring,
+    contractAuthoring,
+    evidenceDesign,
+    spec,
+    readmes,
+  ].join("\n");
+
+  assert.match(guidance, /Figma-native|Figma 原生/iu);
+  assert.match(guidance, /exact file\/version\/node/iu);
+  assert.match(guidance, /repository-readable immutable/iu);
+  assert.match(guidance, /residual (?:structured )?(?:semantic\/coverage )?handoff/iu);
+  assert.match(
+    guidance,
+    /Source Claims[\s\S]*Controls\/`?surface_bindings`?[\s\S]*production[\s\S]*design_conformance[\s\S]*interaction[\s\S]*target-runtime[\s\S]*Final Gate/iu,
+  );
+  assert.match(
+    evidenceDesign,
+    /connector\/extraction success[\s\S]*cannot become product acceptance/iu,
+  );
+  assert.match(
+    guidance,
+    /mutable (?:Figma )?link[\s\S]*(?:metadata-only|flattened screenshot)[\s\S]*(?:incomplete|insufficient|cannot replace)/iu,
+  );
+  assert.match(
+    spec,
+    /no provider-specific schema[\s\S]*second Authority[\s\S]*second Gate/iu,
+  );
+});
+
 test("registered rationale owns history, mechanism mapping and trusted limits", async () => {
   const [manifest, rationale, globalContext, verification] = await Promise.all([
     read("project_context/context.toml"),

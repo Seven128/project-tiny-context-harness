@@ -10,8 +10,9 @@
 - Subsequent implementation delivery: the user separately authorized package implementation on 2026-07-22; that delivery owned the production Skill, owning Context/public guidance, package distribution and deterministic/opt-in verification changes. At that point application-product code, Delivery Contract authoring, package publication and automatic adoption of generated resources remained excluded.
 - Clarification delivery: the user subsequently clarified on 2026-07-22 that the Skill's design purpose is workflow-independent and development-corresponding: a local development slice must not expand into whole-product design, while an implementation handoff must cover every material in-scope UI/UX decision through relevant control detail without requiring one artifact per control. The current Goal owns this Source clarification, Skill/Context/index/public/test alignment, release preparation and package publication; it still does not authorize application-product implementation or automatic adoption of generated resources.
 - Input-adapter delivery: on 2026-07-24 the user required the selected implementation handoff to become a shared, machine-validatable input for both the default Workflow Contract and Long-Task so implementation, testing and acceptance can completely follow every declared design fact. This amendment owns the provider-neutral `design-resource-handoff-v1` adapter, CLI/Long-Task integration, Context/Skill/public guidance, deterministic tests and one real complex-single-page Open Design workflow smoke. It does not make exploration pay the handoff cost or turn the adapter into Design Authority/acceptance.
+- Figma-native input delivery: on 2026-07-24 the user selected an optional hybrid path in which Figma carries addressable native UI/UX facts while the structured residual handoff retains semantics, coverage accounting and downstream bindings that Figma cannot own. This amendment owns the Figma best-practice producer profile, immutable capture boundary, complete design-purpose causal chain, authoring-quality rule, package/public parity and real Long-Task verification; it does not require installing/authenticating Figma or make it a universal dependency.
 - Authority: this document is optional upstream Source/navigation. It is not Context, a Contract Draft, runtime state, Design Authority, selection approval or completion evidence.
-- Research date: 2026-07-22.
+- Research dates: Open Design 2026-07-22; Figma official developer guidance 2026-07-24.
 
 ### Navigation index
 
@@ -57,7 +58,7 @@ explicit request + initial proposal/product/technical/design Source
   -> optional durable adoption, implementation and project-owned verification
 ```
 
-No resource type is globally mandatory. A prototype is expected to be high-value for many new Web/App screens and interaction flows, but it is selected only when the current design gap and available Open Design capability justify it. The same rule applies to wireframes, visual candidates, component state studies, design systems, Figma handoffs and every other resource.
+No resource type is globally mandatory. A prototype is expected to be high-value for many new Web/App screens and interaction flows, but it is selected only when the current design gap and available Open Design capability justify it. The same rule applies to wireframes, visual candidates, component state studies, design systems, Figma-native inputs/handoffs and every other resource.
 
 For an implementation handoff, sufficiency is development-corresponding rather than product-global: every material user-visible design decision inside the explicit development scope is covered by selected existing or newly generated Source, is not applicable or is excluded by that scope. An honestly unresolved/unavailable decision may stop further authoring, but only as a blocked result; it cannot become a ready handoff. One addressable page/prototype/board may cover many conditions; repeated controls may map to a shared component family; only unique or complex uncovered controls need dedicated studies. A static/default view proves no unshown state, interaction, motion, responsive or accessibility behavior. Design resources express user-visible interaction semantics and product-rule presentation, while business, data, permission and algorithmic rules remain owned by product/technical Source.
 
@@ -82,13 +83,51 @@ This amendment supersedes older statements below that assigned proposal revision
 This amendment supersedes older statements below that allowed a selected implementation handoff to remain prose-only or said that no dedicated file/schema was required. That lightweight rule still applies to exploration, candidates and unselected previews.
 
 - The design purpose is explicit: every material UI/UX fact actually declared for the selected development scope must survive into implementation, testing and acceptance without Agent invention or category substitution.
-- Open Design HTML, images and prototypes remain the primary visual artifacts. The structured textual semantic supplement is itself part of the selected implementation design-resource set: it makes only explicitly specified or demonstrated facts traceable into a Contract, while absent meaning requires resource refinement, an explicit decision or a blocked handoff rather than inference.
+- Open Design HTML, images and prototypes remain valid visual artifacts. The later Figma-native amendment adds an optional native fact source, while the provider-neutral structured semantic supplement remains part of every selected implementation handoff as the residual coverage/binding layer: it makes only explicitly specified or demonstrated facts traceable into a Contract, while absent meaning requires resource refinement, an explicit decision or a blocked handoff rather than inference.
 - A selected implementation handoff emits one project-native marked Markdown Source containing exactly one strict `design-resource-handoff-v1` YAML block. Its repository location is arbitrary and it is not a pack or registry.
 - The block indexes scope, provenance, immutable repository-local resources/digests/editable upstreams, declared conditions, stable subjects/targets, addressable evidence, eight-dimension coverage, Source-item refs, verification methods, acceptance blockers and proposal-reconciliation status.
 - Every in-scope subject closes `surface_flow`, `visual_content`, `component_control`, `state_interaction`, `motion`, `adaptation_input`, `accessibility` and `assets` as covered, not applicable, explicitly excluded or unresolved. Unresolved/unavailable meaning makes the handoff not ready.
 - Evidence kinds are dimension-sensitive. In particular, a static frame cannot prove unseen states, interaction, motion, responsive/input or accessibility semantics; resource integrity never proves implementation conformance.
 - `ty-context design-resource preflight <handoff.md>` is the shared adapter entry. `design-resource-authoring` runs it before handoff, the default Workflow reruns it before fidelity authorization, and Long-Task Preflight/Compile reruns it while binding target/conditions/files/Source Claims/root Assertion/blockers.
 - Default and Long-Task retain different lifecycle strength but consume the same design meaning. The adapter creates no Authority Lock, Progress, Receipt, Gate, acceptance result or durable Context fact.
+
+## 2026-07-24 Figma-Native Input And Residual Handoff Amendment
+
+This amendment supersedes older operational statements below that treated Open Design HTML/images/prototypes as the only primary input path or treated Figma only as an optional export destination. The earlier Open Design capability experiments remain historical facts; they do not limit a currently operational Figma connector.
+
+- **Problem and purpose:** direct visual consumption and manually rewritten prose can omit or distort selected UI/UX facts before Contract authoring. The purpose remains complete conformance by Agent implementation, acceptance and testing to every selected fact inside its declared conditions.
+- **Inputs and transformation:** Open Design, human design and non-Figma resources remain valid. When Figma is selected and operational, pin exact file/version/node IDs/conditions; inspect small logical node sets through metadata, design context, Variables and screenshots plus applicable motion/assets/Code Connect; then freeze repository-readable immutable results with hashes and separate editable-upstream provenance.
+- **Source quality:** applicable upstream work prefers Components/Variants, Variables or token mappings, Auto Layout, semantic names, Annotations/dev resources and operational Code Connect. These improve machine interpretability but do not create authority.
+- **Residual handoff:** `design-resource-handoff-v1` remains required for selected implementation handoff. It references addressable Figma-native facts instead of retranscribing every property, while it still closes all eight dimensions and owns scope/exclusions, condition meaning, not-applicable versus missing facts, product/data/permission/recovery semantics, unmodeled accessibility/input/motion, unresolved or unavailable facts, blockers, Source Items and verification methods.
+- **Authority and proof:** native output and residual handoff remain ordinary Source. Context/`DESIGN.md` owns durable adoption; Contract Source Claims, Controls/`surface_bindings` and production owners carry the facts into independently failing `design_conformance`, interaction and target-runtime evidence; current-snapshot Contract Conformance or the sole Long-Task Final Gate proves the declared implementation.
+- **Fail-closed limits:** mutable-only links, missing version/node identity, oversized or truncated extraction, unreadable/stale captures, incomplete tool results and unresolved coverage block affected fidelity claims. Connector success, Code Connect, screenshots, hashes and handoff preflight prove acquisition/integrity only.
+- **Costs, alternatives and ROI:** the native path reduces manual transcription and improves precision, while the residual handoff preserves omission detection and deterministic downstream binding. Replacing handoff with Figma loses nonvisual semantics; manually duplicating native facts raises drift; link-only/prompt-only paths are not recoverable; a Figma schema/pack/registry/Gate adds duplicate ownership. Optional use keeps non-Figma authoring cost unchanged, so expected ROI is materially positive without a second Authority.
+- **Operational variability:** connector/auth/tool names, Figma plans, Code Connect availability and rate limits are feature-detected. Batch/cache immutable reads, handle `429`, split large selections and never fabricate unavailable capabilities.
+- **Indexed surfaces:** the owning Context, `PROJECT_SPEC.md`, English/Chinese/package README, managed/generated/package Skills and references, Long-Task authoring/evidence guidance, authoring overlay, source-sync map and deterministic tests must stay aligned.
+
+```text
+product/technical Source + configured Design Authority
+  -> Open Design generation or selected existing design Source
+  -> optional exact Figma-native acquisition
+  -> repository-readable immutable capture + editable upstream route
+  -> residual provider-neutral design-resource-handoff-v1
+  -> Context-reachable target + Source Claims + Controls/surface_bindings
+  -> production owner + cold-start journey
+  -> design_conformance + interaction + target-runtime evidence
+  -> Contract Conformance or sole Long-Task Final Gate
+```
+
+Official Figma sources consulted on 2026-07-24:
+
+| Source | Adopted operational meaning |
+| --- | --- |
+| [MCP server](https://developers.figma.com/docs/figma-mcp-server/) and [tools/prompts](https://developers.figma.com/docs/figma-mcp-server/tools-and-prompts/) | Feature-detect metadata, design-context, variable, screenshot, motion, asset and Code Connect capabilities; remote availability/auth is an operational boundary. |
+| [Structure your Figma file](https://developers.figma.com/docs/figma-mcp-server/structure-figma-file/) | Components, Variables, semantic naming, Auto Layout, Annotations/dev resources and Code Connect improve implementation context. |
+| [Avoid large frames](https://developers.figma.com/docs/figma-mcp-server/avoid-large-frames/) | Acquire logical small nodes because large selections can time out, truncate or lose context. |
+| [Code Connect](https://developers.figma.com/docs/code-connect/) | Map selected design components to repository components only when the plan/seat-dependent capability is operational. |
+| [REST file endpoints](https://developers.figma.com/docs/rest-api/file-endpoints/) | Explicit version and node reads support immutable, addressable capture. |
+| [REST rate limits](https://developers.figma.com/docs/rest-api/rate-limits/) | Plan/seat/endpoint limits require bounded calls, caching/batching and explicit `429` handling. |
+| [Trigger specific tools](https://developers.figma.com/docs/figma-mcp-server/trigger-specific-tools/) | Explicitly route each required fact to its tool class rather than assuming automatic tool choice. |
 
 <a id="dra-input-inventory"></a>
 ## Input Inventory And Treatment
@@ -134,6 +173,17 @@ This amendment supersedes older statements below that allowed a selected impleme
   - prototype layout/information, control visual detail, states, interaction UX, motion and every other applicable design-resource fact must remain explicit and consumable rather than being guessed from one static image;
   - the owning Context must state both this purpose and the mechanism and must route future work to all affected implementation, Skill, documentation and verification surfaces;
   - verification must include one actual Open Design generation of a UI/UX-complex, business-logic-simple single page and exercise its handoff through both development consumers.
+
+### `IN-DRA-USER-004` — Figma-native input and residual handoff requirement
+
+- Role: controlling direct Source for the 2026-07-24 Figma-native extension.
+- Direct meaning:
+  - introduce Figma when it produces materially better precision and lower authoring cost for selected UI/UX facts;
+  - keep the structured handoff for information Figma cannot express and for Source/Contract/verification binding;
+  - follow current Figma official best practices and retain optional/non-operational behavior honestly;
+  - update the entire design-purpose mechanism chain with complete, causally rigorous explanation rather than isolated wording;
+  - add the same information-completeness and causal-rigor obligation to the source-workspace authoring Skill if not already sufficient; and
+  - execute and accept the implementation through a real Single-Goal Long-Task Workflow.
 
 ### `IN-DRA-EXT-001` — Original 1,077-line external UI/UX upgrade proposal
 
@@ -296,6 +346,8 @@ The provider has real Figma-import machinery: `figma-extract` accepts a Figma UR
 
 The installed `figma-generate-design` and `figma-generate-library` skills are catalogue pointers to `https://github.com/figma/skills`; their own instructions require the full upstream bundles to be installed in the active agent. Open Design's `handoff` atom records a Figma export target only after another exporter wrote it; it is not itself a Figma frame writer. No Figma MCP/connector or editable-design creation was proven operational in this Goal. A Codex Figma plugin may be offered only when the user explicitly wants Figma and the connector/plugin is installed and authenticated; it is never a prerequisite for HTML prototypes or Tiny Context consumption.
 
+This is a historical finding about the tested 2026-07-22 Open Design environment, not a prohibition on current native Figma input. The 2026-07-24 amendment feature-detects the active Figma path and, when operational, consumes exact version/node facts through the provider-neutral immutable-input and residual-handoff boundary.
+
 ### `FIND-DRA-007` — Provider self-review and outer review are different layers
 
 The generated HTML sources contained structural checks, but the high-fidelity flow run showed that the nested Codex process had no Browser MCP servers in its Open Design tool bundle. It attempted a hidden local server that policy rejected and a Windows-incompatible Bash Playwright wrapper before recovering. The outer Codex Browser could inspect the finished provider preview directly.
@@ -389,7 +441,7 @@ Use the following as selection heuristics, not a mandatory phase sequence:
 | One control's behavior and states | Interactive component specimen/state workbench | a unique/complex control's user-visible anatomy, variants, feedback, motion, keyboard, error/loading or recovery is unclear | a selected component/page/prototype source explicitly specifies and demonstrates every applicable condition |
 | Cross-screen behavior and shared state | Interactive flow prototype | transitions, persistence or conditional UI must be experienced | a static board answers the current decision and implementation is not yet requested |
 | Reusable visual language | `DESIGN.md`/design-system resource | several surfaces need a coherent durable language and existing authority is insufficient | the request is a throwaway style probe or one isolated control |
-| Editable collaborative source | Figma frames/library | team review, editable layout/component collaboration or Figma is the declared system of record | HTML/source screenshots are sufficient or Figma capability/auth is absent |
+| Native inspectable/editable source | Figma frames/library plus exact version/node capture | team review, native property/component inspection, editable collaboration or Figma is the declared system of record | other selected resources are sufficient or the connector/auth/read/export path is unavailable |
 | Bespoke imagery/media/3D | Specialized Open Design media capability | the requested UI genuinely depends on those assets | decorative media would only fill an authority gap with invention |
 
 Prototype selection heuristic: prefer a real prototype when the unresolved question depends on interaction, transition, shared state, responsive behavior or implementation-facing feedback. Prefer a static/lo-fi resource when the unresolved question is topology, hierarchy or visual direction and interaction would add no independent information. Select neither when existing authority already answers the requested scope.
@@ -430,7 +482,7 @@ The preferred transport order is:
 
 The outer Skill supplies the product commission, selected Open Design capability and bounded inputs. Open Design's daemon launches its configured inner agent, including Codex CLI where configured. The outer Skill must not recreate the Open Design template prompt, pretend that calling image generation alone is equivalent, or hardcode a model ID that Open Design can discover.
 
-Figma is an optional provider-side refinement/handoff route. It is selected only when the request benefits from editable frames/libraries or organizational handoff and the required Figma capabilities/authentication are actually installed. A catalogue pointer to upstream Figma skills is not evidence that the local path is operational.
+Figma is an optional native input or provider-side refinement/handoff route. It is selected only when the request benefits from native inspectability, editable frames/libraries, component reuse or organizational handoff and the required Figma read/export capabilities/authentication are operational. A catalogue pointer, URL or thumbnail is not evidence that the local path is operational; selected input follows the exact-identity, small-node, immutable-capture and residual-handoff rules in the 2026-07-24 amendment.
 
 ### Provider preflight and execution algorithm
 
@@ -586,6 +638,12 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 - `REQ-DRA-044` — Expose one provider-neutral `ty-context design-resource preflight` parser/validator to both workflows; reject unknown fields, duplicate/incomplete coverage, unsupported evidence, path escape, missing/stale resources and unresolved handoffs.
 - `REQ-DRA-045` — Long-Task Preflight/Compile requires each Contract `design_target` to match exactly one validated handoff target, freezes the handoff/resources as inputs, maps every covered Source Item through `source_claims` into the root conformance Assertion and binds every declared acceptance blocker.
 - `REQ-DRA-046` — The default Workflow reruns the same preflight before UI Authority Closure, opens every selected exact/constraint resource, routes covered Source Items/verification methods through production owners and real-entry checks, and reports only declared combinations.
+- `REQ-DRA-047` — Treat Figma-native input as an optional feature-detected producer profile over the provider-neutral adapter, never as a universal dependency, provider-specific schema, pack, registry, Authority, Claim kind, Gate or acceptance lifecycle.
+- `REQ-DRA-048` — For selected Figma-native input, pin exact file/version/node IDs/conditions, acquire small logical node sets through metadata/design context/Variables/screenshots plus applicable motion/assets/Code Connect, and freeze repository-readable immutable artifacts with exact hashes and a separate editable-upstream route.
+- `REQ-DRA-049` — Prefer applicable Components/Variants, Variables/token mappings, Auto Layout, semantic names, Annotations/dev resources and operational Code Connect; treat tool, plan, seat, auth and rate-limit constraints honestly and fail closed on missing identity, truncated/incomplete output, stale capture or mutable-only input.
+- `REQ-DRA-050` — Keep `design-resource-handoff-v1` as the residual handoff: reference addressable native facts, close all eight dimensions, and retain scope, conditions, nonvisual product semantics, missing/not-applicable distinctions, unresolved items, blockers, Source Items and project verification methods.
+- `REQ-DRA-051` — Preserve the complete proof chain from immutable native/resource inputs and residual handoff through Context-reachable targets, Source Claims, Controls/`surface_bindings`, production owners and independently failing `design_conformance`, interaction and target-runtime evidence to Contract Conformance or Final Gate; input success/integrity cannot substitute.
+- `REQ-DRA-052` — Keep design-purpose/design-thinking/mechanism-rationale documentation and Context information-complete and causally rigorous across problem/purpose, inputs/transformation, authority/ownership, downstream consumption/proof, fail-closed limits, costs/alternatives and indexed surfaces.
 
 <a id="dra-handoff-contract"></a>
 ## Output And Downstream Handoff Contract
@@ -753,12 +811,14 @@ Proposed authored tree:
 └── references/
     ├── resource-selection.md
     ├── open-design-provider.md
+    ├── figma-native-handoff.md
     └── downstream-handoff.md
 ```
 
 - `SKILL.md`: narrow triggers, input inventory, scope ceiling, intent mode, core decision/execution loop and hard boundaries.
 - `resource-selection.md`: explicit output/development ceiling, material surface/flow/region/component/control condition model, selected-source subtraction, shared-versus-dedicated dynamic gap-to-resource heuristics, dispositions, intent-specific stop rules and commission envelope; no fixed artifact sequence.
 - `open-design-provider.md`: capability discovery, MCP/daemon/UI recovery, polling, entry resolution, hashing and Figma capability checks; no copied provider templates.
+- `figma-native-handoff.md`: optional operational feature detection, exact file/version/node/condition acquisition, small-node tool routing, Figma source-quality practices, immutable repository capture, residual handoff and downstream proof boundaries.
 - `downstream-handoff.md`: candidate/selection/authority separation plus workflow-independent development scope, necessary-context, exclusion, stable-key coverage and provenance handoff fields; default/Long-Task are downstream consumers rather than design-purpose owners.
 
 The shared selected-implementation adapter is package code rather than a provider helper:
@@ -861,6 +921,10 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - `AC-DRA-022` — Given one complete marked implementation handoff, both the standalone CLI and Long-Task activation accept the same target/conditions/resources/coverage. Removing or duplicating a dimension, substituting a static frame for motion/accessibility evidence, mutating a resource digest or adding an unknown field fails closed. Accepts `REQ-DRA-038`, `REQ-DRA-039`, `REQ-DRA-044`.
 - `AC-DRA-023` — Given a valid handoff and a Long-Task Contract, Compile fails unless each design target exactly matches the handoff interpretation/conditions/frozen files, every covered Source Item maps to a claimed root conformance Assertion and every handoff blocker is bound by the owning surface. Accepts `REQ-DRA-045`.
 - `AC-DRA-024` — Given the same valid handoff under the default Workflow, shared preflight runs before UI Authority Closure, every exact/constraint resource is opened, and declared Source Items/methods are routed to real-entry production checks; handoff integrity alone is never reported as implementation conformance. Accepts `REQ-DRA-046`.
+- `AC-DRA-025` — Given an operational selected Figma source, authoring pins exact file/version/nodes/conditions, discovers structure before requesting small implementation-relevant nodes, captures Variables/screenshots and applicable motion/assets/Code Connect, and freezes addressable repository inputs plus editable-upstream provenance. Accepts `REQ-DRA-047` through `REQ-DRA-049`.
+- `AC-DRA-026` — Given a mutable-only link, missing version/node identity, oversized/truncated extraction, incomplete tool result, stale hash or unavailable plan-dependent capability, the affected fidelity claim remains blocked; no flattened export, metadata response or connector-success signal is relabeled as complete native input. Accepts `REQ-DRA-047` through `REQ-DRA-049`.
+- `AC-DRA-027` — Given selected Figma-native inputs, the residual handoff references native facts rather than duplicating them while still closing eight dimensions and carrying nonvisual semantics, gaps, blockers and Source/verification bindings; downstream production evidence must independently fail when implementation diverges. Accepts `REQ-DRA-050`, `REQ-DRA-051`.
+- `AC-DRA-028` — Given a design-purpose or design-thinking mechanism change, owning specification, Context, managed/generated/package guidance, public docs and tests expose one information-complete, causally rigorous chain with authority, proof, fail-closed and alternative/ROI boundaries. Accepts `REQ-DRA-052`.
 
 <a id="dra-risks"></a>
 ## Risks And Mitigations
@@ -933,6 +997,8 @@ Focused deterministic test cases should cover:
 - mutable preview rejection in favor of explicit entry plus content hash/snapshot;
 - final agent message plus complete artifact while the run remains nonterminal, followed by a post-artifact provider timeout; test `artifact-ready/run-unreconciled` → `artifact-ready/provider-failed`, retained provenance and no automatic cancel/retry;
 - Figma catalogue-only, missing connector/auth and proven-operational cases;
+- exact Figma-native version/node/condition capture, small-node tool sequence, source-structure guidance, rate-limit/incomplete-result handling, immutable/residual split and managed/generated/package parity;
+- design-purpose causal-chain and source-workspace information-complete/causally-rigorous authoring-rule drift;
 - exploration stopping after minimal preview, handoff metadata, selection-basis enforcement and zero Context/`DESIGN.md`/code/Contract mutation;
 - authored/package/generated source equality, profile installation, idempotent sync and release tarball inclusion.
 
@@ -950,6 +1016,7 @@ The implementation verification sequence should include build, focused static/mo
 - `IN-DRA-USER-001` controls the no-mandatory-resource rule, scope ceiling, Open Design reuse, no-mutation boundary, experiments and original complete-plan requirement.
 - `IN-DRA-USER-002` controls workflow-independent purpose, explicit development-scope correspondence, necessary-context boundary, material control-level UI/UX coverage, selected-source subtraction, shared-versus-dedicated resource selection, business-logic ownership, handoff stop rule, indexing and package release.
 - `IN-DRA-USER-003` controls the strict shared adapter, complete declared-fact preservation, dual-consumer integration, owning Context purpose/mechanism and real complex-single-page Open Design workflow smoke.
+- `IN-DRA-USER-004` controls the optional Figma-native producer profile, residual handoff boundary, official-practice basis, immutable acquisition, complete design-purpose causal chain, authoring-quality rule and real Long-Task acceptance.
 - `IN-DRA-EXT-001` and `IN-DRA-PLAN-001` control the design-authority, target-classification, condition-coverage and evidence boundaries.
 - `IN-DRA-HARNESS-001` controls Tiny Context ownership, Source/Contract separation, package impact and downstream adoption.
 - `IN-DRA-OD-001`, `IN-DRA-OD-LOCAL-001` and `FIND-DRA-001` through `FIND-DRA-008` control the adapter, capability split, setup/recovery, Figma boundary, entry/provenance rules and live test design.
@@ -960,9 +1027,10 @@ The implementation verification sequence should include build, focused static/mo
 
 - Input inventory: complete for the original conversation/attachment/repository/screenshots and the subsequent development-corresponding design-purpose clarification.
 - Open Design source pin and capability audit: complete against upstream revision `447b18b98e0db98a586ef913b76b0269e487db70` and local package `0.15.1`.
+- Figma-native producer research: complete against the official MCP/tool, file-structure, large-frame, Code Connect, REST file/version/node, rate-limit and explicit-tool-routing guidance retrieved on 2026-07-24; live connector installation/authentication is intentionally outside this delivery.
 - Component/page/flow experiments: complete; three terminal-success artifacts and one fully generated/outer-reviewed `artifact-ready/provider-failed` artifact are recorded with project/run IDs, explicit entries, hashes and failure diagnostics.
 - Provider failure/recovery, registry asymmetry, mutable-preview, nested-tool and Figma availability findings: complete for the researched provider/runtime.
 - Requirements, development-scope/material-coverage semantics, downstream boundaries, implementation outcomes, repository impact and deterministic/live test split: complete and traceable.
-- Final cross-input audit: complete; every current user correction—including partial-development scope, control-level completeness without one-file-per-control output, static/dynamic coverage honesty, user-visible versus business-logic ownership and workflow independence—and every material external/repository/provider constraint is covered, delegated or explicitly excluded.
+- Final cross-input audit: complete; every current user correction—including partial-development scope, control-level completeness without one-file-per-control output, static/dynamic coverage honesty, user-visible versus business-logic ownership, workflow independence, optional Figma-native acquisition, retained residual handoff and information-complete/causally-rigorous rationale authoring—and every material external/repository/provider constraint is covered, delegated or explicitly excluded.
 
 This Source Plan remains optional upstream Source and authorizes no package change by itself. The separately authorized 2026-07-22 implementation request entered the normal Harness package-authoring workflow and owns its Context Delta, Skill/tests and release-facing verification; the current clarification Goal separately and explicitly authorizes the requested commit, remote/main integration and npm publication.

@@ -98,6 +98,18 @@ test("default Context routing combines manifest candidates with bounded search",
     managed,
     /preflight and file hashes prove semantic-input completeness\/resource integrity only[\s\S]*never prove implementation conformance/iu,
   );
+  assert.match(
+    managed,
+    /Optional Figma-native input[\s\S]*exact file\/version\/nodes\/conditions[\s\S]*immutable repository captures/iu,
+  );
+  assert.match(
+    managed,
+    /residual provider-neutral handoff[\s\S]*mutable link, metadata-only response or flattened screenshot is incomplete/iu,
+  );
+  assert.match(
+    managed,
+    /marked residual handoff[\s\S]*exact Figma-native captures[\s\S]*`verification_inputs`/iu,
+  );
 });
 
 test("shared architecture quality is observable, risk-proportional, and single-carrier", async () => {
@@ -224,8 +236,8 @@ test("Workflow Contract names the complete Source-bound-Draft-to-qualified-resul
   const summary = workflow.match(/The workflow is:\r?\n\r?\n`([^`]+)`/u)?.[1];
   assert.ok(summary);
   for (const concept of [
-    "initial/revised proposal + selected design resources",
-    "validated design-resource handoff",
+    "initial/revised proposal + selected immutable design resources",
+    "validated residual design-resource handoff",
     "one Source-bound Contract Draft loop",
     "inventory/provenance/refinement/markers/mapping",
     "Preflight",

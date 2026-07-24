@@ -85,7 +85,7 @@ For exploration, ask what remains uncertain inside the scope. For a handoff, ask
 - **visual direction:** composition, typography, color, density, imagery or brand character;
 - **platform/responsiveness:** safe areas, breakpoints, input methods or viewport behavior;
 - **system reuse:** tokens, component variants or cross-surface rules needed by more than the requested artifact;
-- **team editability:** a real need for collaborative editable frames/libraries or an organizational Figma handoff.
+- **team editability/native inspection:** a real need for collaborative editable frames/libraries, inspectable component/token facts or an organizational Figma-native handoff.
 
 Do not manufacture a gap already resolved by selected Source.
 
@@ -100,7 +100,7 @@ Do not manufacture a gap already resolved by selected Source.
 | Flow/journey board | Multiple surfaces, branches or recovery paths must be compared together | The request is one isolated surface/control |
 | Design-system slice | Several requested artifacts need shared tokens/components or reuse rules | One exploratory candidate does not justify a system |
 | Component inventory/specification | Development handoff needs explicit reusable families, variants, state behavior or mappings for several control instances | Exploration is visual only, or selected component sources already cover every mapped instance |
-| Figma handoff | Editable collaborative frames/libraries are explicitly valuable and operational | A screenshot/HTML/project-native source is sufficient or connector/auth/export is unavailable |
+| Figma-native input/handoff | Editable collaboration, native property inspection, component/library reuse or organizational Figma handoff is explicitly valuable and the connector/auth/read/export path is operational | A screenshot/HTML/project-native source is sufficient or the native path is unavailable |
 | Image/illustration/icon/media study | Bespoke content materially defines the selected direction | Generic placeholders answer the present decision |
 
 A prototype is often valuable for new Web/App flows, but it is never automatically required. Low- and high-fidelity resources may both be selected only when they answer independent questions. One comprehensive, inspectable artifact may cover page composition and several component families; a static frame cannot claim unseen interaction or state coverage merely because all controls appear in it.

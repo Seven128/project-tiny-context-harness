@@ -19,6 +19,7 @@ test("design-resource-authoring has one exact managed/generated/package source",
     "SKILL.md",
     "references/resource-selection.md",
     "references/open-design-provider.md",
+    "references/figma-native-handoff.md",
     "references/downstream-handoff.md",
   ]) {
     const values = await copies(relative);
@@ -95,6 +96,46 @@ test("style-bearing Open Design projects bind and verify the adopted design syst
   assert.match(provider, /synchronization\/rebinding issue/iu);
 });
 
+test("optional Figma-native input uses exact immutable capture plus residual handoff", async () => {
+  const [skill, provider, figma, handoff] = await Promise.all([
+    copies("SKILL.md").then((items) => items[0]),
+    copies("references/open-design-provider.md").then((items) => items[0]),
+    copies("references/figma-native-handoff.md").then((items) => items[0]),
+    copies("references/downstream-handoff.md").then((items) => items[0]),
+  ]);
+  const combined = `${skill}\n${provider}\n${figma}\n${handoff}`;
+  assert.match(skill, /figma-native-handoff\.md/iu);
+  assert.match(provider, /Figma is optional/iu);
+  assert.match(provider, /operational/iu);
+  assert.match(figma, /Feature-detect/iu);
+  assert.match(figma, /exact file.*immutable Figma version.*node IDs/isu);
+  for (const tool of [
+    "get_metadata",
+    "get_design_context",
+    "get_variable_defs",
+    "get_screenshot",
+    "get_motion_context",
+    "download_assets",
+  ]) assert.match(figma, new RegExp(`\\b${tool}\\b`, "u"));
+  assert.match(
+    figma,
+    /Components and Variants.*Variables.*Auto Layout.*semantic names.*Annotations.*Code Connect/isu,
+  );
+  assert.match(figma, /small.*node/iu);
+  assert.match(figma, /rate limit/iu);
+  assert.match(figma, /repository-readable immutable/iu);
+  assert.match(figma, /residual handoff/iu);
+  assert.match(
+    combined,
+    /mutable.*link[\s\S]*metadata-only[\s\S]*(?:flattened|screenshot)[\s\S]*(?:insufficient|incomplete|cannot authorize|fail)/iu,
+  );
+  assert.match(
+    figma,
+    /Source Claims.*Controls\/surface_bindings.*design_conformance.*interaction.*target-runtime.*Final Gate/isu,
+  );
+  assert.match(figma, /no Figma-specific schema.*second Authority.*second Gate/isu);
+});
+
 test("final selection performs one idempotent initial-proposal reconciliation", async () => {
   const [skill, selection, handoff] = await Promise.all([
     copies("SKILL.md").then((items) => items[0]),
@@ -148,7 +189,10 @@ test("handoff preserves immutable resource identity and direct downstream routin
     handoff,
     /`decision_required` or `unavailable`[\s\S]*make preflight fail/iu,
   );
-  assert.match(handoff, /selected immutable resources \+ reconciled initial proposal/iu);
+  assert.match(
+    handoff,
+    /selected immutable resources[\s\S]*reconciled initial proposal/iu,
+  );
   assert.match(handoff, /long-task-workflow.*current native Goal/isu);
   assert.match(handoff, /`source-plan-authoring` is not an intermediate stage/iu);
   assert.match(
@@ -194,6 +238,10 @@ test("Source, specification, Context and public docs expose the new resource con
   assert.match(plan, /AC-DRA-016/u);
   assert.match(plan, /REQ-DRA-046/u);
   assert.match(plan, /AC-DRA-024/u);
+  assert.match(plan, /^## 2026-07-24 Figma-Native Input And Residual Handoff Amendment$/mu);
+  assert.match(plan, /IN-DRA-USER-004/u);
+  assert.match(plan, /REQ-DRA-052/u);
+  assert.match(plan, /AC-DRA-028/u);
   for (const content of [spec, contexts, readmes]) {
     assert.match(content, /design-resource-authoring/u);
     assert.match(content, /style-bearing/iu);
@@ -204,10 +252,34 @@ test("Source, specification, Context and public docs expose the new resource con
       /eight.dimension|eight closed|八维|surface\/flow[\s\S]*accessibility[\s\S]*assets/isu,
     );
   }
+  for (const content of [plan, spec, contexts, readmes]) {
+    assert.match(content, /figma-native|Figma 原生/iu);
+    assert.match(content, /residual handoff|残余.*handoff/iu);
+    assert.match(content, /immutable|不可变/iu);
+    assert.match(content, /Final Gate/iu);
+  }
   assert.match(readmes, /^## Recommended Usage$/mu);
   assert.match(readmes, /^## 推荐用法$/mu);
   assert.match(profile, /"design-resource-authoring"/u);
   assert.match(manifest, /design-resource-authoring/u);
   assert.match(manifest, /proposal reconciliation/u);
   assert.doesNotMatch(manifest, /docs\/design-resource-authoring-source-plan\.md/u);
+});
+
+test("authoring overlay keeps design rationale information-complete and causally rigorous", async () => {
+  const authoring = await read(".codex/skills/authoring/harness_package_design/SKILL.md");
+  for (const term of [
+    "design purpose",
+    "design thinking",
+    "information-complete",
+    "causally rigorous",
+    "problem and purpose",
+    "inputs and transformation",
+    "authority",
+    "downstream consumption",
+    "proof",
+    "fail-closed",
+    "alternatives",
+    "indexed surfaces",
+  ]) assert.match(authoring, new RegExp(term, "iu"));
 });
