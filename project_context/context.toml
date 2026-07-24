@@ -20,6 +20,12 @@ read_policy = "on-demand"
 triggers = ["workflow contract", "context delta", "context discovery", "bounded context search", "internal plan", "plan.md", "local audit", "contract conformance", "design authority", "design readiness", "design context depth", "screen contract", "control inventory", "ui authority closure", "exact target", "design reference", "external design resource", "design resource authoring", "development-scope design", "implementation handoff", "control-level design coverage", "与开发内容对应的设计资源", "控件粒度 UI/UX 信息", "Open Design", "candidate design", "selected design target", "context-reachable source", "editable upstream", "design resource update", "default decision delegation", "decision criteria", "tradeoff preference", "research before selection", "quality versus cost", "high-risk external action", "decision required", "execution model checkpoint", "model choice checkpoint"]
 
 [[context]]
+path = "project_context/areas/harness-package/contracts/design-resource-handoff.md"
+role = "contract"
+read_policy = "on-demand"
+triggers = ["design resource handoff", "design resource adapter", "design-resource-handoff-v1", "design resource preflight", "complete UIUX conformance", "pixel fidelity", "设计资源输入适配", "设计资源交接", "完全遵循设计资源", "像素级遵循", "动效设计"]
+
+[[context]]
 path = "project_context/areas/harness-package/contracts/package-managed-surfaces.md"
 role = "contract"
 read_policy = "on-demand"
@@ -47,13 +53,13 @@ triggers = ["long-task objective", "false completion", "delivery drift", "semant
 path = "project_context/areas/harness-package/implementation-index.md"
 role = "implementation-index"
 read_policy = "on-demand"
-triggers = ["cli entry", "sync", "validator", "design-system-authoring", "design-resource-authoring", "source-authoring", "source-bound draft", "source-plan-authoring", "external design resource", "proposal reconciliation", "implementation handoff", "control-level design coverage", "Open Design", "migration", "release tool", "release artifact", "trusted publish", "test entry", "test suite policy", "affected test", "affected change discovery", "active contract", "final result", "terminal scope", "native goal effect", "stop hook", "context authority", "authority revision summary", "revision return", "diagnose-revision", "execution model checkpoint", "workspace scope classifier", "verification preview", "verify explain", "progress stale"]
+triggers = ["cli entry", "sync", "validator", "design-system-authoring", "design-resource-authoring", "design-resource-handoff-v1", "design resource preflight", "source-authoring", "source-bound draft", "source-plan-authoring", "external design resource", "proposal reconciliation", "implementation handoff", "control-level design coverage", "Open Design", "migration", "release tool", "release artifact", "trusted publish", "test entry", "test suite policy", "affected test", "affected change discovery", "active contract", "final result", "terminal scope", "native goal effect", "stop hook", "context authority", "authority revision summary", "revision return", "diagnose-revision", "execution model checkpoint", "workspace scope classifier", "verification preview", "verify explain", "progress stale"]
 
 [[context]]
 path = "project_context/areas/harness-package/verification.md"
 role = "verification"
 read_policy = "on-demand"
-triggers = ["test", "verify", "validation", "harness gate", "diff check", "visual guidance test", "design authority test", "design-system-authoring", "design-resource-authoring", "source authoring test", "source-bound draft test", "source plan compatibility", "external design resource", "proposal reconciliation", "implementation handoff", "control-level design coverage", "Open Design smoke", "design reference", "long-task black box", "semantic drift regression", "stage gate", "required target", "target runtime", "evidence capability", "product conformance", "rolling runtime smoke", "proxy evidence", "causal counterfactual", "workspace scope classification", "unclassified path", "scope escape", "verification execution preview", "verify explain", "progress stale", "test budget", "test suite purpose", "test ROI", "rerun policy", "trust boundary gate", "release regression suite", "release workflow", "trusted publish", "artifact handoff", "affected test", "focused test", "final gate", "terminal scope test", "revision return test", "model checkpoint test"]
+triggers = ["test", "verify", "validation", "harness gate", "diff check", "visual guidance test", "design authority test", "design-system-authoring", "design-resource-authoring", "design-resource-handoff-v1", "design resource preflight", "source authoring test", "source-bound draft test", "source plan compatibility", "external design resource", "proposal reconciliation", "implementation handoff", "control-level design coverage", "Open Design smoke", "design reference", "long-task black box", "semantic drift regression", "stage gate", "required target", "target runtime", "evidence capability", "product conformance", "rolling runtime smoke", "proxy evidence", "causal counterfactual", "workspace scope classification", "unclassified path", "scope escape", "verification execution preview", "verify explain", "progress stale", "test budget", "test suite purpose", "test ROI", "rerun policy", "trust boundary gate", "release regression suite", "release workflow", "trusted publish", "artifact handoff", "affected test", "focused test", "final gate", "terminal scope test", "revision return test", "model checkpoint test"]
 
 [[areas]]
 id = "delivery-benchmark"

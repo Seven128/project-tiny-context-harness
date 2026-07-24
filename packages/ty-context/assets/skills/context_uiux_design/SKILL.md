@@ -26,6 +26,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 - `design-resource-authoring` 可以按明确请求在上游动态委托 Open Design 产生 flow、低保真、候选方向、组件族/独特复杂控件状态、交互原型或条件式 Figma handoff；它以明确输出/开发内容为上限，在范围内补齐材料性 UI/UX 含义但不要求逐控件一份稿，不复制 provider 的提示词/模板，也不把任何资源设为全局必选。
 - `design-system-authoring` 是另一个仅显式调用的冷启动/修复 Skill：它用 Open Design 生成或选择候选，经过明确或受托选择后，把结果采纳到 canonical `DESIGN.md`、唯一 token source/direction 与 owning Context。缺少设计系统不会让本 Skill 或 `design-resource-authoring` 自动调用它。
 - 本 Skill 不承担独立资源生产。只有进入默认开发流程或 Long-Task、需要采纳稳定结论时，本 Skill 才消费这些或其他外部设计 Source。
+- 如果上游交付是用于实现的已选资源，先要求一个通过 `ty-context design-resource preflight <handoff.md>` 的 `design-resource-handoff-v1`。它必须逐 subject 闭合 surface/flow、visual/content、component/control、state/interaction、motion、adaptation/input、accessibility、assets，并把 covered 项绑定到不可变证据、Source Item 与验证方法。探索候选不需要此文件；preflight 也不等于采纳或验收。
 - 候选、灵感和未选定输出不是 Context readiness 或实现权威，不能写入 selected registry；选定目标仍必须完成 UI Authority Closure 和 `Context Delta`。
 - 消费时沿 owning Context 的 surface/control/target key 到 `DESIGN.md` 登记，主动打开每个受影响的 selected `exact-target`/`constraint`，而不是把登记存在视为已消费。核对产品 Source、Screen/Control Context、token owner、不可变 adopted locator/digest、覆盖条件以及 editable upstream owner/locator/update route；只把长期稳定且无冲突的事实写入其唯一 owner，不要求统一 pack、目录或工具格式。
 - 缺失、不可读、过期或冲突的 adopted resource 对受影响 claim 一律 fail closed。若 immutable adopted target 可读而 editable upstream 不可用，可以继续理解/实现既有目标，但修改资源必须保留为明确人工/外部边界。更新经 upstream 完成后生成/批准新 immutable version 并更新 owning reference，不能静默覆盖旧基线。
@@ -35,7 +36,7 @@ Project-specific UI/UX and visual design rules belong in a separate project-loca
 
 1. 先读取 `project_context/global.md` 和 `project_context/context.toml`，按 default area、triggers、read_when 选择相关 context。
 2. 如果项目存在 `DESIGN.md`，先读取其 Design Authority 状态、唯一 token 源/生成方向和设计引用。仅当当前开发工作流经 UI Authority Closure 判断长期视觉体系需要采纳或修复时，按 Google `@google/design.md` 的格式创建或更新根目录 `DESIGN.md`；独立资源生成阶段不写入。
-3. 读取已有外部设计资源或其他 selected Source，整理需要采纳的用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y、视觉约束、token 和 design reference registry。若当前请求只是生成资源，转到 `design-resource-authoring`；不要在本 Skill 内复制 provider 生成流程或建立强制交付格式。
+3. 读取已有外部设计资源或其他 selected Source。若有 implementation handoff，先运行共享 preflight，再主动打开 handoff 索引的 exact/constraint 资源；不能用索引存在替代资源消费。按其稳定 subject/target/condition/Source-item key 整理需要采纳的用户流程、页面/组件清单、关键状态、交互反馈、响应式边界、a11y、视觉约束、token 和 design reference registry。若当前请求只是生成资源，转到 `design-resource-authoring`；不要在本 Skill 内复制 provider 生成流程或另建交付格式。
 4. 涉及 Product Surface（Web 页面、移动/桌面屏幕、游戏 UI/HUD/菜单、CLI/TUI 输出、扩展或设备界面）、前端布局、UI/UX、产品模块边界或信息放置时，把产品/页面定位检查作为前置动作：用户在这个 surface 要完成的判断、产品必须提供的信息/动作/反馈、不应常驻的信息、主层/下钻/运维/诊断/详情归属、布局和信息密度是否匹配任务。多 surface、多平台或多模块归属不清时，先读取相关 Context、搜索入口并结合已有 UI 代码/截图做信息架构 sweep，必要时使用 `context_surface_contract` 做 Surface Contract Check，再收窄到具体视觉或交互实现。该检查是下一步变更分类的输入；只有形成长期 surface 职责、信息架构、交互契约或模块边界结论时才更新 Context 或 `DESIGN.md`。
    - 若存在 Product Surface Contract，读取并对齐 primary user question、main allows/forbids、drilldown ownership、long-task state 和 verification。
    - 若缺失且本任务改变 durable surface responsibility，将唯一 `Context Delta` 设为 `required`，把界面职责写入 `project_context/**`；视觉 token、颜色、字体、间距、圆角和视觉 rationale 仍写入 `DESIGN.md`。

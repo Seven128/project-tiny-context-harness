@@ -14,6 +14,7 @@
 - Product Surface/Screen Contract workflow is prompt-level and project-owned through `context_surface_contract` and existing roles; the package must not add a surface-specific Context role. The managed Screen Contract template is optional/on-demand and owns durable per-screen/control semantics only when that depth is reusable.
 - Material production UI uses UI Authority Closure plus a conditional Design Authority Check: affected stable surface/control/target keys reconcile screen/surface Context, `DESIGN.md`, one authored token source/generation direction and exact-target/constraint/inspiration references before implementation. Every affected adopted exact target/constraint must be opened through its Context-reachable immutable locator and editable upstream/update record; a registry mention alone is not consumption. An unconfigured starter or implementation-generated screenshot is not production design authority; no required design directory or visual workflow state is added.
 - Open Design remains the provider. Explicit-only `design-system-authoring` generates/selects/adopts project Design Authority and records provider synchronization without a second authority. `design-resource-authoring` gates only style-bearing work on configured authority, binds the adopted provider system, commissions the smallest scoped set and after final selection reconciles accepted decisions into the initial proposal once. It never edits a Source Plan, Context/`DESIGN.md`, code or Contract; adopted resources remain ordinary Context-reachable Source with an immutable version and explicit editable upstream/manual update boundary.
+- Selected implementation handoffs use one shared fail-closed `design-resource-handoff-v1` adapter; exploration stays lightweight and both development workflows reuse the same input semantics.
 - `long-task-workflow` sends every input directly into one Source-bound Contract Draft loop. Inventory/synthesis/refinement/provenance/markers and Contract mapping converge there before Preflight/Compile; `/source-plan-authoring` is a compatibility pointer and no Source-authoring intermediate stage exists.
 - The platform Goal owns mutable implementation sequencing. Harness never launches models/agents/AppServer, creates branches/worktrees, merges, pushes, opens PRs or deploys.
 - First Authority Lock creates a strict user-choice turn boundary: absent a prior explicit task-specific model strategy, generic continuation is insufficient and implementation/edit/build/test work waits for an explicit current-model or switch-and-resume choice. Harness stores no acknowledgement or route.
@@ -31,7 +32,7 @@
 
 - Package behavior changes keep implementation, managed source, package assets, Context, `PROJECT_SPEC.md`, public README and behavior tests aligned.
 - Default UI guidance routes missing/conflicting durable UI meaning to its one Context/`DESIGN.md` owner or `context_uiux_design`, keeps local fixes/prototypes lightweight and requires project-owned rendered/token/interaction/accessibility/target-runtime verification only for the claims actually declared.
-- External design-resource guidance leaves artifact generation to dedicated design capabilities and routes durable adoption/governance to `context_uiux_design`. For an implementation handoff, each material in-scope surface/flow/region/component/control condition maps to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition; this task-local accounting is not a pack, registry or readiness authority. The consuming workflow resolves selection, stable immutable identity/digest, declared coverage, editable upstream owner/locator/update route, active consumption and verification binding; no authoring validator can judge aesthetics or create implementation acceptance.
+- External design-resource generation remains delegated and durable adoption routes to `context_uiux_design`. The shared adapter validates task-local evidence completeness and integrity; consuming workflows still own production conformance and acceptance.
 - Architecture depth is risk-triggered: material decisions resolve owner, unique source of truth, dependency direction, interface/state lifecycle, failure/recovery/compatibility, alternatives, future-change pressure, forbidden shortcuts and project-owned verification.
 - Every implementation delivery surfaces one risk-proportional `Architecture Deliberation` before implementation. Small work records concrete preservation of the current owner/extension point and no new or worsened debt; material work additionally resolves alternatives, future-change pressure, lifecycle and project-owned architecture checks.
 - Post-implementation `Architecture Conformance` has one owner per candidate snapshot: default Contract Conformance or Long-Task Final Gate. Candidate changes stale the result; no duplicate closure, second authority or architecture state is created.
@@ -44,6 +45,7 @@
 
 - Commands: `packages/ty-context/src/commands/**`.
 - Context graph/manifest/doctor/sync: `packages/ty-context/src/lib/context-*`, `doctor.ts`, `sync-engine.ts`.
+- Design-resource input adapter: `design-resource-handoff-*`, `commands/design-resource.ts`, `long-task-design-resource-handoff.ts`.
 - Long-task schema/parser/compiler/risk/claims/evidence/authority/final gate: `packages/ty-context/src/schemas/long-task-delivery-v2/**` and `packages/ty-context/src/lib/long-task-*`.
 - Managed sources/assets: `.codex/ty-context-managed/**`, `packages/ty-context/assets/**`, `packages/ty-context/source-mappings.yaml`.
 - Release/version automation: `tools/sync_release_version.mjs`, release prepare/publish and tarball smoke tools.
@@ -61,6 +63,7 @@
 
 - [Context Model](harness-package/foundation/context-model.md)
 - [Workflow Contract](harness-package/contracts/workflow-contract.md)
+- [Design Resource Handoff Adapter Contract](harness-package/contracts/design-resource-handoff.md)
 - [Package-Managed Surface Contract](harness-package/contracts/package-managed-surfaces.md)
 - [Minimal Context Rationale](harness-package/decision-rationale/minimal-context.md)
 - [Architecture Quality Rationale](harness-package/decision-rationale/architecture-quality.md)

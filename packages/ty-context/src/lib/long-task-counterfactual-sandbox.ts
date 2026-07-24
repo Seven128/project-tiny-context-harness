@@ -24,6 +24,23 @@ export interface CounterfactualSandboxV2 {
   dispose(): Promise<void>;
 }
 
+type RemoveTree = (
+  target: string,
+  options: { recursive: true; force: true },
+) => Promise<void>;
+
+type Wait = (milliseconds: number) => Promise<void>;
+
+const TRANSIENT_REMOVE_CODES = new Set([
+  "EBUSY",
+  "EMFILE",
+  "ENFILE",
+  "ENOTEMPTY",
+  "EPERM",
+]);
+const REMOVE_RETRY_LIMIT = process.platform === "win32" ? 6 : 2;
+const REMOVE_RETRY_DELAY_MS = 100;
+
 export async function createCounterfactualSandbox(
   snapshotRoot: string,
   check: CompiledCheckV2,
@@ -134,7 +151,32 @@ function disposable(root: string): CounterfactualSandboxV2 {
   return {
     root,
     async dispose() {
-      await rm(root, { recursive: true, force: true });
+      await removeCounterfactualSandboxRoot(root);
     },
   };
+}
+
+export async function removeCounterfactualSandboxRoot(
+  root: string,
+  removeTree: RemoveTree = rm,
+  wait: Wait = (milliseconds) =>
+    new Promise((resolve) => setTimeout(resolve, milliseconds)),
+): Promise<void> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await removeTree(root, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : "";
+      if (
+        !TRANSIENT_REMOVE_CODES.has(code) ||
+        attempt >= REMOVE_RETRY_LIMIT
+      )
+        throw error;
+      await wait(REMOVE_RETRY_DELAY_MS * (attempt + 1));
+    }
+  }
 }

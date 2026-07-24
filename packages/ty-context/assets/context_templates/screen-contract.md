@@ -139,6 +139,15 @@ Reference project-native targets; do not embed binary content.
 
 An `exact-target` authorizes fidelity comparison only for its declared conditions. A `constraint` governs only its named rule. `inspiration` does not authorize reproduction. For an adopted exact target/constraint, the immutable locator must be readable and the editable upstream/update route must be verified or explicitly marked as a manual/external boundary. Relevant work opens the resource rather than treating this row as consumption. Update upstream and register a new immutable version/digest; never overwrite the adopted baseline. An implementation screenshot cannot register itself as its own target.
 
+### Selected Implementation Handoff
+
+- Handoff Source Path:
+- Handoff Scope Key:
+- Affected Subject / Target Keys:
+- Durable Owner / Update Boundary:
+
+Fill this pointer only when selected implementation resources use a validated `design-resource-handoff-v1`. The handoff remains ordinary Source and owns its strict subject-by-eight-dimension condition/evidence/verification index; do not duplicate that changing index into Context. This Screen Contract owns durable screen/control meaning and makes the handoff/targets reachable. Consumers must rerun shared preflight and open affected exact/constraint resources; neither this pointer nor a successful digest proves implementation conformance.
+
 ## Verification
 
 - Semantic / information-hierarchy check:

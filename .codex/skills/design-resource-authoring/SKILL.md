@@ -16,6 +16,7 @@ Commission the smallest sufficient set of design resources for the explicitly re
 - Treat the user's explicit output/development scope as the hard ceiling. Include only the surrounding context needed to design that slice.
 - Never require one artifact per control. Reuse selected component sources and group repeated controls by family; commission a dedicated study only for unique or complex uncovered meaning.
 - Never infer that a page frame or prototype covers states, responsiveness, accessibility or interaction it does not explicitly specify or demonstrate.
+- Exploration and unselected previews stay schema-free. Only a final selected implementation handoff requires the shared strict Markdown adapter; this is input preparation, not a resource pack or acceptance result.
 - Design resources may express user-visible interaction and presentation, but must not invent or become sole owner of business, data, permission or algorithmic rules.
 - Candidates are ordinary external Source. They do not select themselves, become `exact-target`, create Design Authority or prove acceptance.
 - Do not install or persistently configure MCP, plugins, authentication or disclosure paths without separate authorization.
@@ -39,7 +40,8 @@ Commission the smallest sufficient set of design resources for the explicitly re
 8. **Bind and commission through Open Design.** For style-bearing work, create or verify the Open Design project with the adopted design-system ID and require `get_project.designSystemId` to match. Send a bounded product commission through structured MCP; use documented fallbacks only when required.
 9. **Observe, inspect and iterate.** Keep provider execution, artifact readiness and design suitability separate. Iterate within scope. Keep proposal effects only in the delta buffer while candidates remain unsettled.
 10. **Finalize selection and reconcile once.** After explicit human selection or explicit delegated selection, preserve immutable identity and consolidate accepted, rejected and unresolved effects. Apply only accepted decisions once to a writable initial-proposal file; if it exists only in conversation, return one complete revised proposal. Preserve original intent/provenance and make reruns idempotent. Do not write unresolved or rejected choices as requirements.
-11. **Return an intent-sized result.** Exploration shows the artifact promptly. Handoff adds stable-key coverage, provenance, binding, limitations and immutable identity. Include the reconciled initial proposal or its updated path when final selection occurred.
+11. **Compile an implementation handoff when requested.** For final selected resources intended for development, write one project-native Markdown Source at an authorized path. Preserve readable `ty-source-item` facts and exactly one fenced `design-resource-handoff-v1` YAML block. Close every in-scope subject across the eight required dimensions, bind covered rows to immutable resources/conditions/addressable evidence/Source Items/verification methods, and retain acceptance blockers. Run `ty-context design-resource preflight <handoff.md>` and iterate the resource or mapping until it passes; `decision_required`/`unavailable`, stale digests and unsupported evidence are blocking. Do not create this file for exploration.
+12. **Return an intent-sized result.** Exploration shows the artifact promptly. An implementation handoff returns the validated handoff path, selected immutable resources, stable-key coverage, provenance, binding, limitations and preflight result. Include the reconciled initial proposal or its updated path when final selection occurred.
 
 ## Conditional Design Authority gate
 
@@ -62,6 +64,7 @@ initial proposal
   -> explicit or delegated final selection
   -> one consolidated, idempotent initial-proposal reconciliation
   -> revised proposal + selected immutable resources
+  -> validated design-resource-handoff-v1 (implementation intent only)
   -> default Goal execution or long-task-workflow
 ```
 
@@ -77,4 +80,4 @@ Small requests may complete generation, selection and reconciliation in one turn
 
 ## Completion response
 
-Report scope, necessary context/exclusions, style dependency and gate result; selected/omitted/unavailable resources; visible artifacts/locators; provider, project/run and design-system binding status; review and selection basis; immutable provenance; material coverage/unresolved decisions; proposal reconciliation status/path; and forbidden inferences.
+Report scope, necessary context/exclusions, style dependency and gate result; selected/omitted/unavailable resources; visible artifacts/locators; provider, project/run and design-system binding status; review and selection basis; immutable provenance; material coverage/unresolved decisions; proposal reconciliation status/path; and forbidden inferences. For implementation intent, also report the `design-resource-handoff-v1` path and successful shared preflight; never call a failing or unresolved handoff ready.

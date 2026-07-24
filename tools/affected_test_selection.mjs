@@ -18,6 +18,56 @@ export {
 
 const HOTSPOT_TESTS = new Map([
   [
+    "packages/ty-context/src/commands/design-resource.ts",
+    ["design-resource-handoff.test.mjs"],
+  ],
+  [
+    "packages/ty-context/src/commands/index.ts",
+    [
+      "design-resource-handoff.test.mjs",
+      "workflow-test-entrypoints.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/index.ts",
+    ["design-resource-handoff.test.mjs", "package-source.test.mjs"],
+  ],
+  ...[
+    "packages/ty-context/src/lib/design-resource-handoff-types.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-shape.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-shape-primitives.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-shape-structure.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-shape-evidence.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-parser.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-policy.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-validation.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-validation-primitives.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-validation-structure.ts",
+    "packages/ty-context/src/lib/design-resource-handoff-validation-coverage.ts",
+  ].map((sourcePath) => [
+    sourcePath,
+    [
+      "design-resource-handoff.test.mjs",
+      "long-task-delivery-compiler.test.mjs",
+    ],
+  ]),
+  [
+    "packages/ty-context/src/lib/long-task-design-resource-handoff.ts",
+    [
+      "design-resource-handoff.test.mjs",
+      "long-task-delivery-compiler.test.mjs",
+    ],
+  ],
+  [
+    "packages/ty-context/src/lib/long-task-activation-validation.ts",
+    [
+      "design-resource-handoff.test.mjs",
+      "long-task-authoring-preflight.test.mjs",
+      "long-task-delivery-compiler.test.mjs",
+      "long-task-workspace-scope.test.mjs",
+    ],
+  ],
+  [
     "packages/ty-context/src/lib/design-md.ts",
     ["sync-init-doctor.test.mjs", "visual-delivery-guidance.test.mjs"],
   ],

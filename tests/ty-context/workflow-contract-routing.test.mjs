@@ -85,6 +85,19 @@ test("default Context routing combines manifest candidates with bounded search",
   assert.match(managed, /open every affected selected `exact-target` or `constraint`/iu);
   assert.match(managed, /registry mention alone is not consumption/iu);
   assert.match(managed, /editable upstream owner\/locator\/update route/iu);
+  assert.match(managed, /ty-context design-resource preflight <handoff\.md>/u);
+  assert.match(
+    managed,
+    /incomplete eight-dimension coverage[\s\S]*stale resource digests fail closed/iu,
+  );
+  assert.match(
+    managed,
+    /covered handoff Source Item and verification method[\s\S]*cold-start real-user entry journey/iu,
+  );
+  assert.match(
+    managed,
+    /preflight and file hashes prove semantic-input completeness\/resource integrity only[\s\S]*never prove implementation conformance/iu,
+  );
 });
 
 test("shared architecture quality is observable, risk-proportional, and single-carrier", async () => {
@@ -212,6 +225,7 @@ test("Workflow Contract names the complete Source-bound-Draft-to-qualified-resul
   assert.ok(summary);
   for (const concept of [
     "initial/revised proposal + selected design resources",
+    "validated design-resource handoff",
     "one Source-bound Contract Draft loop",
     "inventory/provenance/refinement/markers/mapping",
     "Preflight",

@@ -336,6 +336,28 @@ test("design authoring profile and provider changes select focused coverage", ()
       "tests/ty-context/design-resource-authoring-skill.test.mjs",
     ),
   );
+
+  const adapter = selectAffectedTests([
+    "packages/ty-context/src/lib/design-resource-handoff-validation-coverage.ts",
+    "packages/ty-context/src/lib/long-task-design-resource-handoff.ts",
+  ]);
+  assert.equal(adapter.mode, "selected");
+  assert.equal(adapter.requires_build, true);
+  assert.deepEqual(adapter.tests, [
+    "tests/ty-context/design-resource-handoff.test.mjs",
+    "tests/ty-context/long-task-delivery-compiler.test.mjs",
+  ]);
+
+  const activation = selectAffectedTests([
+    "packages/ty-context/src/lib/long-task-activation-validation.ts",
+  ]);
+  assert.equal(activation.mode, "selected");
+  assert.deepEqual(activation.tests, [
+    "tests/ty-context/design-resource-handoff.test.mjs",
+    "tests/ty-context/long-task-authoring-preflight.test.mjs",
+    "tests/ty-context/long-task-delivery-compiler.test.mjs",
+    "tests/ty-context/long-task-workspace-scope.test.mjs",
+  ]);
 });
 
 test("explicit scopes are deterministic and no-change auto mode stays useful", () => {

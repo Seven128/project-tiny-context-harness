@@ -9,6 +9,7 @@
 - Originating research Goal delivery: current-source research, bounded capability experiments and this implementation-ready plan only.
 - Subsequent implementation delivery: the user separately authorized package implementation on 2026-07-22; that delivery owned the production Skill, owning Context/public guidance, package distribution and deterministic/opt-in verification changes. At that point application-product code, Delivery Contract authoring, package publication and automatic adoption of generated resources remained excluded.
 - Clarification delivery: the user subsequently clarified on 2026-07-22 that the Skill's design purpose is workflow-independent and development-corresponding: a local development slice must not expand into whole-product design, while an implementation handoff must cover every material in-scope UI/UX decision through relevant control detail without requiring one artifact per control. The current Goal owns this Source clarification, Skill/Context/index/public/test alignment, release preparation and package publication; it still does not authorize application-product implementation or automatic adoption of generated resources.
+- Input-adapter delivery: on 2026-07-24 the user required the selected implementation handoff to become a shared, machine-validatable input for both the default Workflow Contract and Long-Task so implementation, testing and acceptance can completely follow every declared design fact. This amendment owns the provider-neutral `design-resource-handoff-v1` adapter, CLI/Long-Task integration, Context/Skill/public guidance, deterministic tests and one real complex-single-page Open Design workflow smoke. It does not make exploration pay the handoff cost or turn the adapter into Design Authority/acceptance.
 - Authority: this document is optional upstream Source/navigation. It is not Context, a Contract Draft, runtime state, Design Authority, selection approval or completion evidence.
 - Research date: 2026-07-22.
 
@@ -49,15 +50,16 @@ explicit request + initial proposal/product/technical/design Source
   -> live Open Design capability discovery
   -> justified resource selection, with reasons and omissions
   -> Open Design project/run/artifact generation
-  -> bounded review, optional iteration and provenance-preserving handoff
-  -> ordinary external design Source
+  -> bounded review, optional iteration and final selection
+  -> ordinary external design Source + strict implementation-handoff adapter
+  -> shared design-resource preflight
   -> downstream default Workflow Contract or Long-Task UI Authority Closure
   -> optional durable adoption, implementation and project-owned verification
 ```
 
 No resource type is globally mandatory. A prototype is expected to be high-value for many new Web/App screens and interaction flows, but it is selected only when the current design gap and available Open Design capability justify it. The same rule applies to wireframes, visual candidates, component state studies, design systems, Figma handoffs and every other resource.
 
-For an implementation handoff, sufficiency is development-corresponding rather than product-global: every material user-visible design decision inside the explicit development scope is covered by selected existing or newly generated Source, is not applicable, is excluded by that scope, or is honestly unresolved/unavailable. One addressable page/prototype/board may cover many conditions; repeated controls may map to a shared component family; only unique or complex uncovered controls need dedicated studies. A static/default view proves no unshown state, interaction, motion, responsive or accessibility behavior. Design resources express user-visible interaction semantics and product-rule presentation, while business, data, permission and algorithmic rules remain owned by product/technical Source.
+For an implementation handoff, sufficiency is development-corresponding rather than product-global: every material user-visible design decision inside the explicit development scope is covered by selected existing or newly generated Source, is not applicable or is excluded by that scope. An honestly unresolved/unavailable decision may stop further authoring, but only as a blocked result; it cannot become a ready handoff. One addressable page/prototype/board may cover many conditions; repeated controls may map to a shared component family; only unique or complex uncovered controls need dedicated studies. A static/default view proves no unshown state, interaction, motion, responsive or accessibility behavior. Design resources express user-visible interaction semantics and product-rule presentation, while business, data, permission and algorithmic rules remain owned by product/technical Source.
 
 The resource-generation Skill never updates `project_context/**`, `DESIGN.md` or production code merely because generation succeeded. It never promotes a candidate to `exact-target`, creates Contract authority or claims product acceptance. The separate explicit-only `design-system-authoring` Skill may adopt one selected system into canonical project authority.
 
@@ -74,6 +76,19 @@ This amendment supersedes older statements below that assigned proposal revision
 - `design-resource-authoring` gates only style-bearing work. High-fidelity/branded/visual-treatment/prod-style resources require configured Design Authority and a matching `get_project.designSystemId`; low-fidelity structure, IA/flow and semantics-only state studies remain allowed. Missing authority stops and points to explicit `$design-system-authoring` without invoking it.
 - Proposal effects remain task-local during iteration. Final selection triggers exactly one consolidated, idempotent writeback of accepted decisions to the initial proposal; rejected/unresolved choices are excluded. No Source Plan, Context, `DESIGN.md`, code or Contract is mutated.
 - Source-quality synthesis/refinement is integrated into `long-task-workflow`. The recommended inputs are the revised proposal plus selected immutable resources. `/source-plan-authoring` is a retired compatibility pointer; legacy Source Plans remain valid ordinary Source.
+
+## 2026-07-24 Shared Development-Input Adapter Amendment
+
+This amendment supersedes older statements below that allowed a selected implementation handoff to remain prose-only or said that no dedicated file/schema was required. That lightweight rule still applies to exploration, candidates and unselected previews.
+
+- The design purpose is explicit: every material UI/UX fact actually declared for the selected development scope must survive into implementation, testing and acceptance without Agent invention or category substitution.
+- Open Design HTML, images and prototypes remain the primary visual artifacts. The structured textual semantic supplement is itself part of the selected implementation design-resource set: it makes only explicitly specified or demonstrated facts traceable into a Contract, while absent meaning requires resource refinement, an explicit decision or a blocked handoff rather than inference.
+- A selected implementation handoff emits one project-native marked Markdown Source containing exactly one strict `design-resource-handoff-v1` YAML block. Its repository location is arbitrary and it is not a pack or registry.
+- The block indexes scope, provenance, immutable repository-local resources/digests/editable upstreams, declared conditions, stable subjects/targets, addressable evidence, eight-dimension coverage, Source-item refs, verification methods, acceptance blockers and proposal-reconciliation status.
+- Every in-scope subject closes `surface_flow`, `visual_content`, `component_control`, `state_interaction`, `motion`, `adaptation_input`, `accessibility` and `assets` as covered, not applicable, explicitly excluded or unresolved. Unresolved/unavailable meaning makes the handoff not ready.
+- Evidence kinds are dimension-sensitive. In particular, a static frame cannot prove unseen states, interaction, motion, responsive/input or accessibility semantics; resource integrity never proves implementation conformance.
+- `ty-context design-resource preflight <handoff.md>` is the shared adapter entry. `design-resource-authoring` runs it before handoff, the default Workflow reruns it before fidelity authorization, and Long-Task Preflight/Compile reruns it while binding target/conditions/files/Source Claims/root Assertion/blockers.
+- Default and Long-Task retain different lifecycle strength but consume the same design meaning. The adapter creates no Authority Lock, Progress, Receipt, Gate, acceptance result or durable Context fact.
 
 <a id="dra-input-inventory"></a>
 ## Input Inventory And Treatment
@@ -107,8 +122,18 @@ This amendment supersedes older statements below that assigned proposal revision
   - control-level completeness does not mean one separate design file per control: repeated controls may map to one selected component family, related states may share one board/workbench and one large addressable artifact may cover several items;
   - unique or complex controls with uncovered material behavior may require dedicated state/interaction resources;
   - design resources may describe user-visible interaction logic and the visual presentation of product rules, but business/data/permission/algorithmic rules remain owned by product/technical Source;
-  - the handoff stop condition is that no material in-scope user-visible design choice is silently left for the implementer to invent; honest unresolved/unavailable items remain visible limitations rather than fabricated completeness;
+  - the ready-handoff stop condition is that no material in-scope user-visible design choice is silently left for the implementer to invent; honest unresolved/unavailable items remain visible blocked outcomes rather than fabricated completeness;
   - the design purpose and its owners, indexes, public documentation and regression coverage must remain aligned, followed by a versioned npm release.
+
+### `IN-DRA-USER-003` — Shared development-input adaptation requirement
+
+- Role: controlling direct Source for the 2026-07-24 adapter delivery and workflow smoke.
+- Direct meaning:
+  - the target outcome is that Agents developing, testing and accepting UI/UX completely follow the selected design resources inside their declared scope;
+  - `design-resource-authoring` must transform the raw Open Design result into input rich enough for both the Long-Task Workflow and the non-Long-Task Workflow Contract, instead of returning the provider result unchanged;
+  - prototype layout/information, control visual detail, states, interaction UX, motion and every other applicable design-resource fact must remain explicit and consumable rather than being guessed from one static image;
+  - the owning Context must state both this purpose and the mechanism and must route future work to all affected implementation, Skill, documentation and verification surfaces;
+  - verification must include one actual Open Design generation of a UI/UX-complex, business-logic-simple single page and exercise its handoff through both development consumers.
 
 ### `IN-DRA-EXT-001` — Original 1,077-line external UI/UX upgrade proposal
 
@@ -374,7 +399,7 @@ Control-level completeness is a coverage requirement, not an artifact-count rule
 ### Step 5 — Match execution depth to user intent
 
 - `exploration`: generate only the requested candidate count/scope, perform a minimal render/open sanity check, show the result and stop for feedback; do not create a pack, validator run, Context change or implementation.
-- `handoff`: retrieve the minimum sufficient project-native sources, preview and concise provenance/coverage notes needed by another designer or developer. For an implementation handoff, stop only when every material in-scope item has an explicit disposition and mapping, so no material user-visible UI/UX decision is silently left to implementation; honest `decision-required`/`unavailable` items remain visible limitations rather than a completeness claim. Run bounded structural/interaction checks relevant to the promised resources.
+- `handoff`: retrieve the minimum sufficient project-native sources, preview and concise provenance/coverage notes needed by another designer or developer. For an implementation handoff, stop only when every material in-scope item has an explicit disposition and mapping, so no material user-visible UI/UX decision is silently left to implementation. Honest `decision_required`/`unavailable` items may end further generation as a blocked outcome, but they cannot pass shared preflight, be called ready or authorize fidelity implementation. Run bounded structural/interaction checks relevant to the promised resources.
 - `selected-source-preparation`: only after an explicit user selection or delegated selection rule, freeze/export the selected resource with stable identity and declared coverage so the downstream workflow can consider adoption. This still does not itself update durable authority or production code.
 
 ### Ephemeral commission envelope
@@ -508,14 +533,14 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 
 - `REQ-DRA-010` — Derive resource needs from requested scope, existing authority/gaps, uncertainty, platform/interactions, desired downstream use and live Open Design capability.
 - `REQ-DRA-011` — Make no artifact globally mandatory and explain every selected, omitted, unavailable or decision-blocked resource.
-- `REQ-DRA-012` — Prefer the smallest sufficient resource set. Stop exploration once its requested decision is supported; stop an implementation handoff only after every material in-scope UI/UX item is mapped to existing/new Source, is non-applicable/excluded by explicit scope or remains honestly decision-blocked/unavailable, without claiming downstream authority or acceptance.
+- `REQ-DRA-012` — Prefer the smallest sufficient resource set. Stop exploration once its requested decision is supported; stop implementation-handoff generation only after every material in-scope UI/UX item is mapped to existing/new Source, is non-applicable/excluded by explicit scope or is honestly decision-blocked/unavailable. The last two unresolved dispositions may produce only a blocked authoring result, never a preflight-ready handoff or fidelity authorization, and no handoff claims downstream authority or acceptance.
 - `REQ-DRA-013` — Preserve stable surface/control/state/target keys from input when available and propose task-local stable keys when needed for handoff.
 - `REQ-DRA-014` — Keep candidate generation, selection and authority adoption distinct.
 - `REQ-DRA-015` — For implementation-facing work, account from surface/flow/page/region composition, layout grid/constraints, stacking and scroll/overflow through relevant component/control anatomy, dimensions/hit area, variants, exact copy/content/formatting/localization, visual treatment, static/dynamic states, focus/selection, interaction/feedback/recovery/motion, responsive/platform/input behavior, accessibility and necessary visual/auditory/haptic assets; require no filler for non-applicable dimensions.
 - `REQ-DRA-016` — Subtract existing coverage only when selected Source explicitly specifies or demonstrates the relevant conditions; never infer unseen states, interaction, motion, responsiveness or accessibility from a default/static page frame or a design-system label.
 - `REQ-DRA-017` — Treat control-level completeness as coverage rather than artifact count: map repeated controls to selected shared component variants, group related states/families and commission dedicated resources only for unique or complex uncovered material meaning. Permit one addressable, inspectable artifact to cover many items.
 - `REQ-DRA-018` — Keep user-visible interaction semantics and product-rule presentation in design coverage while preserving business, data, permission and algorithmic rule ownership in product/technical Source; never invent those rules or make visuals their sole authority.
-- `REQ-DRA-019` — Keep any material scope/coverage mapping task-local and intent-sized; it may be prose or a structured block but never becomes a required pack, persistent coverage registry, readiness state, Design Authority or acceptance result.
+- `REQ-DRA-019` — Keep exploration/candidate coverage task-local and intent-sized with no required file. For a selected implementation handoff only, emit one strict project-native `design-resource-handoff-v1` Markdown Source; it is an input adapter, never a pack, persistent registry, workflow readiness state, Design Authority or acceptance result.
 
 ### Provider execution
 
@@ -533,13 +558,15 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 ### Output and downstream handoff
 
 - `REQ-DRA-030` — In exploration intent, show the requested result with only minimal sanity review and no unsolicited packaging/validator sequence.
-- `REQ-DRA-031` — In handoff intent, return project-native source/preview plus concise provenance, classification, declared coverage, unresolved decisions and known limitations; do not require a Tiny Context-specific pack schema or directory.
+- `REQ-DRA-031` — In a selected implementation handoff, return project-native resources plus one strict marked Markdown handoff at any repository path; no fixed Tiny Context directory or provider-specific pack is required. Exploration remains schema-free.
 - `REQ-DRA-032` — For selected-source preparation, preserve immutable identity or a content snapshot/hash and selection basis, while leaving actual Context/`DESIGN.md`/Contract adoption downstream.
 - `REQ-DRA-033` — Never claim that Open Design tool success proves product quality, production fidelity, accessibility, native behavior or acceptance beyond the inspected artifact.
 - `REQ-DRA-034` — Never update Context, `DESIGN.md`, production code or a Delivery Contract unless the user separately enters and authorizes the consuming workflow.
 - `REQ-DRA-035` — In a handoff, identify the explicit output/development scope, necessary surrounding context and exclusions; identify every resource by stable surface/flow/region/component/control keys, candidate/constraint/selected classification, declared viewport/mode/state/content/interaction/motion/accessibility coverage, source locator/hash, selection basis if any, unresolved decisions and forbidden inferences. For an implementation handoff, map every material in-scope condition to existing/generated Source or an explicit non-applicable/excluded/unresolved disposition.
 - `REQ-DRA-036` — If the user explicitly selects a candidate and asks to prepare it for team/development use, export or snapshot it to a user-approved durable location; do not rely on Open Design's mutable project preview URL.
 - `REQ-DRA-037` — Keep candidate iterations/interim observations task-local and never continuously rewrite the proposal. After final selection, consolidate accepted/rejected/unresolved implications once, write only accepted changes into an authorized writable proposal (or return the complete revised conversation-only proposal), preserve original meaning/provenance and make reruns idempotent.
+- `REQ-DRA-038` — Close every stable in-scope subject across `surface_flow`, `visual_content`, `component_control`, `state_interaction`, `motion`, `adaptation_input`, `accessibility` and `assets`; each subject/dimension pair has exactly one covered/non-applicable/excluded/unresolved disposition, and unresolved/unavailable rows prevent a ready handoff.
+- `REQ-DRA-039` — Resolve every scope surface to an unambiguous surface subject and forbid duplicate stable-key ownership. For every covered row, bind selected target/conditions, immutable addressable evidence, real marked requirement/control/acceptance Source Items and dimension-appropriate project verification methods. Reject static-frame substitution for unseen state/interaction/motion/adaptation/accessibility and keep resource integrity distinct from implementation conformance.
 
 ### Design-system authority and binding
 
@@ -556,53 +583,87 @@ All experiments use one compact stargazing-product scenario to reduce domain var
 - `REQ-DRA-041` — Update the product specification, public English/Chinese guidance, Skill routing and affected-test selection to reflect the new optional orchestration capability without weakening the existing consumption boundary.
 - `REQ-DRA-042` — Add static contract tests, mock-provider behavior tests and opt-in live Open Design smoke tests; the normal package suite must not depend on a running desktop app, paid provider, login or nondeterministic design quality.
 - `REQ-DRA-043` — Test scope ceilings, no-mutation boundaries, capability fallback, candidate-versus-selected semantics, timeout/cancel/recovery and downstream handoff fields.
+- `REQ-DRA-044` — Expose one provider-neutral `ty-context design-resource preflight` parser/validator to both workflows; reject unknown fields, duplicate/incomplete coverage, unsupported evidence, path escape, missing/stale resources and unresolved handoffs.
+- `REQ-DRA-045` — Long-Task Preflight/Compile requires each Contract `design_target` to match exactly one validated handoff target, freezes the handoff/resources as inputs, maps every covered Source Item through `source_claims` into the root conformance Assertion and binds every declared acceptance blocker.
+- `REQ-DRA-046` — The default Workflow reruns the same preflight before UI Authority Closure, opens every selected exact/constraint resource, routes covered Source Items/verification methods through production owners and real-entry checks, and reports only declared combinations.
 
 <a id="dra-handoff-contract"></a>
 ## Output And Downstream Handoff Contract
 
-The Skill returns ordinary Source, not a new package format. A simple exploration response may contain only the preview, scope and obvious limitations. A development handoff should carry the following compact information in prose or a task-local block; no dedicated file is mandatory:
+The Skill returns ordinary Source, not a new package authority. A simple exploration response may contain only the preview, scope and obvious limitations. After final selection for implementation, it emits one repository-local Markdown Source with readable `ty-source-item` facts and exactly one fenced `design-resource-handoff-v1` YAML block. The file may live at any user-approved project path; its strict shape is shared by both development workflows and is not a provider-specific pack.
 
 ```yaml
-resource_key: target.tonight-home.night.candidate-a
-classification: candidate # candidate | inspiration | constraint | exact-target
-development_scope:
-  in_scope: [surface.tonight-home, region.tonight-decision]
+schema_version: design-resource-handoff-v1
+intent: implementation_handoff
+scope:
+  key: tonight-home
+  style_dependency: style-bearing
+  surface_keys: [surface.tonight-home]
   necessary_context: []
-  excluded: [other application surfaces]
-surface_keys: [surface.tonight-home]
-control_keys: [control.recommended-spots-cta, control.conditions-disclosure]
-provider:
-  name: open-design
-  app_version: 0.15.1
-  project_id: tc-dra-page-20260722
-  run_id: 179d96ac-95e4-4f09-b6e5-ca58e8549c60
-  capability_kind: design-template
-  capability_id: mobile-app
+  exclusions: [other application surfaces]
+provenance:
+  provider: open-design
+  provider_version: 0.15.1
+  project: tc-dra-page-20260722
+  run: 179d96ac-95e4-4f09-b6e5-ca58e8549c60
+  capability: mobile-app
   agent: codex
   model: gpt-5.6-sol
   design_system_id: user:design-md
-  design_system_digest: 42ec0bd...
-source:
-  entry: index.html
-  sha256: 559231D4...
-  durable_snapshot: null # populated only when explicitly prepared/exported
+resources:
+  - key: resource.tonight-home
+    role: exact_target
+    path: design/tonight-home/index.html
+    media_type: text/html
+    sha256: 559231d400000000000000000000000000000000000000000000000000000000
+    editable_upstream:
+      owner: design-team
+      locator: od://projects/tc-dra-page-20260722
+      update_route: create a new accepted immutable export
+conditions:
+  - key: mobile-night-default
+    platform: mobile-web
+    viewport: { width: 390, height: 844, unit: px }
+    modes: [night]
+    states: [default, conditions-expanded, cta-progress, cta-ready]
+    content_cases: [nominal]
+    input_methods: [touch, keyboard]
+    motion: full
+subjects:
+  - key: component-family.tonight-decision
+    kind: component_family
+    stable_keys: [control.recommended-spots-cta, control.conditions-disclosure]
+targets:
+  - key: tonight-home-night
+    interpretation: exact_target
+    resource_refs: [resource.tonight-home]
+    condition_refs: [mobile-night-default]
+    selection_basis: explicit user selection
+evidence:
+  - key: evidence.tonight-prototype
+    resource_ref: resource.tonight-home
+    kind: prototype_transition
+    locator: index.html#interaction-spec
+    condition_refs: [mobile-night-default]
 coverage:
-  platform: mobile
-  viewport: 390x844
-  modes: [night]
-  states: [default, cta-progress, cta-ready, conditions-expanded]
-  content: [decision, score, best-window, reasons, conditions, visible-target-preview]
-  interaction_motion: [conditions disclosure, cta progress feedback]
-  responsive_accessibility: [390x844, visible focus, 44px targets]
-coverage_mapping:
-  - material item -> selected existing/generated resource or explicit disposition
-selection_basis: null # remains a candidate until a real selection exists
-unresolved: []
-forbidden_inference:
-  - does not prove native rendering, production accessibility or downstream acceptance
+  - key: coverage.tonight.state
+    subject_refs: [component-family.tonight-decision]
+    dimension: state_interaction
+    disposition: covered
+    target_refs: [tonight-home-night]
+    condition_refs: [mobile-night-default]
+    evidence_refs: [evidence.tonight-prototype]
+    source_item_refs: [design-tonight-state-interaction]
+    verification_methods: [component_state, interaction_trace]
+    rationale: all declared states and transitions are inspectable
+acceptance_blockers: []
+proposal:
+  reconciliation_status: applied
+  path: proposal.md
+  revision: selected-tonight-home-v1
 ```
 
-The example is descriptive, not a required schema. Unknown fields remain unknown; the Skill must not invent coverage. One resource may own several mapping entries and several repeated control keys may map to one component-family source. A static/default frame carries only the conditions it actually shows.
+The exact V1 field contract is owned by the package parser and the Design Resource Handoff Adapter Context. Unknown fields fail rather than being ignored. The abbreviated example shows one of the eight required subject/dimension rows; a valid handoff closes all eight. One resource may own several entries and repeated controls may map to one component-family subject. A static/default frame carries only the conditions it actually shows.
 
 ### Initial-draft exploration loop
 
@@ -614,17 +675,17 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 
 ### Default Workflow Contract consumption
 
-1. The user brings or selects the generated Source while authorizing a concrete development request.
-2. Default Workflow performs UI Authority Closure against product/surface Context and `DESIGN.md`.
-3. It classifies the resource, confirms selection basis and coverage, decides `Context Delta`, and only then adopts durable facts or exact-target references when required.
-4. Implementation and project-owned verification consume the selected source. Candidate previews and Open Design run success cannot authorize fidelity.
+1. The user brings the selected resources, reconciled proposal and strict handoff while authorizing a concrete development request.
+2. Default Workflow runs `ty-context design-resource preflight <handoff.md>`; any unresolved dimension, unsupported evidence or stale identity stops fidelity work.
+3. It opens the indexed exact/constraint resources, performs UI Authority Closure against product/surface Context and `DESIGN.md`, confirms selection/coverage and decides `Context Delta`.
+4. Every covered Source Item and verification method is routed to the real production owner and project checks. Implementation inspects the first runnable real-entry slice and final Contract Conformance reruns the declared combinations. Candidate previews and Open Design run success cannot authorize fidelity.
 
 ### Long-Task Workflow consumption
 
-1. The revised proposal plus selected immutable resources are ordinary upstream Source to integrated Source/Contract authoring; a legacy Source Plan is also accepted if supplied.
-2. Contract Source/Bindings identify stable surfaces, controls, target files/URLs/hashes and conditions; verification inputs/checks cover only declared machine-verifiable claims.
-3. Authority Lock, protected revisions and Final Gate remain the only Long-Task authority lifecycle. The generation Skill creates no Contract Draft, outcome, receipt or Gate.
-4. If a selected target changes, the downstream workflow applies its normal Source/Authority revision rules; an Open Design rerun alone never mutates Contract authority.
+1. The revised proposal, selected immutable resources and strict handoff are ordinary upstream Source to integrated Source/Contract authoring; a legacy Source Plan is also accepted if supplied.
+2. Long-Task Preflight/Compile reruns the shared adapter; the marked handoff belongs to `task.source_paths`, and handoff plus resource snapshots belong to the target Check's `verification_inputs`.
+3. Each Contract `design_target` must exactly match one handoff target's interpretation, condition set and frozen handoff/resource paths. Covered Source Items map through `source_claims` into the root conformance Assertion; declared handoff blockers map into the owning `surface_binding`.
+4. Existing Product `surface_bindings`, Claims, Bindings, Checks, typed evidence, revision and Final Gate own implementation acceptance. If a selected target changes, normal Source/Authority revision applies; an Open Design rerun alone never mutates authority.
 
 ### Context and `DESIGN.md` boundary
 
@@ -664,7 +725,7 @@ The example is descriptive, not a required schema. Unknown fields remain unknown
 
 ### `OUT-DRA-03` — Intent-proportional review and handoff
 
-- Result: exploration stops after a preview; implementation handoff preserves scope/source/provenance/coverage and leaves no silent material in-scope design invention while retaining honest unresolved limitations; selected-source preparation remains separate from adoption.
+- Result: exploration stops after a preview; a ready implementation handoff preserves scope/source/provenance/coverage and leaves no silent material in-scope design invention, while unresolved meaning remains an explicit blocked authoring result; selected-source preparation remains separate from adoption.
 - Depends on: `OUT-DRA-01`, `OUT-DRA-02`.
 
 ### `OUT-DRA-04` — Tiny Context routing and package integration
@@ -700,7 +761,29 @@ Proposed authored tree:
 - `open-design-provider.md`: capability discovery, MCP/daemon/UI recovery, polling, entry resolution, hashing and Figma capability checks; no copied provider templates.
 - `downstream-handoff.md`: candidate/selection/authority separation plus workflow-independent development scope, necessary-context, exclusion, stable-key coverage and provenance handoff fields; default/Long-Task are downstream consumers rather than design-purpose owners.
 
-Do not add a script merely to restate instructions. Add a small protocol helper only if implementation proves that platform-exposed MCP calls cannot safely perform the current template-discovery/explicit-entry compatibility path. Any helper must normalize metadata and transport only; it must not contain design prompts, a template catalogue or an authority registry.
+The shared selected-implementation adapter is package code rather than a provider helper:
+
+```text
+packages/ty-context/src/
+├── commands/design-resource.ts
+└── lib/
+    ├── design-resource-handoff-types.ts
+    ├── design-resource-handoff-shape.ts
+    ├── design-resource-handoff-shape-primitives.ts
+    ├── design-resource-handoff-shape-structure.ts
+    ├── design-resource-handoff-shape-evidence.ts
+    ├── design-resource-handoff-parser.ts
+    ├── design-resource-handoff-policy.ts
+    ├── design-resource-handoff-validation.ts
+    ├── design-resource-handoff-validation-primitives.ts
+    ├── design-resource-handoff-validation-structure.ts
+    ├── design-resource-handoff-validation-coverage.ts
+    └── long-task-design-resource-handoff.ts
+```
+
+The first five modules and CLI own one strict provider-neutral parser, semantic/evidence policy and repository resource-integrity preflight. The Long-Task bridge calls that same preflight during shared activation validation, then binds targets, frozen files, Source Claims/root Assertions and blockers through existing Contract structures. The default Workflow invokes the CLI and consumes the same returned meaning through guidance; it gains no validator-owned lifecycle.
+
+Do not add a provider script merely to restate instructions. Add a small protocol helper only if implementation proves that platform-exposed MCP calls cannot safely perform the current template-discovery/explicit-entry compatibility path. Any provider helper must normalize metadata and transport only; it must not contain design prompts, a template catalogue or an authority registry. The package handoff adapter is independently justified because it intercepts silent semantic loss between authoring and both consumers.
 
 Because narrow one-control/one-screen exploration is useful outside Long-Task, add `design-resource-authoring` to the base set returned by `enabledManagedSkillNames`; do not require the `long-task` profile. Its front matter remains explicit enough that ordinary UI implementation does not trigger provider generation.
 
@@ -726,6 +809,14 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - Implementation handoff: preserve the explicit development ceiling and necessary context/exclusions, map every material in-scope item to existing/generated Source or an honest disposition, reuse component families, add dedicated unique/complex-control resources only when needed and stop only when no silent material design invention remains.
 - Selected-source preparation: require real selection basis, then export/snapshot to an approved durable location and return the locator/hash; make no Context/code/Contract edits.
 - Keep outer visual checking outside the nested Open Design run unless the live provider advertises a reliable equivalent.
+
+### Phase `IMP-DRA-03A` — Shared implementation-input adapter
+
+- Parse exactly one fenced `design-resource-handoff-v1` block from ordinary marked Markdown Source with strict unknown-field rejection.
+- Validate repository containment/digests, unique/reachable keys, exact subject-by-eight-dimension closure, disposition semantics, evidence/method compatibility and Source Item references.
+- Expose `ty-context design-resource preflight <handoff.md> [--json]` and make `design-resource-authoring` require a passing result before reporting a ready handoff.
+- Invoke the same validator from Long-Task activation and require exact target interpretation/condition/frozen-file equality, covered Source Claim/root Assertion reachability and blocker binding.
+- Keep exploration, Design Authority, default-workflow lifecycle and final production acceptance outside the adapter.
 
 ### Phase `IMP-DRA-04` — Package/public surfaces and migration
 
@@ -766,7 +857,10 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - `AC-DRA-018` — Given a selected page prototype and design system that show ordinary controls only in default state while a development handoff includes unique multi-state controls, the Skill maps ordinary controls to shared component variants, does not commission one file per instance, and selects grouped component-state or dedicated unique/complex-control studies for uncovered variants, feedback, motion, responsive or accessibility conditions. Accepts `REQ-DRA-012`, `REQ-DRA-015` through `REQ-DRA-017`, `NCOMP-DRA-011`.
 - `AC-DRA-019` — Given one large addressable interactive artifact whose sections and reachable states explicitly cover every material item inside the development scope, the Skill accepts that one artifact as the smallest sufficient set and generates no duplicate control boards. Given only a static/default frame, it does not infer unseen dynamic coverage. Accepts `REQ-DRA-011`, `REQ-DRA-012`, `REQ-DRA-016`, `REQ-DRA-017`.
 - `AC-DRA-020` — Given product/technical Source that defines a permission, data or algorithmic rule, the design commission references that rule and shows its user-visible states/feedback without inventing or making the visual artifact the rule's sole authority. Accepts `REQ-DRA-018`, `NCOMP-DRA-012`.
-- `AC-DRA-021` — Given an implementation handoff, every material in-scope surface/flow/region/component/control condition has an existing/generated/non-applicable/excluded/decision-required/unavailable mapping; unresolved/unavailable items remain explicit limitations and the Skill claims neither Design Authority nor product acceptance. Accepts `REQ-DRA-012`, `REQ-DRA-019`, `REQ-DRA-031`, `REQ-DRA-035`.
+- `AC-DRA-021` — Given implementation-handoff generation, every material in-scope subject closes all eight dimensions with covered/not-applicable/excluded/decision-required/unavailable meaning. Any decision-required/unavailable row remains an explicit blocked authoring result and shared preflight refuses ready status; the Skill claims neither Design Authority nor product acceptance. Accepts `REQ-DRA-012`, `REQ-DRA-019`, `REQ-DRA-031`, `REQ-DRA-035`, `REQ-DRA-038`.
+- `AC-DRA-022` — Given one complete marked implementation handoff, both the standalone CLI and Long-Task activation accept the same target/conditions/resources/coverage. Removing or duplicating a dimension, substituting a static frame for motion/accessibility evidence, mutating a resource digest or adding an unknown field fails closed. Accepts `REQ-DRA-038`, `REQ-DRA-039`, `REQ-DRA-044`.
+- `AC-DRA-023` — Given a valid handoff and a Long-Task Contract, Compile fails unless each design target exactly matches the handoff interpretation/conditions/frozen files, every covered Source Item maps to a claimed root conformance Assertion and every handoff blocker is bound by the owning surface. Accepts `REQ-DRA-045`.
+- `AC-DRA-024` — Given the same valid handoff under the default Workflow, shared preflight runs before UI Authority Closure, every exact/constraint resource is opened, and declared Source Items/methods are routed to real-entry production checks; handoff integrity alone is never reported as implementation conformance. Accepts `REQ-DRA-046`.
 
 <a id="dra-risks"></a>
 ## Risks And Mitigations
@@ -782,7 +876,7 @@ Because narrow one-control/one-screen exploration is useful outside Long-Task, a
 - `RISK-DRA-009` — Fact `nested_tool_mismatch`: Open Design's inner agent may see Skill instructions without the browser/MCP runtime they expect. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: keep provider commission focused on generation, inspect advertised tool bundle, and perform outer review with available project/browser tools.
 - `RISK-DRA-010` — Fact `profile_surface_growth`: a base-installed Skill increases default capability/trigger surface. Affects `OUT-DRA-04`. Mitigation: explicit narrow triggers, no automatic provider dependency, static trigger tests and no change to ordinary Workflow routing.
 - `RISK-DRA-011` — Fact `post_artifact_terminal_failure`: a nested provider process may leave a run nonterminal and eventually time out after its final message and complete artifact. Affects `OUT-DRA-02`, `OUT-DRA-03`. Mitigation: model execution state and artifact readiness separately, preserve last-update/failure diagnostics, use bounded observation, never invent success, retain independently verified output and retry only when artifact completeness or user intent justifies it.
-- `RISK-DRA-012` — Fact `critical_user_path`: a handoff may stop after a page/default-state prototype while implementation still has to invent material control states, interaction, motion, responsive or accessibility behavior. Affects `OUT-DRA-01`, `OUT-DRA-03`. Mitigation: task-local material coverage through controls, selected-source subtraction only for explicit conditions and an implementation-handoff stop rule with honest unresolved dispositions.
+- `RISK-DRA-012` — Fact `critical_user_path`: a handoff may stop after a page/default-state prototype while implementation still has to invent material control states, interaction, motion, responsive or accessibility behavior. Affects `OUT-DRA-01`, `OUT-DRA-03`. Mitigation: task-local material coverage through controls, selected-source subtraction only for explicit conditions and fail-closed shared preflight that keeps every unresolved disposition blocked.
 - `RISK-DRA-013` — Fact `architecture_change`: control-level completeness may be misread as one artifact per control, creating unnecessary output and a de facto pack. Affects `OUT-DRA-01`, `OUT-DRA-03`, `OUT-DRA-04`. Mitigation: component-family reuse, one-addressable-artifact coverage, dedicated studies only for unique/complex gaps and explicit no-registry/no-pack boundaries.
 
 <a id="dra-decisions"></a>
@@ -799,6 +893,7 @@ The user delegated detailed plan design under the explicit preference for high q
 - `DLG-DRA-007` — Make outer artifact review the default and nested provider browser verification optional/capability-driven. Basis: the high-fidelity flow experiment's tool-bundle mismatch and the requirement for efficient, evidence-backed generation.
 - `DLG-DRA-008` — Define implementation-handoff sufficiency by the explicit development scope and material user-visible UI/UX coverage through relevant controls, not by Long-Task or another consuming workflow. Basis: `IN-DRA-USER-002` and the existing ordinary-Source boundary.
 - `DLG-DRA-009` — Treat control granularity as addressable coverage rather than artifact count: reuse component families and comprehensive inspectable resources while requiring dedicated unique/complex-control studies only for uncovered meaning. Basis: `IN-DRA-USER-002`, output efficiency and the no-mandatory-pack boundary.
+- `DLG-DRA-010` — Use one strict provider-neutral marked Markdown adapter only for selected implementation handoffs and share its preflight across both consumers. Basis: `IN-DRA-USER-003`, the independent semantic-loss boundary between resource authoring and development, and the need to reject omission/category substitution without creating a provider pack or second workflow.
 
 `RQ-DRA-001` through `RQ-DRA-008` are resolved by `FIND-DRA-001` through `FIND-DRA-008` and the experiment record. No user decision is required before implementation. A later user may still choose a provider/model, approve persistent MCP/Figma setup, select among candidates or reserve a visual decision; those are runtime choices, not plan gaps.
 
@@ -810,9 +905,10 @@ The separately authorized implementation and current clarification/release deliv
 - authored `.codex/ty-context-managed/skills/design-resource-authoring/**`, generated `.codex/skills/**`, and `packages/ty-context/assets/skills/**` through existing source sync;
 - `packages/ty-context/src/lib/profiles.ts` base managed-skill set plus sync/init/upgrade/release fixture inventories;
 - small directly referenced Skill resources, and a transport-only helper only if capability probing proves necessary;
+- package-owned `design-resource-handoff-{types,shape,parser,policy,validation}.ts`, `commands/design-resource.ts` and the Long-Task activation bridge, with no provider prompt/runtime dependency;
 - `PROJECT_SPEC.md`, owning package Context, `README.md`, `README.zh-CN.md`, `packages/ty-context/README.md` and relevant Skill-routing wording;
 - current `source-plan-authoring`, `context_uiux_design`, default Workflow and `long-task-workflow` boundary text only where cross-links are needed, not duplicated generation logic;
-- new `tests/ty-context/design-resource-authoring-skill.test.mjs` plus affected package-source/profile/sync/doctor/orientation/tarball/consumer-lab tests;
+- `tests/ty-context/design-resource-authoring-skill.test.mjs`, the shared adapter/CLI fixture suite, Long-Task compiler integration, default/Long-Task guidance assertions and affected-test routing plus existing package-source/profile/sync/doctor/orientation/tarball/consumer-lab tests;
 - explicit migration of the deleted-Skill assertions in `tests/ty-context/sync-init-doctor.test.mjs` and the no-generation-Skill boundary assertion in `tests/ty-context/visual-delivery-guidance.test.mjs`, replacing them with the new thin-commissioner/no-authority boundary rather than simply removing coverage;
 - optional local integration fixture/tooling outside the normal deterministic gate.
 
@@ -825,7 +921,10 @@ Focused deterministic test cases should cover:
 - selected page/design-system coverage that does not imply unshown dynamic conditions;
 - shared component-family mappings and one comprehensive inspectable artifact versus dedicated unique/complex-control gaps, with no one-file-per-control rule;
 - user-visible interaction semantics versus product/business/data/permission/algorithmic Source ownership;
-- implementation-handoff stop behavior with explicit existing/new/non-applicable/excluded/decision-required/unavailable coverage and no Design Authority/acceptance claim;
+- implementation-handoff stop behavior with explicit existing/new/non-applicable/excluded/decision-required/unavailable coverage, unresolved results blocked from ready status and no Design Authority/acceptance claim;
+- strict V1 unknown-field, completeness, duplicate-pair, evidence-category, repository-path/digest and Source-item validation through both library and CLI entry points;
+- Long-Task target/condition/frozen-input equality, covered Source Claim/root Assertion reachability and blocker binding;
+- default Workflow shared-preflight routing, resource opening and real-entry verification without treating adapter integrity as implementation conformance;
 - no globally mandatory prototype/wireframe/Figma/design-system sequence;
 - selected/optional/not-needed/unavailable/decision-required dispositions;
 - functional-skill versus rendering-template discovery and missing-template fallback;
@@ -850,6 +949,7 @@ The implementation verification sequence should include build, focused static/mo
 
 - `IN-DRA-USER-001` controls the no-mandatory-resource rule, scope ceiling, Open Design reuse, no-mutation boundary, experiments and original complete-plan requirement.
 - `IN-DRA-USER-002` controls workflow-independent purpose, explicit development-scope correspondence, necessary-context boundary, material control-level UI/UX coverage, selected-source subtraction, shared-versus-dedicated resource selection, business-logic ownership, handoff stop rule, indexing and package release.
+- `IN-DRA-USER-003` controls the strict shared adapter, complete declared-fact preservation, dual-consumer integration, owning Context purpose/mechanism and real complex-single-page Open Design workflow smoke.
 - `IN-DRA-EXT-001` and `IN-DRA-PLAN-001` control the design-authority, target-classification, condition-coverage and evidence boundaries.
 - `IN-DRA-HARNESS-001` controls Tiny Context ownership, Source/Contract separation, package impact and downstream adoption.
 - `IN-DRA-OD-001`, `IN-DRA-OD-LOCAL-001` and `FIND-DRA-001` through `FIND-DRA-008` control the adapter, capability split, setup/recovery, Figma boundary, entry/provenance rules and live test design.

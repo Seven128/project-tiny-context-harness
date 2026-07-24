@@ -209,6 +209,7 @@ export async function createWorkspaceSnapshot(
       "--force",
       `--prefix=${temporary.replace(/\\/gu, "/")}/`,
     ]);
+    await overlayTrackedEolDifferences(root, temporary);
     const [modified, untracked] = await Promise.all([
       gitBuffer(root, ["diff", "--name-only", "-z"]),
       gitBuffer(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
@@ -443,6 +444,51 @@ async function removeExcludedSnapshotPaths(
     }
   }
   await visit(snapshotRoot);
+}
+
+async function overlayTrackedEolDifferences(
+  sourceRoot: string,
+  snapshotRoot: string,
+): Promise<void> {
+  const [raw, autocrlf] = await Promise.all([
+    gitBuffer(sourceRoot, ["ls-files", "--eol", "-z"]),
+    gitConfigGet(sourceRoot, "core.autocrlf"),
+  ]);
+  for (const record of splitZero(raw)) {
+    const tab = record.indexOf("\t");
+    if (tab < 0) continue;
+    const metadata = record.slice(0, tab);
+    const relative = record.slice(tab + 1).replace(/\\/gu, "/");
+    const match = metadata.match(
+      /^i\/(\S+)\s+w\/(\S+)\s+attr\/(.*)$/u,
+    );
+    if (!match) continue;
+    const [, indexEol, worktreeEol, attributesRaw] = match;
+    const expected = checkoutEol(
+      indexEol,
+      attributesRaw.trim(),
+      autocrlf,
+    );
+    if (worktreeEol === expected) continue;
+    const source = path.join(sourceRoot, ...relative.split("/"));
+    const target = path.join(snapshotRoot, ...relative.split("/"));
+    const info = await stat(source).catch(() => null);
+    if (!info?.isFile()) continue;
+    await mkdir(path.dirname(target), { recursive: true });
+    await copyFile(source, target);
+  }
+}
+
+function checkoutEol(
+  indexEol: string,
+  attributes: string,
+  autocrlf: string | null,
+): string {
+  const explicit = attributes.match(/(?:^|\s)eol=(lf|crlf)(?:\s|$)/u)?.[1];
+  if (explicit) return explicit;
+  if (/(?:^|\s)-text(?:\s|$)/u.test(attributes)) return indexEol;
+  if (indexEol === "-text" || indexEol === "none") return indexEol;
+  return autocrlf?.toLowerCase() === "true" ? "crlf" : indexEol;
 }
 
 async function linkDependencyTrees(

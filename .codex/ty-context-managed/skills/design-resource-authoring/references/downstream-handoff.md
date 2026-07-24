@@ -62,20 +62,41 @@ Return scope/intent, visible candidates, resource dispositions, obvious limitati
 
 ### Implementation handoff
 
-Add:
+After final selection for implementation, add one project-native Markdown Source at an authorized repository path. It is ordinary Source, not a pack or Authority. The file contains readable `ty-source-item:start/end` facts plus exactly one:
+
+````markdown
+```yaml design-resource-handoff-v1
+...
+```
+````
+
+The strict block includes:
 
 - output/development scope, necessary context and exclusions;
-- stable resource, surface/control/state/target keys;
-- candidate/inspiration/constraint/pre-existing-exact-target classification;
+- stable resource, subject, surface/control/state and target keys;
+- selected exact-target/constraint/supporting classification; candidates and inspiration do not enter covered implementation rows;
 - provider version, project/run, capability/template, agent/model and live design-system binding;
-- exact entry/preview locator plus SHA-256 or approved snapshot;
+- each repository-local immutable resource path, media type and exact SHA-256;
 - editable upstream owner, locator and update/export method, or an explicit manual/external-update boundary when unavailable;
-- declared platform, viewport, mode, state, content, interaction, accessibility and motion coverage;
-- stable-key coverage mapping and unresolved dispositions;
+- declared platform, viewport, mode, state, content, input and full/reduced/not-applicable motion conditions;
+- addressable evidence entries whose kinds distinguish frame/component variant/prototype state or transition/motion/responsive/input/accessibility/semantic/token/asset/annotation meaning;
+- stable subjects grouped only when they truly share meaning;
+- every declared scope surface represented by one unambiguous surface subject, with no stable key owned by two subjects;
+- complete subject-by-dimension coverage for `surface_flow`, `visual_content`, `component_control`, `state_interaction`, `motion`, `adaptation_input`, `accessibility` and `assets`;
+- exactly one disposition per subject/dimension pair: `covered`, `not_applicable`, `excluded_by_scope`, `decision_required` or `unavailable`;
+- covered-row target/condition/evidence/Source-item refs and dimension-appropriate project verification methods; referenced design Source Items use `requirement`, `control` or `acceptance` markers;
+- source-backed rationales for non-applicable/excluded rows; unresolved rows remain visible and make preflight fail;
+- target-local acceptance blockers that downstream checks must bind rather than dismiss;
 - selection basis, proposal reconciliation path/status and known limitations;
 - outer review and separate provider/artifact/design qualifiers.
 
-No dedicated Markdown/YAML file or directory is mandatory.
+Unknown fields fail closed. A static frame may support only visible layout/visual/component facts for its shown condition; it cannot cover unseen interaction, motion, adaptation/input or accessibility. Run:
+
+```text
+ty-context design-resource preflight <handoff.md>
+```
+
+Do not call the handoff ready until it passes. Exploration, candidates and unselected previews still require no file, schema, hash sequence or validator. There is no fixed directory or one-file-per-control requirement.
 
 ## Recommended downstream routing
 
@@ -83,6 +104,7 @@ No dedicated Markdown/YAML file or directory is mandatory.
 initial proposal
   -> design-resource-authoring
   -> selected immutable resources + reconciled initial proposal
+  -> validated design-resource-handoff-v1
   -> long-task-workflow (explicit long delivery)
      OR current native Goal + default Workflow Contract (non-long delivery)
 ```
@@ -91,11 +113,11 @@ initial proposal
 
 ### Default Workflow consumption
 
-The consuming Goal brings the revised proposal and selected resources as ordinary Source, performs UI Authority Closure, classifies coverage, decides `Context Delta`, and makes every adopted decision-relevant target Context-reachable through existing owners. It opens affected exact/constraint resources before deciding, records immutable adopted identity plus editable upstream/update route, implements and runs project-owned verification. A later update creates a new immutable version rather than overwriting the adopted baseline.
+The consuming Goal brings the revised proposal, selected resources and handoff as ordinary Source. It reruns shared preflight before UI Authority Closure, opens affected exact/constraint resources before deciding, classifies coverage, decides `Context Delta`, and makes every adopted decision-relevant target Context-reachable through existing owners. It routes every covered Source Item and verification method through the production owner and real-entry checks. A later update creates a new immutable version rather than overwriting the adopted baseline.
 
 ### Long-Task consumption
 
-The same revised proposal and selected resources enter `long-task-workflow`'s Source-bound Contract Draft loop immediately. Source self-containment and Contract mapping converge there, so `source_paths`, Bindings, `verification_inputs`, Check `input_paths` and `artifact_globs` name only stable locators and conditions actually consumed. Authority Lock, Authority Revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
+The same revised proposal, selected resources and validated handoff enter `long-task-workflow`'s Source-bound Contract Draft loop immediately. The marked handoff is `task.source_paths`; each Contract design target's frozen `source_paths` and Check `verification_inputs` equal that handoff plus its selected resource paths and conditions. Covered Source Items map through `source_claims` to Claims in the root conformance Assertion, and handoff acceptance blockers appear in the owning surface binding. Authority Lock, Authority Revision and Final Gate remain the sole lifecycle. This Skill creates no Contract Draft, Outcome, Receipt, Check result or Gate.
 
 ## Forbidden inferences
 

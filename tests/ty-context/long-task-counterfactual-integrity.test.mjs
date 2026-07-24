@@ -6,6 +6,7 @@ import {
   evaluateOutcomeCounterfactuals,
   isValidCounterfactualCheckResult,
 } from "../../packages/ty-context/dist/lib/long-task-evidence-v2.js";
+import { removeCounterfactualSandboxRoot } from "../../packages/ty-context/dist/lib/long-task-counterfactual-sandbox.js";
 import {
   createDeliveryFixture,
   runCli,
@@ -218,6 +219,43 @@ test("Counterfactual rejects AC not-executed and skipped failures", () => {
       code,
     );
   }
+});
+
+test("Counterfactual sandbox cleanup retries transient filesystem locks", async () => {
+  const attempts = [];
+  const waits = [];
+  await removeCounterfactualSandboxRoot(
+    "fixture-counterfactual-root",
+    async (target, options) => {
+      attempts.push({ target, options });
+      if (attempts.length < 3)
+        throw Object.assign(new Error("fixture lock"), { code: "EBUSY" });
+    },
+    async (milliseconds) => {
+      waits.push(milliseconds);
+    },
+  );
+
+  assert.equal(attempts.length, 3);
+  assert.deepEqual(
+    attempts.map(({ target }) => target),
+    Array(3).fill("fixture-counterfactual-root"),
+  );
+  assert.deepEqual(attempts[0].options, { recursive: true, force: true });
+  assert.deepEqual(waits, [100, 200]);
+
+  await assert.rejects(
+    removeCounterfactualSandboxRoot(
+      "fixture-counterfactual-root",
+      async () => {
+        throw Object.assign(new Error("permanent failure"), { code: "EACCES" });
+      },
+      async () => {
+        assert.fail("permanent failures must not be retried");
+      },
+    ),
+    /permanent failure/u,
+  );
 });
 
 async function writeOracle(root, mode) {

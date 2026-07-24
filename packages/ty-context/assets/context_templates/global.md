@@ -36,6 +36,7 @@
 - Capture durable screen, flow, interaction, responsive and accessibility facts. Use `DESIGN.md` for visual identity and design tokens when needed.
 - For web/front-end surfaces, record durable page responsibilities, core user judgments, persistent information boundaries and cross-page or cross-layer ownership when they guide future changes.
 - Reference durable versioned design targets at their project-native path or URI and classify them as `exact-target`, `constraint` or `inspiration`; do not paste generated implementation screenshots, diffs or review logs into Context.
+- When selected resources arrive through a validated `design-resource-handoff-v1`, keep only durable surface/control/target ownership and a route to its immutable Source here. Do not copy the handoff's condition/evidence/coverage index into Context; future work must open the handoff and affected exact/constraint resources and rerun shared preflight before fidelity implementation.
 
 ## Verification Entry Points
 

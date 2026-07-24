@@ -27,6 +27,7 @@ import {
   validateDeliveryContractStructure,
 } from "./long-task-delivery-validation.js";
 import { validateRawExecutionObservationOwnership } from "./long-task-observation-ownership.js";
+import { validateLongTaskDesignResourceHandoffs } from "./long-task-design-resource-handoff.js";
 import { freezeDeliveryCheck } from "./long-task-runner-freeze.js";
 import {
   classifyLongTaskRisk,
@@ -105,6 +106,9 @@ export async function validateContractForActivation(options: {
     );
     return items;
   });
+  await attempt(mode, diagnostics, () =>
+    validateLongTaskDesignResourceHandoffs(contract, repository),
+  );
   const risk = await attempt(mode, diagnostics, () => {
     const decision = classifyLongTaskRisk(contract);
     validateRiskProof(contract, decision);

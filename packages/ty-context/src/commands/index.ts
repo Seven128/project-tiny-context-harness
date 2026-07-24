@@ -3,6 +3,7 @@ import { compositeLongTask } from "./composite-long-task.js";
 import { compositeCampaign } from "./composite-campaign.js";
 import { longTask } from "./long-task.js";
 import { deliverySet } from "./delivery-set.js";
+import { designResource } from "./design-resource.js";
 import { doctor } from "./doctor.js";
 import { exportContext } from "./export-context.js";
 import { enable } from "./enable.js";
@@ -32,6 +33,7 @@ export const commands: Record<string, CommandHandler> = {
     validate(["validate-code-modularity", ...args]),
   "validate-harness": (args) => validate(["validate-harness", ...args]),
   "long-task": (args) => withLongTaskProfile(args, longTask),
+  "design-resource": designResource,
   "delivery-set": deliverySet,
   "composite-long-task": compositeLongTask,
   "composite-campaign": compositeCampaign,
@@ -57,6 +59,8 @@ export function help(): void {
   validate-code-modularity
                        Enforce touched handwritten source file modularity
   validate-harness     Run validate-context and validate-code-modularity
+  design-resource <subcommand>
+                       Validate a selected design-resource implementation handoff
   long-task <subcommand>
                        Manage one Canonical Delivery Contract in the current workspace
   delivery-set <subcommand>

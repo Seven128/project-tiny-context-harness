@@ -117,18 +117,48 @@ test("final selection performs one idempotent initial-proposal reconciliation", 
 test("handoff preserves immutable resource identity and direct downstream routing", async () => {
   const handoff = (await copies("references/downstream-handoff.md"))[0];
   assert.match(handoff, /Candidate, selection and authority are separate/iu);
-  assert.match(handoff, /stable resource, surface\/control\/state\/target keys/iu);
+  assert.match(handoff, /stable resource, subject, surface\/control\/state and target keys/iu);
   assert.match(handoff, /provider\/project\/run\/entry/iu);
   assert.match(handoff, /immutable digest\/snapshot/iu);
   assert.match(
     handoff,
     /editable upstream owner, locator and update\/export method/iu,
   );
-  assert.match(handoff, /declared platform, viewport, mode, state, content, interaction, accessibility and motion coverage/iu);
+  assert.match(
+    handoff,
+    /declared platform, viewport, mode, state, content, input and full\/reduced\/not-applicable motion conditions/iu,
+  );
+  assert.match(handoff, /exactly one:[\s\S]*design-resource-handoff-v1/iu);
+  for (const dimension of [
+    "surface_flow",
+    "visual_content",
+    "component_control",
+    "state_interaction",
+    "motion",
+    "adaptation_input",
+    "accessibility",
+    "assets",
+  ]) assert.match(handoff, new RegExp(`\\b${dimension}\\b`, "u"));
+  assert.match(handoff, /ty-context design-resource preflight <handoff\.md>/u);
+  assert.match(
+    handoff,
+    /static frame[\s\S]*cannot cover unseen interaction, motion, adaptation\/input or accessibility/iu,
+  );
+  assert.match(
+    handoff,
+    /`decision_required` or `unavailable`[\s\S]*make preflight fail/iu,
+  );
   assert.match(handoff, /selected immutable resources \+ reconciled initial proposal/iu);
   assert.match(handoff, /long-task-workflow.*current native Goal/isu);
   assert.match(handoff, /`source-plan-authoring` is not an intermediate stage/iu);
-  assert.match(handoff, /source_paths.*verification_inputs.*input_paths.*artifact_globs/isu);
+  assert.match(
+    handoff,
+    /marked handoff is `task\.source_paths`[\s\S]*Check `verification_inputs`/iu,
+  );
+  assert.match(
+    handoff,
+    /Source Items map through `source_claims`[\s\S]*root conformance Assertion/iu,
+  );
   assert.match(handoff, /creates no Contract Draft, Outcome, Receipt, Check result or Gate/iu);
   assert.match(handoff, /Context-reachable through existing owners/iu);
   assert.match(handoff, /opens affected exact\/constraint resources before deciding/iu);
@@ -144,6 +174,7 @@ test("Source, specification, Context and public docs expose the new resource con
       read("project_context/architecture.md"),
       read("project_context/areas/harness-package.md"),
       read("project_context/areas/harness-package/contracts/workflow-contract.md"),
+      read("project_context/areas/harness-package/contracts/design-resource-handoff.md"),
       read("project_context/areas/harness-package/contracts/package-managed-surfaces.md"),
       read("project_context/areas/harness-package/decision-rationale/long-task-workflow.md"),
       read("project_context/areas/harness-package/implementation-index.md"),
@@ -157,13 +188,21 @@ test("Source, specification, Context and public docs expose the new resource con
   ]);
   assert.match(plan, /Plan key: `PLAN-DRA-001`/u);
   assert.match(plan, /^## 2026-07-22 Workflow And Provider Amendment$/mu);
+  assert.match(plan, /^## 2026-07-24 Shared Development-Input Adapter Amendment$/mu);
   assert.match(plan, /REQ-DSA-005/u);
   assert.match(plan, /AC-DSA-003/u);
   assert.match(plan, /AC-DRA-016/u);
+  assert.match(plan, /REQ-DRA-046/u);
+  assert.match(plan, /AC-DRA-024/u);
   for (const content of [spec, contexts, readmes]) {
     assert.match(content, /design-resource-authoring/u);
     assert.match(content, /style-bearing/iu);
     assert.match(content, /proposal reconciliation|initial proposal.*once|初始方案.*一次/isu);
+    assert.match(content, /design-resource-handoff-v1/u);
+    assert.match(
+      content,
+      /eight.dimension|eight closed|八维|surface\/flow[\s\S]*accessibility[\s\S]*assets/isu,
+    );
   }
   assert.match(readmes, /^## Recommended Usage$/mu);
   assert.match(readmes, /^## 推荐用法$/mu);

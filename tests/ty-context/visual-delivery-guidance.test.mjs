@@ -76,6 +76,11 @@ test("visual design and implementation guidance reaches every managed copy", asy
     /^## External Design Resource Consumption \/ 外部设计资源消费$/mu,
   );
   assert.match(uiux, /design-resource-authoring/iu);
+  assert.match(uiux, /ty-context design-resource preflight <handoff\.md>/u);
+  assert.match(
+    uiux,
+    /surface\/flow、visual\/content、component\/control、state\/interaction、motion、adaptation\/input、accessibility、assets/u,
+  );
   assert.match(uiux, /不复制 provider.*提示词\/模板/isu);
   assert.match(
     uiux,
@@ -132,6 +137,11 @@ test("visual design and implementation guidance reaches every managed copy", asy
     /production token source, its generation direction/iu,
   );
   assert.match(development, /first confirm Design Authority readiness/iu);
+  assert.match(development, /ty-context design-resource preflight <handoff\.md>/u);
+  assert.match(
+    development,
+    /covered Source Item and verification method[\s\S]*project-owned checks/iu,
+  );
   assert.match(development, /`exact-target`, `constraint` or `inspiration`/iu);
   assert.match(
     development,
@@ -183,6 +193,11 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   assert.match(authoring, /existing Contract semantics/iu);
   assert.match(authoring, /resolve Design Authority before Compile/iu);
   assert.match(authoring, /perform UI Authority Closure/iu);
+  assert.match(authoring, /design-resource-handoff-v1/u);
+  assert.match(
+    authoring,
+    /exact handoff target key and interpretation[\s\S]*condition_keys[\s\S]*source_claims[\s\S]*root conformance Assertion/iu,
+  );
   assert.match(
     authoring,
     /unconfigured starter, style-only prose, inspiration-only set/iu,
@@ -237,6 +252,11 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
 
   const evidence = evidenceCopies[0];
   assert.match(evidence, /^## Visual UI Evidence$/mu);
+  assert.match(evidence, /ty-context design-resource preflight/iu);
+  assert.match(
+    evidence,
+    /geometry\/pixel\/token\/content[\s\S]*motion timeline[\s\S]*accessibility semantics[\s\S]*asset integrity/iu,
+  );
   assert.match(
     evidence,
     /`design_resource_integrity` and `design_implementation_conformance` distinct/iu,
@@ -280,6 +300,75 @@ test("Long-Task visual guidance reuses existing authoring and evidence mechanism
   );
 });
 
+test("complete selected-design conformance is an explicit Long-Task purpose", async () => {
+  const [
+    spec,
+    globalContext,
+    rationale,
+    handoffContract,
+    longTaskCopies,
+    rootReadme,
+    chineseReadme,
+    packageReadme,
+    sourcePlan,
+  ] = await Promise.all([
+    read("PROJECT_SPEC.md"),
+    read("project_context/global.md"),
+    read(
+      "project_context/areas/harness-package/decision-rationale/long-task-workflow.md",
+    ),
+    read(
+      "project_context/areas/harness-package/contracts/design-resource-handoff.md",
+    ),
+    skillCopies("long-task-workflow"),
+    read("README.md"),
+    read("README.zh-CN.md"),
+    read("packages/ty-context/README.md"),
+    read("docs/design-resource-authoring-source-plan.md"),
+  ]);
+
+  assert.equal(longTaskCopies[1], longTaskCopies[0]);
+  assert.equal(longTaskCopies[2], longTaskCopies[0]);
+  for (const content of [
+    spec,
+    rationale,
+    handoffContract,
+    longTaskCopies[0],
+    rootReadme,
+    packageReadme,
+  ]) {
+    assert.match(
+      content,
+      /Agent implementation, acceptance and testing fully conform/iu,
+    );
+    assert.match(content, /Open Design HTML, images and prototypes/iu);
+    assert.match(
+      content,
+      /structured textual semantic (?:handoff|supplement)/iu,
+    );
+  }
+  assert.match(
+    globalContext,
+    /Complete selected-design conformance is a design-specific Long-Task objective/iu,
+  );
+  assert.match(
+    globalContext,
+    /structured textual handoff is part of the selected implementation resource set/iu,
+  );
+  assert.match(
+    chineseReadme,
+    /Agent 的开发、验收和测试在 UI\/UX 方面完整遵循选定设计资源/iu,
+  );
+  assert.match(
+    chineseReadme,
+    /结构化文本语义交接也作为选定实现设计资源的一部分/iu,
+  );
+  assert.match(
+    sourcePlan,
+    /structured textual semantic supplement is itself part of the selected implementation design-resource set/iu,
+  );
+});
+
 test("default workflow routes Design Authority readiness without adding a visual lifecycle", async () => {
   const [
     spec,
@@ -318,6 +407,15 @@ test("default workflow routes Design Authority readiness without adding a visual
   assert.match(verification, /Design Authority and visual delivery guidance/iu);
   assert.match(workflow, /^## Design Authority Readiness$/mu);
   assert.match(workflow, /^## External Design Resources$/mu);
+  assert.match(workflow, /ty-context design-resource preflight <handoff\.md>/u);
+  assert.match(
+    workflow,
+    /every subject across surface\/flow[\s\S]*accessibility and assets/iu,
+  );
+  assert.match(
+    workflow,
+    /routes every covered Source Item and verification method[\s\S]*real-entry checks/iu,
+  );
   assert.match(workflow, /^## UI Authority Closure$/mu);
   assert.match(workflow, /material production UI/iu);
   assert.match(workflow, /`exact-target`, `constraint` or `inspiration`/iu);
@@ -347,7 +445,7 @@ test("default workflow routes Design Authority readiness without adding a visual
   );
   assert.match(
     agents,
-    /Design file hashes, registry membership and counts prove resource integrity only/iu,
+    /Design handoff preflight and file hashes prove semantic-input completeness\/resource integrity only/iu,
   );
   assert.match(
     agents,

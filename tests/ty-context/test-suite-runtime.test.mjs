@@ -124,6 +124,38 @@ test("workspace snapshots materialize current Context while fingerprinting it se
   }
 });
 
+test("workspace snapshots preserve clean tracked LF bytes with autocrlf enabled", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "ty-context-snapshot-eol-"));
+  const workdir = path.join(root, ".work_products", "task");
+  let snapshot = null;
+  try {
+    await mkdir(path.join(root, "design"), { recursive: true });
+    await mkdir(workdir, { recursive: true });
+    const resource = path.join(root, "design", "handoff.md");
+    const expected = Buffer.from("# Frozen resource\n\nExact digest input.\n", "utf8");
+    await writeFile(resource, expected);
+    await git(root, ["init"]);
+    await git(root, ["config", "user.email", "fixture@example.test"]);
+    await git(root, ["config", "user.name", "Fixture"]);
+    await git(root, ["config", "core.autocrlf", "true"]);
+    await git(root, ["add", "."]);
+    await git(root, ["commit", "-m", "fixture"]);
+
+    assert.deepEqual(await readFile(resource), expected);
+    assert.match(await git(root, ["ls-files", "--eol", "design/handoff.md"]), /w\/lf/u);
+
+    snapshot = await createWorkspaceSnapshot(root, workdir, "eol-fixture");
+
+    assert.deepEqual(
+      await readFile(path.join(snapshot.root, "design", "handoff.md")),
+      expected,
+    );
+  } finally {
+    if (snapshot) await snapshot.dispose();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test(
   "workspace manifest serializes index-writing Git before parallel reads",
   assertWorkspaceGitOrdering,

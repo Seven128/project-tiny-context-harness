@@ -5,9 +5,19 @@ import test from "node:test";
 import YAML from "yaml";
 import { compileDeliveryContract } from "../../packages/ty-context/dist/lib/long-task-delivery-compiler.js";
 import {
+  addProductionControlBinding,
   createDeliveryFixture,
   writeContract,
 } from "./long-task-delivery-fixtures.mjs";
+import {
+  DESIGN_CONDITION_KEY,
+  DESIGN_HANDOFF_PATH,
+  DESIGN_RESOURCE_PATH,
+  DESIGN_SOURCE_ITEM_KEY,
+  DESIGN_TARGET_KEY,
+  writeDesignResourceHandoff,
+  writeDesignResourceHandoffFixture,
+} from "./design-resource-handoff-fixture.mjs";
 
 test("compiles V2 generated Claim/Outcome/Check ids and frozen runner targets under two seconds", async () => {
   const fixture = await createDeliveryFixture({ twoOutcomes: true });
@@ -156,6 +166,80 @@ test("preflight rejects missing package scripts and UI outcomes without browser 
   }
 });
 
+test("Long-Task Compile consumes the same strict design handoff through target, Claim and root Assertion bindings", async () => {
+  const fixture = await createDeliveryFixture();
+  try {
+    await attachDesignResourceHandoff(fixture);
+    await writeContract(fixture.workdir, fixture.contract);
+    const compiled = await compileDeliveryContract(
+      fixture.workdir,
+      fixture.root,
+      { require_completion_gate: false },
+    );
+    const target =
+      compiled.outcomes[0].product.surface_bindings[0].design_targets[0];
+    assert.equal(target.key, DESIGN_TARGET_KEY);
+    assert.deepEqual(target.condition_keys, [DESIGN_CONDITION_KEY]);
+    assert.deepEqual(target.source_paths, [
+      DESIGN_HANDOFF_PATH,
+      DESIGN_RESOURCE_PATH,
+    ]);
+    assert.equal(
+      compiled.source_items.some((item) => item.key === DESIGN_SOURCE_ITEM_KEY),
+      true,
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("Long-Task Compile rejects handoff target drift and unbound handoff blockers", async () => {
+  const targetFixture = await createDeliveryFixture();
+  try {
+    const handoff = await attachDesignResourceHandoff(targetFixture);
+    handoff.conditions[0].key = "other-condition";
+    handoff.targets[0].condition_refs = ["other-condition"];
+    for (const item of handoff.evidence)
+      item.condition_refs = ["other-condition"];
+    for (const row of handoff.coverage)
+      row.condition_refs = ["other-condition"];
+    await writeDesignResourceHandoff(targetFixture.root, handoff);
+    await writeContract(targetFixture.workdir, targetFixture.contract);
+    await assert.rejects(
+      compileDeliveryContract(targetFixture.workdir, targetFixture.root, {
+        require_completion_gate: false,
+      }),
+      /design_resource_target_conditions_mismatch:main-default/u,
+    );
+  } finally {
+    await rm(targetFixture.root, { recursive: true, force: true });
+  }
+
+  const blockerFixture = await createDeliveryFixture();
+  try {
+    const handoff = await attachDesignResourceHandoff(blockerFixture);
+    handoff.acceptance_blockers.push({
+      key: "accessibility-proof",
+      target_refs: [DESIGN_TARGET_KEY],
+      subject_refs: ["surface.main"],
+      dimensions: ["accessibility"],
+      source_item_refs: [DESIGN_SOURCE_ITEM_KEY],
+      verification_methods: ["accessibility_semantics"],
+      description: "The production semantic tree must match the design.",
+    });
+    await writeDesignResourceHandoff(blockerFixture.root, handoff);
+    await writeContract(blockerFixture.workdir, blockerFixture.contract);
+    await assert.rejects(
+      compileDeliveryContract(blockerFixture.workdir, blockerFixture.root, {
+        require_completion_gate: false,
+      }),
+      /design_resource_acceptance_blocker_unbound:main-default:accessibility-proof/u,
+    );
+  } finally {
+    await rm(blockerFixture.root, { recursive: true, force: true });
+  }
+});
+
 test("counterfactual mutation must stay on carriers and cannot delete verification inputs", async () => {
   const fixture = await createDeliveryFixture();
   try {
@@ -200,3 +284,121 @@ test("counterfactual mutation must stay on carriers and cannot delete verificati
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
+
+async function attachDesignResourceHandoff(fixture) {
+  const { handoff } = await writeDesignResourceHandoffFixture(fixture.root);
+  await writeFile(
+    path.join(fixture.root, "tests", "ui.spec.mjs"),
+    "export const designHandoffFixture = true;\n",
+  );
+  const outcome = fixture.contract.outcomes[0];
+  const check = outcome.acceptance.checks[0];
+  fixture.contract.task.execution_targets.push({
+    key: "fixture-browser",
+    description: "The fixture browser support target.",
+    role: "support",
+    runtime_family: "browser",
+    root_entrypoint: "tests/ui.spec.mjs",
+  });
+  outcome.acceptance.checks.push({
+    key: "first-ui-check",
+    journey_roles: ["success"],
+    execution_target: {
+      target_ref: "fixture-browser",
+      entrypoint: "root",
+    },
+    scenario: {
+      given: [{ key: "ui-loaded", statement: "Load the fixture UI." }],
+      when: [{ key: "inspect-ui", statement: "Inspect the fixture UI." }],
+    },
+    proof_surface: "ui_browser",
+    runner: {
+      type: "playwright_test",
+      target: "tests/ui.spec.mjs",
+      argv: [],
+      cwd: ".",
+      timeout_ms: 30000,
+      effect: "read_only",
+      retry_policy: "none",
+      idempotent: true,
+    },
+    verification_inputs: ["tests/ui.spec.mjs"],
+    input_paths: ["src/**"],
+    expected_output_paths: [],
+    artifact_globs: [],
+    positive_assertions: [],
+    negative_assertions: [],
+    environment_requirements: [],
+  });
+  outcome.product.requirements.push({
+    key: "design-handoff",
+    statement:
+      "The main surface must conform to every declared design-resource dimension.",
+    required_proof_surfaces: ["runtime_behavior"],
+  });
+  outcome.product.controls.push({
+    key: "main",
+    surface: "fixture-main",
+    region: "",
+    location: "main content",
+    control_type: "",
+    label_content: "",
+    user_task: "",
+    visibility: "",
+    availability: "",
+    trigger: "",
+    input: "",
+    validation: "",
+    default_value: "",
+    interaction: "",
+    navigation_result: "",
+    loading_state: "",
+    empty_state: "",
+    success_state: "",
+    failure_state: "",
+    recovery: "",
+    permission: "",
+    feedback: "",
+    accessibility: "",
+  });
+  check.verification_inputs.push(DESIGN_HANDOFF_PATH, DESIGN_RESOURCE_PATH);
+  check.artifact_globs = ["artifacts/**"];
+  check.positive_assertions[0].claims.push("requirement.design-handoff");
+  check.positive_assertions[0].evidence_capabilities.push(
+    "design_conformance",
+  );
+  outcome.acceptance.counterfactual_controls[0].claims.push(
+    "requirement.design-handoff",
+    "control.main.surface",
+    "control.main.location",
+  );
+  addProductionControlBinding(fixture.contract, {
+    controlKey: "main",
+    rootClaimRef: "control.main.location",
+    designTargets: [
+      {
+        key: DESIGN_TARGET_KEY,
+        interpretation: "exact_target",
+        source_paths: [DESIGN_HANDOFF_PATH, DESIGN_RESOURCE_PATH],
+        condition_keys: [DESIGN_CONDITION_KEY],
+        claim_refs: ["control.main.location"],
+        conformance_check_ref: "first-check",
+        conformance_assertion_ref: "first-result",
+        actual_artifact_path: "artifacts/design-actual.json",
+        comparison_artifact_path: "artifacts/design-comparison.json",
+      },
+    ],
+  });
+  fixture.contract.task.source_paths.push(DESIGN_HANDOFF_PATH);
+  fixture.contract.source_claims.push({
+    key: DESIGN_SOURCE_ITEM_KEY,
+    source_ref: `${DESIGN_HANDOFF_PATH}#main-design`,
+    statement:
+      "The main surface must conform to every declared design-resource dimension.",
+    disposition: {
+      type: "claim",
+      refs: ["first.requirement.design-handoff"],
+    },
+  });
+  return handoff;
+}

@@ -9,6 +9,7 @@ export {
   parseDeliveryContractBundle,
 } from "./lib/long-task-delivery-parser.js";
 export { evaluateContractBoundary } from "./lib/long-task-boundary-check.js";
+export { preflightDesignResourceHandoff } from "./lib/design-resource-handoff-validation.js";
 export {
   classifyLongTaskRisk,
   validateRiskProof,
