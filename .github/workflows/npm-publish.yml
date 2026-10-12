@@ -53,7 +53,7 @@ jobs:
         run: node -e "if(require('./packages/ty-context/package.json').version !== process.env.EXPECTED_VERSION) throw Error('version mismatch')"
       - name: Pack and verify the exact artifact
         run: npm run release:prepare
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: npm-package-${{ github.run_id }}
           path: .artifacts/releases/*.tgz
